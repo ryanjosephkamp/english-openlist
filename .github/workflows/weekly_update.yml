@@ -1,0 +1,96 @@
+# GitHub Actions Workflow: Weekly Dictionary Update
+# English OpenList Phase 3 - Automated Updates
+#
+# This workflow runs every Sunday at 00:00 UTC to:
+# 1. Check for new words from dictionary sources
+# 2. Update the valid/invalid word lists
+# 3. Generate statistics and changelog
+# 4. Push updates to Hugging Face Datasets
+#
+# Can also be triggered manually via workflow_dispatch
+
+name: Weekly Dictionary Update
+
+on:
+  schedule:
+    # Run every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      skip_upload:
+        description: 'Skip uploading to Hugging Face'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  update:
+    name: Run Weekly Update
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0  # Full history for changelog generation
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'phase3/requirements.txt'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r phase3/requirements.txt
+      
+      - name: Run update pipeline
+        env:
+          MW_API_KEY: ${{ secrets.MW_API_KEY }}
+          WORDNIK_API_KEY: ${{ secrets.WORDNIK_API_KEY }}
+        run: |
+          cd phase3
+          python scripts/run_weekly_update.py
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ github.run_id }}
+          path: phase3/output/
+          retention-days: 90
+      
+      - name: Push to Hugging Face
+        if: ${{ github.event.inputs.skip_upload != 'true' }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          cd phase3
+          python scripts/push_to_huggingface.py
+      
+      - name: Create GitHub Release
+        if: ${{ github.event.inputs.skip_upload != 'true' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}-${{ steps.date.outputs.date }}
+          name: Weekly Update - ${{ steps.date.outputs.date }}
+          body_path: phase3/output/*/CHANGELOG.md
+          files: |
+            phase3/output/*/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Summary
+        run: |
+          echo "## Weekly Update Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f phase3/output/*/update_stats.json ]; then
+            cat phase3/output/*/update_stats.json >> $GITHUB_STEP_SUMMARY
+          fi

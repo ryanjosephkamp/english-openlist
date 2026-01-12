@@ -1,0 +1,14 @@
+# Manual word additions for testing
+# Add words here to check against the dictionary API
+
+# Modern words that might not be in current list
+rizz
+situationship
+bussin
+skibidi
+slay
+yeet
+vibe
+ghosting
+catfish
+doomscrolling
