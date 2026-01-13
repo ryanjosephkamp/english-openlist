@@ -28,6 +28,9 @@ from scripts.dictionary_api import DictionaryAPIClient, WordStatus
 from scripts.word_validator import WordValidator
 from scripts.data_updater import DataUpdater, DataManager, create_word_metadata
 
+# Ensure logs directory exists
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
 # Set up logging
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL),
