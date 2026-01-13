@@ -382,7 +382,13 @@ class InvalidListValidator:
         
         if not invalid_words:
             logger.info("No more words to validate!")
-            return {"success": True, "promoted": 0, "validated": 0}
+            return {
+                "success": True, 
+                "promoted": 0, 
+                "validated": 0, 
+                "promoted_words": [],
+                "message": "No invalid words file found or all words already validated"
+            }
         
         # Select candidates
         if sample_mode:
@@ -501,9 +507,11 @@ async def main():
         sample_mode=args.sample
     )
     
-    if results["promoted_words"]:
+    # Save promoted words if any were found
+    if results.get("promoted_words"):
         validator.save_promoted_words(results["promoted_words"])
     
+    # Return exit code 0 even if no words to validate (graceful handling)
     return results
 
 
