@@ -43,6 +43,10 @@ MW_BASE_URL = "https://www.dictionaryapi.com/api/v3/references/collegiate/json"
 MW_RATE_LIMIT = 1000  # requests per day
 MW_REQUEST_DELAY = 0.1  # seconds between requests
 
+# Merriam-Webster Medical Dictionary API
+MW_MEDICAL_API_KEY = os.environ.get("MW_MEDICAL_API_KEY", "")
+MW_MEDICAL_BASE_URL = "https://www.dictionaryapi.com/api/v3/references/medical/json"
+
 # Free Dictionary API (fallback)
 FREE_DICT_BASE_URL = "https://api.dictionaryapi.dev/api/v2/entries/en"
 
@@ -72,8 +76,12 @@ VALIDATION_RULES = {
 }
 
 # Scheduling
-UPDATE_DAY = "Sunday"  # Day of week for scheduled updates
+UPDATE_SCHEDULE = "daily"  # "daily" or "weekly"
 UPDATE_HOUR = 0  # Hour (UTC) for scheduled updates
+
+# Invalid list validation settings
+DAILY_VALIDATION_LIMIT = 1000  # Words to validate per day from invalid list
+VALIDATION_BATCH_SIZE = 50  # Words per batch for API calls
 
 # =============================================================================
 # OUTPUT CONFIGURATION
