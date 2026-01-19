@@ -461,20 +461,84 @@ class InvalidListValidator:
         return results
     
     def save_promoted_words(self, promoted_words: list[str]):
-        """Save promoted words to the output directory."""
+        """
+        Save promoted words to the output directory AND update source files.
+        
+        This:
+        1. Adds promoted words to the output directory for release
+        2. Updates the source files in initial_deliverables/
+        """
         if not promoted_words:
             return
         
         output_dir = OUTPUT_DIR / get_release_date()
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        # Save to file
+        # Save to release file
         promoted_file = output_dir / "promoted_words.txt"
         with open(promoted_file, 'a', encoding='utf-8') as f:
             for word in promoted_words:
                 f.write(f"{word}\n")
         
         logger.info(f"Saved {len(promoted_words)} promoted words to {promoted_file}")
+        
+        # Update source files (critical for persistence across runs)
+        self._update_source_files(promoted_words)
+    
+    def _update_source_files(self, promoted_words: list[str]):
+        """Update the source files in initial_deliverables/ with promoted words."""
+        import orjson
+        
+        logger.info(f"Updating source files with {len(promoted_words)} promoted words...")
+        
+        # Load current valid words
+        valid_words = set()
+        if VALID_WORDS_FILE.exists():
+            with open(VALID_WORDS_FILE, 'r', encoding='utf-8') as f:
+                valid_words = set(line.strip() for line in f if line.strip())
+        
+        # Load current invalid words
+        invalid_words = set()
+        if INVALID_WORDS_FILE.exists():
+            with open(INVALID_WORDS_FILE, 'r', encoding='utf-8') as f:
+                invalid_words = set(line.strip() for line in f if line.strip())
+        
+        # Add promoted words to valid, remove from invalid
+        for word in promoted_words:
+            valid_words.add(word)
+            invalid_words.discard(word)
+        
+        # Save updated valid words
+        with open(VALID_WORDS_FILE, 'w', encoding='utf-8') as f:
+            for word in sorted(valid_words):
+                f.write(f"{word}\n")
+        logger.info(f"Updated {VALID_WORDS_FILE} ({len(valid_words)} words)")
+        
+        # Save updated invalid words
+        with open(INVALID_WORDS_FILE, 'w', encoding='utf-8') as f:
+            for word in sorted(invalid_words):
+                f.write(f"{word}\n")
+        logger.info(f"Updated {INVALID_WORDS_FILE} ({len(invalid_words)} words)")
+        
+        # Update valid dictionary with basic metadata for promoted words
+        valid_dict = {}
+        if VALID_DICT_FILE.exists():
+            with open(VALID_DICT_FILE, 'rb') as f:
+                valid_dict = orjson.loads(f.read())
+        
+        from datetime import datetime
+        for word in promoted_words:
+            if word not in valid_dict:
+                valid_dict[word] = {
+                    "word": word,
+                    "source": "invalid_list_recovery",
+                    "added_date": datetime.now().isoformat(),
+                    "validation_status": "valid"
+                }
+        
+        with open(VALID_DICT_FILE, 'wb') as f:
+            f.write(orjson.dumps(valid_dict, option=orjson.OPT_INDENT_2))
+        logger.info(f"Updated {VALID_DICT_FILE}")
 
 
 async def main():

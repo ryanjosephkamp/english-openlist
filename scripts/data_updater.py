@@ -174,6 +174,39 @@ class DataManager:
             f.write(orjson.dumps(self.invalid_dict, option=orjson.OPT_INDENT_2))
         logger.info(f"Saved invalid dictionary")
     
+    def save_source_files(self) -> None:
+        """
+        Update the original source files in initial_deliverables/.
+        
+        This is critical for persistence across workflow runs.
+        The source files are the canonical data that gets uploaded to Hugging Face.
+        """
+        from config import VALID_WORDS_FILE, VALID_DICT_FILE, INVALID_WORDS_FILE, INVALID_DICT_FILE
+        
+        logger.info("Updating source files in initial_deliverables/...")
+        
+        # Save valid words list (sorted)
+        with open(VALID_WORDS_FILE, 'w', encoding='utf-8') as f:
+            for word in sorted(self.valid_words):
+                f.write(f"{word}\n")
+        logger.info(f"Updated {VALID_WORDS_FILE} with {len(self.valid_words)} words")
+        
+        # Save valid dictionary
+        with open(VALID_DICT_FILE, 'wb') as f:
+            f.write(orjson.dumps(self.valid_dict, option=orjson.OPT_INDENT_2))
+        logger.info(f"Updated {VALID_DICT_FILE}")
+        
+        # Save invalid words list (sorted)
+        with open(INVALID_WORDS_FILE, 'w', encoding='utf-8') as f:
+            for word in sorted(self.invalid_words):
+                f.write(f"{word}\n")
+        logger.info(f"Updated {INVALID_WORDS_FILE} with {len(self.invalid_words)} words")
+        
+        # Save invalid dictionary  
+        with open(INVALID_DICT_FILE, 'wb') as f:
+            f.write(orjson.dumps(self.invalid_dict, option=orjson.OPT_INDENT_2))
+        logger.info(f"Updated {INVALID_DICT_FILE}")
+    
     def add_valid_word(
         self,
         word: str,
@@ -252,7 +285,8 @@ class DataUpdater:
     def run_update(
         self,
         new_valid_words: list[dict],
-        output_dir: Optional[Path] = None
+        output_dir: Optional[Path] = None,
+        update_source_files: bool = True
     ) -> UpdateStats:
         """
         Run a full update cycle.
@@ -260,6 +294,7 @@ class DataUpdater:
         Args:
             new_valid_words: List of dicts with 'word' and optional metadata
             output_dir: Directory to save updated data
+            update_source_files: If True, also update the source files in initial_deliverables/
             
         Returns:
             UpdateStats with summary of changes
@@ -297,8 +332,12 @@ class DataUpdater:
         self.stats.total_valid_after = len(self.data_manager.valid_words)
         self.stats.total_invalid_after = len(self.data_manager.invalid_words)
         
-        # Save updated data
+        # Save updated data to release directory
         self.data_manager.save_data(output_dir)
+        
+        # Also update the source files so changes persist
+        if update_source_files:
+            self.data_manager.save_source_files()
         
         logger.info(f"Update complete: +{self.stats.words_added_to_valid} valid, "
                    f"-{self.stats.words_removed_from_invalid} invalid")

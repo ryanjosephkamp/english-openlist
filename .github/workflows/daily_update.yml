@@ -4,8 +4,8 @@
 # This workflow runs daily at 00:00 UTC to:
 # 1. Validate ~1,000 words from the invalid list against MW APIs
 # 2. Promote validated words to the valid list
-# 3. Track progress for long-term recovery
-# 4. Push updates to Hugging Face Datasets
+# 3. Update source files and commit changes back to repo
+# 4. Push full word lists to Hugging Face Datasets
 #
 # Also runs new word discovery from RSS/manual additions
 #
@@ -51,6 +51,7 @@ jobs:
         with:
           lfs: true
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -86,6 +87,29 @@ jobs:
         run: |
           LIMIT="${{ github.event.inputs.validation_limit || '1000' }}"
           python scripts/validate_invalid_list.py --limit $LIMIT
+      
+      # Step 3: Commit updated source files back to repo
+      - name: Commit changes to repository
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # Add updated source files
+          git add initial_deliverables/merged_valid_words.txt
+          git add initial_deliverables/merged_valid_dict.json
+          git add initial_deliverables/merged_invalid_words.txt
+          git add initial_deliverables/merged_invalid_dict.json
+          git add validation_progress.json
+          git add output/
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Daily update: ${{ steps.date.outputs.date }}"
+            git push
+            echo "Changes committed and pushed"
+          fi
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

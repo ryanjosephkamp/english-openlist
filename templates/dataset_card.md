@@ -51,16 +51,39 @@ English OpenList is a comprehensive, continuously updated dictionary of valid En
 
 ## Dataset Structure
 
-### Latest Release
+### Full Word Lists (data/)
+
+**These are the complete, up-to-date word lists that most users will want to download:**
+
+```
+data/
+├── merged_valid_words.txt      # FULL valid word list (378,666+ words, one per line)
+├── merged_valid_dict.json      # FULL dictionary with metadata for all valid words
+├── merged_invalid_words.txt    # FULL invalid/rejected entries list
+└── merged_invalid_dict.json    # FULL invalid dictionary with rejection reasons
+```
+
+### Daily Releases (releases/)
+
+Daily updates with changelog and statistics:
+
+```
+releases/
+└── {YYYY-MM-DD}/
+    ├── promoted_words.txt      # Words promoted from invalid to valid that day
+    ├── update_stats.json       # Statistics for the update
+    └── CHANGELOG.md            # Changelog for the update
+```
+
+### Latest Update Reference (latest/)
+
+Copy of the most recent release for convenience:
 
 ```
 latest/
-├── merged_valid_words.txt      # All valid words (one per line)
-├── merged_valid_dict.json      # Full metadata dictionary
-├── merged_invalid_words.txt    # Rejected/invalid entries
-├── CHANGELOG.md                # Recent changes
-└── stats/
-    └── update_statistics.csv   # Update metrics
+├── promoted_words.txt
+├── update_stats.json
+└── CHANGELOG.md
 ```
 
 ### Data Fields
@@ -93,7 +116,7 @@ Words are included if they:
 |--------|-------|
 | Total Valid Words | 378,666+ |
 | Total Invalid Entries | 9,275,000+ |
-| Update Frequency | Weekly (Sunday 00:00 UTC) |
+| Update Frequency | Daily (00:00 UTC) |
 | Primary Source | Merriam-Webster Collegiate Dictionary |
 
 ## Usage
@@ -113,12 +136,27 @@ for entry in dataset:
 
 ### Direct Download
 
-```bash
-# Download latest valid words
-wget https://huggingface.co/datasets/english-openlist/english-openlist/resolve/main/latest/merged_valid_words.txt
+**Download the complete word lists:**
 
-# Download specific release
-wget https://huggingface.co/datasets/english-openlist/english-openlist/resolve/main/releases/2026-01-12/valid.zip
+```bash
+# Download FULL valid words list (378,666+ words)
+wget https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_valid_words.txt
+
+# Download FULL valid dictionary with metadata
+wget https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_valid_dict.json
+
+# Download FULL invalid words list (for reference)
+wget https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_invalid_words.txt
+
+# Download FULL invalid dictionary
+wget https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_invalid_dict.json
+```
+
+**Download daily release files:**
+
+```bash
+# Download a specific day's update
+wget https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/releases/2026-01-19/CHANGELOG.md
 ```
 
 ### Python (Raw Files)
@@ -162,11 +200,12 @@ Multi-stage AI validation using Gemini 2.0/2.5 Flash:
 
 ### Phase 3: Continuous Updates (January 2026 - Ongoing)
 
-Weekly automated pipeline:
-1. Scrape Merriam-Webster for new words
-2. Validate against Scrabble rules
-3. Update word lists and dictionaries
-4. Push to Hugging Face with changelog
+Daily automated pipeline:
+1. Discover new words from Merriam-Webster RSS feed and manual additions
+2. Validate ~1,000 words from invalid list against dictionary APIs
+3. Promote validated words to the valid list
+4. Update full word lists and dictionaries on Hugging Face
+5. Generate changelog and statistics
 
 ## Citation
 
