@@ -2,9 +2,9 @@
 # English OpenList Phase 3 - Invalid List Recovery
 #
 # This workflow runs daily at 00:00 UTC to:
-# 1. Validate ~1,000 words from the invalid list against MW APIs
-# 2. Promote validated words to the valid list
-# 3. Update source files and commit changes back to repo
+# 1. Download current word lists from Hugging Face
+# 2. Validate ~1,000 words from the invalid list against MW APIs
+# 3. Promote validated words to the valid list
 # 4. Push full word lists to Hugging Face Datasets
 #
 # Also runs new word discovery from RSS/manual additions
@@ -15,8 +15,8 @@ name: Daily Dictionary Update
 
 on:
   schedule:
-    # Run every day at 00:00 UTC
-    - cron: '0 0 * * *'
+    # TEMPORARY: Run at 16:57 UTC for testing (will revert to daily at 00:00 UTC)
+    - cron: '57 16 * * *'
   
   # Allow manual trigger
   workflow_dispatch:
@@ -69,6 +69,14 @@ jobs:
         id: date
         run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
       
+      # Step 0: Download current data from Hugging Face
+      # (Data is stored on HF, not in git repo, so we need to download it first)
+      - name: Download data from Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python scripts/download_from_huggingface.py --method snapshot
+      
       # Step 1: New Word Discovery (RSS + manual additions)
       - name: Run new word discovery
         env:
@@ -89,18 +97,16 @@ jobs:
           python scripts/validate_invalid_list.py --limit $LIMIT
       
       # Step 3: Commit updated source files back to repo
+      # Note: Word list files are stored on Hugging Face (not in git), 
+      # so we only commit validation progress and output metadata
       - name: Commit changes to repository
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          # Add updated source files
-          git add initial_deliverables/merged_valid_words.txt
-          git add initial_deliverables/merged_valid_dict.json
-          git add initial_deliverables/merged_invalid_words.txt
-          git add initial_deliverables/merged_invalid_dict.json
-          git add validation_progress.json
-          git add output/
+          # Add files that ARE tracked in git (validation progress only)
+          git add validation_progress.json || true
+          git add output/ || true
           
           # Check if there are changes to commit
           if git diff --staged --quiet; then
