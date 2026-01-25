@@ -15,8 +15,8 @@ name: Daily Dictionary Update
 
 on:
   schedule:
-    # TEMPORARY: Run at 16:57 UTC for testing (will revert to daily at 00:00 UTC)
-    - cron: '57 16 * * *'
+    # Run every day at 00:00 UTC
+    - cron: '0 0 * * *'
   
   # Allow manual trigger
   workflow_dispatch:
