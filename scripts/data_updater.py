@@ -168,11 +168,14 @@ class DataManager:
                 f.write(f"{word}\n")
         logger.info(f"Saved {len(self.invalid_words)} invalid words")
         
-        # Save invalid dictionary
-        invalid_dict_file = output_dir / "merged_invalid_dict.json"
-        with open(invalid_dict_file, 'wb') as f:
-            f.write(orjson.dumps(self.invalid_dict, option=orjson.OPT_INDENT_2))
-        logger.info(f"Saved invalid dictionary")
+        # Save invalid dictionary (only if we have data - it may be skipped for space)
+        if self.invalid_dict:
+            invalid_dict_file = output_dir / "merged_invalid_dict.json"
+            with open(invalid_dict_file, 'wb') as f:
+                f.write(orjson.dumps(self.invalid_dict, option=orjson.OPT_INDENT_2))
+            logger.info(f"Saved invalid dictionary")
+        else:
+            logger.info("Skipping invalid dictionary (no data loaded)")
     
     def save_source_files(self) -> None:
         """
@@ -202,10 +205,13 @@ class DataManager:
                 f.write(f"{word}\n")
         logger.info(f"Updated {INVALID_WORDS_FILE} with {len(self.invalid_words)} words")
         
-        # Save invalid dictionary  
-        with open(INVALID_DICT_FILE, 'wb') as f:
-            f.write(orjson.dumps(self.invalid_dict, option=orjson.OPT_INDENT_2))
-        logger.info(f"Updated {INVALID_DICT_FILE}")
+        # Save invalid dictionary (only if we have data - it may be skipped for space)
+        if self.invalid_dict:
+            with open(INVALID_DICT_FILE, 'wb') as f:
+                f.write(orjson.dumps(self.invalid_dict, option=orjson.OPT_INDENT_2))
+            logger.info(f"Updated {INVALID_DICT_FILE}")
+        else:
+            logger.info(f"Skipping {INVALID_DICT_FILE} (no data loaded)")
     
     def add_valid_word(
         self,

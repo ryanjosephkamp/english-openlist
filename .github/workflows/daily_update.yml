@@ -71,11 +71,12 @@ jobs:
       
       # Step 0: Download current data from Hugging Face
       # (Data is stored on HF, not in git repo, so we need to download it first)
+      # Skip the large 11GB invalid dict to save disk space on the runner
       - name: Download data from Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          python scripts/download_from_huggingface.py --method snapshot
+          python scripts/download_from_huggingface.py --method snapshot --skip-large-dicts
       
       # Step 1: New Word Discovery (RSS + manual additions)
       - name: Run new word discovery

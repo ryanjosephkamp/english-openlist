@@ -80,7 +80,7 @@ class HuggingFaceDownloader:
             logger.error(f"Failed to download {remote_path}: {e}")
             return False
     
-    def download_all_wordlists(self) -> bool:
+    def download_all_wordlists(self, skip_large_dicts: bool = False) -> bool:
         """
         Download all word lists from Hugging Face.
         
@@ -88,10 +88,13 @@ class HuggingFaceDownloader:
         - data/merged_valid_words.txt -> initial_deliverables/merged_valid_words.txt
         - data/merged_valid_dict.json -> initial_deliverables/merged_valid_dict.json
         - data/merged_invalid_words.txt -> initial_deliverables/merged_invalid_words.txt
-        - data/merged_invalid_dict.json -> initial_deliverables/merged_invalid_dict.json
+        - data/merged_invalid_dict.json -> initial_deliverables/merged_invalid_dict.json (optional)
+        
+        Args:
+            skip_large_dicts: If True, skip downloading the large invalid dict (11GB+)
         
         Returns:
-            True if all downloads successful
+            True if all required downloads successful
         """
         # Ensure output directory exists
         INITIAL_DELIVERABLES.mkdir(parents=True, exist_ok=True)
@@ -100,8 +103,13 @@ class HuggingFaceDownloader:
             ("data/merged_valid_words.txt", VALID_WORDS_FILE),
             ("data/merged_valid_dict.json", VALID_DICT_FILE),
             ("data/merged_invalid_words.txt", INVALID_WORDS_FILE),
-            ("data/merged_invalid_dict.json", INVALID_DICT_FILE),
         ]
+        
+        # Only download the large invalid dict if not skipping
+        if not skip_large_dicts:
+            files_to_download.append(("data/merged_invalid_dict.json", INVALID_DICT_FILE))
+        else:
+            logger.info("Skipping large invalid dict download (--skip-large-dicts)")
         
         all_success = True
         for remote_path, local_path in files_to_download:
@@ -111,10 +119,13 @@ class HuggingFaceDownloader:
         
         return all_success
     
-    def download_with_snapshot(self) -> bool:
+    def download_with_snapshot(self, skip_large_dicts: bool = False) -> bool:
         """
         Alternative download method using snapshot_download.
         Downloads only the data/ folder.
+        
+        Args:
+            skip_large_dicts: If True, skip downloading the large invalid dict (11GB+)
         
         Returns:
             True if download successful
@@ -126,12 +137,22 @@ class HuggingFaceDownloader:
             # Ensure output directory exists
             INITIAL_DELIVERABLES.mkdir(parents=True, exist_ok=True)
             
+            # Define patterns - exclude the huge invalid dict if requested
+            allow_patterns = ["data/merged_valid_words.txt", 
+                            "data/merged_valid_dict.json",
+                            "data/merged_invalid_words.txt"]
+            
+            if not skip_large_dicts:
+                allow_patterns.append("data/merged_invalid_dict.json")
+            else:
+                logger.info("Skipping large invalid dict download (--skip-large-dicts)")
+            
             # Download the data folder
             local_dir = snapshot_download(
                 repo_id=self.repo_id,
                 repo_type="dataset",
                 token=self.token if self.token else None,
-                allow_patterns=["data/*"],
+                allow_patterns=allow_patterns,
                 local_dir_use_symlinks=False
             )
             
@@ -157,6 +178,8 @@ def main():
     parser = argparse.ArgumentParser(description="Download English OpenList from Hugging Face")
     parser.add_argument("--method", choices=["individual", "snapshot"], default="snapshot",
                        help="Download method: individual files or snapshot")
+    parser.add_argument("--skip-large-dicts", action="store_true",
+                       help="Skip downloading the large invalid dict (11GB+) to save space")
     args = parser.parse_args()
     
     print("=" * 60)
@@ -164,14 +187,16 @@ def main():
     print("=" * 60)
     print(f"Repository: {HF_DATASET_REPO}")
     print(f"Target directory: {INITIAL_DELIVERABLES}")
+    if args.skip_large_dicts:
+        print("Skipping large dictionary files to save disk space")
     print()
     
     downloader = HuggingFaceDownloader()
     
     if args.method == "snapshot":
-        success = downloader.download_with_snapshot()
+        success = downloader.download_with_snapshot(skip_large_dicts=args.skip_large_dicts)
     else:
-        success = downloader.download_all_wordlists()
+        success = downloader.download_all_wordlists(skip_large_dicts=args.skip_large_dicts)
     
     if success:
         print("\n✓ Download successful!")
