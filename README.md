@@ -4,10 +4,12 @@
 
 Phase 3 transforms the English OpenList from a static dataset into a **living, continuously updated lexical resource**. This phase implements:
 
-- 🔄 **Weekly automated dictionary scraping** via GitHub Actions
+- 🔄 **Daily automated word discovery** via GitHub Actions
+- 🔍 **Multi-source discovery** from Merriam-Webster RSS, MW New Words page, and Wordnik API
+- 🔎 **Invalid list recovery** - validates ~1,000 words/day from the invalid list
 - 📦 **Public distribution** on Hugging Face Datasets
 - 📊 **Statistical reports and visualizations** for each update
-- 📝 **Version-controlled releases** with changelogs
+- 📝 **Version-controlled releases** with consolidated changelogs
 
 ## Quick Start
 
@@ -24,11 +26,14 @@ Create a `.env` file or set environment variables:
 
 ```bash
 export MW_API_KEY="your-merriam-webster-api-key"
+export MW_MEDICAL_API_KEY="your-merriam-webster-medical-api-key"  # Optional
+export WORDNIK_API_KEY="your-wordnik-api-key"  # Optional, for Word of the Day
 export HF_TOKEN="your-huggingface-token"
 ```
 
 Get your API keys:
 - **Merriam-Webster:** [dictionaryapi.com](https://www.dictionaryapi.com/) (Free tier: 1000 requests/day)
+- **Wordnik:** [developer.wordnik.com](https://developer.wordnik.com/) (Free tier: 100 requests/day)
 - **Hugging Face:** [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
 ### 3. Run Manual Update
@@ -60,7 +65,10 @@ phase3/
 │   ├── dictionary_api.py       # Merriam-Webster API wrapper
 │   ├── word_validator.py       # Scrabble-compatible validation
 │   ├── data_updater.py         # List/dictionary update logic
-│   ├── run_weekly_update.py    # Main orchestration script
+│   ├── run_weekly_update.py    # Main orchestration (new word discovery)
+│   ├── validate_invalid_list.py # Invalid list recovery pipeline
+│   ├── generate_changelog.py   # Consolidated changelog generator
+│   ├── download_from_huggingface.py # Download data from HF
 │   └── push_to_huggingface.py  # Hugging Face upload
 ├── templates/
 │   ├── dataset_card.md         # Hugging Face README template
@@ -74,7 +82,21 @@ phase3/
 
 ## GitHub Actions Automation
 
-The workflow at `.github/workflows/weekly_update.yml` runs every Sunday at 00:00 UTC.
+The workflow at `.github/workflows/daily_update.yml` runs **daily at 00:00 UTC**.
+
+### Daily Pipeline
+
+1. **New Word Discovery** - Discovers words from multiple sources:
+   - Merriam-Webster RSS feed (Word of the Day)
+   - Merriam-Webster "New Words in the Dictionary" page
+   - Wordnik Word of the Day (past 30 days)
+   - Manual additions file (`manual_additions.txt`)
+
+2. **Invalid List Validation** - Validates ~1,000 words/day from the invalid list against MW API, promoting valid words
+
+3. **Changelog Generation** - Creates consolidated changelog with all changes
+
+4. **Hugging Face Upload** - Pushes updated word lists to HF Datasets
 
 ### Required Secrets
 
@@ -82,12 +104,17 @@ Set these in your GitHub repository settings:
 
 | Secret | Description |
 |--------|-------------|
-| `MW_API_KEY` | Merriam-Webster API key |
+| `MW_API_KEY` | Merriam-Webster Collegiate API key |
+| `MW_MEDICAL_API_KEY` | Merriam-Webster Medical API key (optional) |
+| `WORDNIK_API_KEY` | Wordnik API key (optional, for WOTD discovery) |
 | `HF_TOKEN` | Hugging Face write token |
 
 ### Manual Trigger
 
-You can trigger the workflow manually from the GitHub Actions tab.
+You can trigger the workflow manually from the GitHub Actions tab with optional parameters:
+- `validation_limit` - Number of invalid words to validate (default: 1000)
+- `skip_upload` - Skip uploading to Hugging Face
+- `skip_invalid_validation` - Skip invalid list validation
 
 ## Validation Rules
 
@@ -101,7 +128,7 @@ Words are valid if they:
 
 ## Output Files
 
-Each weekly release generates:
+Each daily release generates (in `output/YYYY-MM-DD/`):
 
 | File | Description |
 |------|-------------|
@@ -109,7 +136,8 @@ Each weekly release generates:
 | `merged_valid_dict.json` | Updated valid dictionary |
 | `merged_invalid_words.txt` | Updated invalid list |
 | `merged_invalid_dict.json` | Updated invalid dictionary |
-| `CHANGELOG.md` | Summary of changes |
+| `promoted_words.txt` | Words promoted from invalid → valid today |
+| `CHANGELOG.md` | Consolidated summary of all changes |
 | `update_stats.json` | Machine-readable statistics |
 
 ## Testing
@@ -124,6 +152,18 @@ pytest tests/ -v
 - [PHASE3_STRATEGY.md](PHASE3_STRATEGY.md) - Full strategy and architecture
 - [templates/dataset_card.md](templates/dataset_card.md) - Hugging Face dataset description
 
+## Word Discovery Sources
+
+The pipeline automatically discovers new words from multiple sources:
+
+| Source | Description | Frequency |
+|--------|-------------|----------|
+| MW RSS Feed | Merriam-Webster Word of the Day | Daily |
+| MW New Words Page | Newly added dictionary entries | Daily |
+| Wordnik WOTD | Wordnik Word of the Day (past 30 days) | Daily |
+| Manual Additions | `manual_additions.txt` file | On commit |
+| Invalid List Recovery | Validates candidates from invalid list | ~1,000/day |
+
 ## Status
 
 | Component | Status |
@@ -134,10 +174,14 @@ pytest tests/ -v
 | Word Validator | ✅ Complete |
 | Data Updater | ✅ Complete |
 | Main Pipeline | ✅ Complete |
+| Multi-Source Discovery | ✅ Complete |
+| Invalid List Validator | ✅ Complete |
+| Abbreviation Filtering | ✅ Complete |
+| Consolidated Changelog | ✅ Complete |
 | HF Uploader | ✅ Complete |
 | GitHub Actions | ✅ Complete |
 | Unit Tests | ✅ Complete |
-| Integration Testing | ⏳ Pending |
+| Integration Testing | ✅ Complete |
 | First Live Update | ⏳ Pending |
 
 ---
