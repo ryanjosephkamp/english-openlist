@@ -49,18 +49,24 @@ class NewWordDiscoverer:
     
     Sources:
     1. Merriam-Webster RSS feed for "Word of the Day"
-    2. Merriam-Webster "Words at Play" for new additions
-    3. Manual word list (for testing/additions)
+    2. Merriam-Webster "New Words" page (newly added dictionary entries)
+    3. Wordnik Word of the Day (past N days)
+    4. Manual word list (for testing/additions) - kept as fallback
     """
     
     def __init__(self):
         self.discovered_words: list[str] = []
+        self._http_headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
     
     async def discover_from_rss(self) -> list[str]:
         """
         Parse Merriam-Webster RSS feed for words.
         
         Note: This discovers the Word of the Day, not necessarily new words.
+        The RSS feed format uses the word directly as the title (e.g., "oaf")
+        rather than "Word of the Day: oaf".
         """
         try:
             import feedparser
@@ -76,14 +82,24 @@ class NewWordDiscoverer:
             
             words = []
             for entry in feed.entries:
-                # Extract word from title (format: "Word of the Day: {word}")
-                title = entry.get("title", "")
+                title = entry.get("title", "").strip()
+                
+                # Handle both formats:
+                # 1. Old format: "Word of the Day: {word}"
+                # 2. Current format: just the word (e.g., "oaf")
                 if ":" in title:
                     word = title.split(":")[-1].strip().lower()
-                    if word:
-                        words.append(word)
+                elif title:
+                    # Title is just the word itself
+                    word = title.lower()
+                else:
+                    continue
+                
+                # Basic validation: only alphabetic words
+                if word and word.isalpha():
+                    words.append(word)
             
-            logger.info(f"Discovered {len(words)} words from RSS feed")
+            logger.info(f"Discovered {len(words)} words from MW RSS feed")
             return words
             
         except ImportError:
@@ -93,12 +109,143 @@ class NewWordDiscoverer:
             logger.error(f"Error parsing RSS feed: {e}")
             return []
     
+    async def discover_from_mw_new_words_page(self) -> list[str]:
+        """
+        Scrape Merriam-Webster's "New Words in the Dictionary" page.
+        
+        This page announces newly added words to the dictionary - the best source
+        for truly new dictionary entries.
+        
+        Returns:
+            List of newly added words from the page
+        """
+        try:
+            import httpx
+            from bs4 import BeautifulSoup
+            import re
+            from config import NEW_WORD_SOURCES
+            
+            url = NEW_WORD_SOURCES.get("merriam_webster_new_words")
+            if not url:
+                return []
+            
+            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+                response = await client.get(url, headers=self._http_headers)
+                
+                if response.status_code != 200:
+                    logger.warning(f"MW new words page returned status {response.status_code}")
+                    return []
+                
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                # Find the main article content
+                main_content = soup.find('div', class_=re.compile(r'wap-article-content|article-body|entry-content'))
+                if not main_content:
+                    logger.warning("Could not find main content on MW new words page")
+                    return []
+                
+                words = set()
+                
+                # Method 1: Find all dictionary links (most reliable)
+                for link in main_content.find_all('a', href=lambda x: x and '/dictionary/' in x):
+                    href = link.get('href', '')
+                    word = href.split('/dictionary/')[-1].split('?')[0].split('#')[0]
+                    word = word.replace('%20', ' ')
+                    # Only single alphabetic words (Scrabble-compatible)
+                    if word and ' ' not in word and word.isalpha() and len(word) > 1:
+                        words.add(word.lower())
+                
+                # Method 2: Find italic/emphasized text (often marks new words)
+                for em in main_content.find_all(['em', 'i']):
+                    text = em.get_text().strip()
+                    if text and len(text) > 1 and len(text) < 25 and text.isalpha():
+                        words.add(text.lower())
+                
+                logger.info(f"Discovered {len(words)} words from MW new words page")
+                return list(words)
+                
+        except ImportError as e:
+            logger.warning(f"Required package not installed for MW scraping: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Error scraping MW new words page: {e}")
+            return []
+    
+    async def discover_from_wordnik(self) -> list[str]:
+        """
+        Discover words from Wordnik's Word of the Day.
+        
+        Fetches the past N days of Word of the Day to find interesting words.
+        Note: Wordnik Basic plan has API rate limits (100 calls/day).
+        
+        Returns:
+            List of words from Wordnik Word of the Day
+        """
+        try:
+            import httpx
+            from datetime import timedelta
+            from config import WORDNIK_API_KEY, NEW_WORD_SOURCES, WORDNIK_WOTD_LOOKBACK_DAYS
+            
+            if not WORDNIK_API_KEY:
+                logger.debug("No Wordnik API key configured, skipping Wordnik discovery")
+                return []
+            
+            base_url = NEW_WORD_SOURCES.get("wordnik_wotd")
+            if not base_url:
+                return []
+            
+            words = []
+            
+            async with httpx.AsyncClient(timeout=15) as client:
+                # Fetch Word of the Day for the past N days
+                # Use fewer days to stay within rate limits
+                days_to_fetch = min(WORDNIK_WOTD_LOOKBACK_DAYS, 30)
+                
+                for days_ago in range(days_to_fetch):
+                    date = datetime.now() - timedelta(days=days_ago)
+                    date_str = date.strftime("%Y-%m-%d")
+                    
+                    try:
+                        response = await client.get(
+                            base_url,
+                            params={"api_key": WORDNIK_API_KEY, "date": date_str}
+                        )
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            word = data.get('word', '')
+                            if word and word.isalpha():
+                                words.append(word.lower())
+                        elif response.status_code == 429:
+                            # Rate limited - stop fetching
+                            logger.warning("Wordnik API rate limit reached, stopping fetch")
+                            break
+                        
+                        # Small delay to be respectful of API
+                        await asyncio.sleep(0.2)
+                        
+                    except Exception as e:
+                        logger.debug(f"Error fetching Wordnik WOTD for {date_str}: {e}")
+                        continue
+            
+            # Deduplicate
+            unique_words = list(set(words))
+            logger.info(f"Discovered {len(unique_words)} words from Wordnik WOTD")
+            return unique_words
+            
+        except ImportError:
+            logger.warning("httpx not installed, skipping Wordnik discovery")
+            return []
+        except Exception as e:
+            logger.error(f"Error fetching from Wordnik: {e}")
+            return []
+    
     async def discover_from_manual_list(self, filepath: Path) -> list[str]:
         """
         Read words from a manual additions file.
         
         Args:
-            filepath: Path to file with one word per line
+            filepath: Path to file with one word per line (lines starting with # are comments)
             
         Returns:
             List of words from the file
@@ -108,8 +255,14 @@ class NewWordDiscoverer:
         
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                words = [line.strip().lower() for line in f if line.strip()]
-            logger.info(f"Loaded {len(words)} words from manual list")
+                words = []
+                for line in f:
+                    line = line.strip().lower()
+                    # Skip empty lines and comments
+                    if line and not line.startswith('#') and line.isalpha():
+                        words.append(line)
+            if words:
+                logger.info(f"Loaded {len(words)} words from manual list")
             return words
         except Exception as e:
             logger.error(f"Error reading manual word list: {e}")
@@ -124,11 +277,19 @@ class NewWordDiscoverer:
         """
         all_words = set()
         
-        # RSS feed
+        # 1. Merriam-Webster RSS feed (Word of the Day)
         rss_words = await self.discover_from_rss()
         all_words.update(rss_words)
         
-        # Manual additions file
+        # 2. Merriam-Webster "New Words" page (best source for new additions)
+        mw_new_words = await self.discover_from_mw_new_words_page()
+        all_words.update(mw_new_words)
+        
+        # 3. Wordnik Word of the Day
+        wordnik_words = await self.discover_from_wordnik()
+        all_words.update(wordnik_words)
+        
+        # 4. Manual additions file (fallback/testing)
         manual_file = PHASE3_ROOT / "manual_additions.txt"
         manual_words = await self.discover_from_manual_list(manual_file)
         all_words.update(manual_words)
@@ -215,6 +376,8 @@ class WeeklyUpdatePipeline:
                     logger.debug(f"  ✓ {word} - valid")
                 elif result.status == WordStatus.PROPER_NOUN:
                     logger.debug(f"  ✗ {word} - proper noun")
+                elif result.status == WordStatus.ABBREVIATION:
+                    logger.debug(f"  ✗ {word} - abbreviation/acronym")
                 elif result.status == WordStatus.NOT_FOUND:
                     logger.debug(f"  ✗ {word} - not in dictionary")
                 else:

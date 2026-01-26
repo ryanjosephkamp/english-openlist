@@ -347,6 +347,9 @@ class InvalidListValidator:
             elif result.status == WordStatus.PROPER_NOUN:
                 still_invalid.append(word)
                 logger.debug(f"❌ Proper noun: {word}")
+            elif result.status == WordStatus.ABBREVIATION:
+                still_invalid.append(word)
+                logger.debug(f"❌ Abbreviation/acronym: {word}")
             else:
                 still_invalid.append(word)
         

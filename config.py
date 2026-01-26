@@ -132,8 +132,16 @@ LOG_FILE = PHASE3_ROOT / "logs" / "update_pipeline.log"
 
 NEW_WORD_SOURCES = {
     "merriam_webster_rss": "https://www.merriam-webster.com/wotd/feed/rss2",
-    "merriam_webster_new_words": "https://www.merriam-webster.com/words-at-play",
+    "merriam_webster_new_words": "https://www.merriam-webster.com/wordplay/new-words-in-the-dictionary",
+    "wordnik_wotd": "https://api.wordnik.com/v4/words.json/wordOfTheDay",
 }
+
+# Wordnik API rate limits (Basic/Free plan)
+WORDNIK_DAILY_LIMIT = 100  # API calls per day
+WORDNIK_WOTD_LOOKBACK_DAYS = 30  # How many days of Word of the Day to fetch
+
+# Discovery tracking (to avoid re-processing same words)
+DISCOVERED_WORDS_CACHE = PHASE3_ROOT / "discovered_words_cache.json"
 
 # =============================================================================
 # ERROR HANDLING

@@ -97,6 +97,13 @@ jobs:
           LIMIT="${{ github.event.inputs.validation_limit || '1000' }}"
           python scripts/validate_invalid_list.py --limit $LIMIT
       
+      # Step 2.5: Generate consolidated changelog
+      # This runs after both new word discovery and invalid list validation
+      # to produce a unified changelog with all changes
+      - name: Generate consolidated changelog
+        run: |
+          python scripts/generate_changelog.py
+      
       # Step 3: Commit updated source files back to repo
       # Note: Word list files are stored on Hugging Face (not in git), 
       # so we only commit validation progress and output metadata

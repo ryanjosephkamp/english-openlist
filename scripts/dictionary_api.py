@@ -37,6 +37,7 @@ class WordStatus(Enum):
     INVALID = "invalid"
     NOT_FOUND = "not_found"
     PROPER_NOUN = "proper_noun"
+    ABBREVIATION = "abbreviation"
     ERROR = "error"
 
 
@@ -169,6 +170,15 @@ class MerriamWebsterAPI:
                 source="merriam-webster"
             )
         
+        # Check if it's an abbreviation or acronym
+        if self._is_abbreviation(entry):
+            return WordLookupResult(
+                word=word,
+                status=WordStatus.ABBREVIATION,
+                source="merriam-webster",
+                raw_response=entry
+            )
+        
         # Check if it's a proper noun
         if self._is_proper_noun(entry):
             return WordLookupResult(
@@ -227,20 +237,47 @@ class MerriamWebsterAPI:
         # No match found
         return False
     
+    def _is_abbreviation(self, entry: dict) -> bool:
+        """
+        Detect if an entry is an abbreviation or acronym.
+        
+        Indicators:
+        - Functional label (fl) contains "abbreviation"
+        - Headword is all uppercase (e.g., "NASA", "FYI", "ASAP")
+        """
+        # Check functional label for "abbreviation"
+        fl = entry.get("fl", "").lower()
+        if "abbreviation" in fl:
+            return True
+        
+        # Check if headword is all uppercase (typical for acronyms)
+        hwi = entry.get("hwi", {})
+        hw = hwi.get("hw", "")
+        clean_hw = hw.replace("*", "")
+        if clean_hw and len(clean_hw) > 1 and clean_hw.isupper():
+            return True
+        
+        return False
+    
     def _is_proper_noun(self, entry: dict) -> bool:
         """
         Detect if an entry is a proper noun.
         
         Indicators:
-        - Headword is capitalized
+        - Headword is capitalized (but not all caps - that's an acronym)
         - Section is "biog" (biographical) or "geog" (geographical)
-        - Certain definition patterns
         """
         # Check headword capitalization
         hwi = entry.get("hwi", {})
         hw = hwi.get("hw", "")
         # Remove syllable markers and check first letter
         clean_hw = hw.replace("*", "")
+        
+        # All uppercase = acronym, not proper noun (handled separately)
+        if clean_hw and clean_hw.isupper():
+            return False
+        
+        # First letter uppercase = proper noun
         if clean_hw and clean_hw[0].isupper():
             return True
         
