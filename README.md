@@ -182,7 +182,7 @@ The pipeline automatically discovers new words from multiple sources:
 | GitHub Actions | ✅ Complete |
 | Unit Tests | ✅ Complete |
 | Integration Testing | ✅ Complete |
-| First Live Update | ⏳ Pending |
+| First Live Update | ✅ Complete (94+ successful daily runs; workflow re-enabled after inactivity) |
 
 ---
 
