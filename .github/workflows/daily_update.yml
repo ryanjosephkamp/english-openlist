@@ -1,5 +1,5 @@
 # GitHub Actions Workflow: Daily Dictionary Validation
-# English OpenList Phase 3 - Invalid List Recovery
+# English OpenList Phase 3 - Invalid List Recovery + Blog Automation
 #
 # This workflow runs daily at 00:00 UTC to:
 # 1. Download current word lists from Hugging Face
