@@ -9,7 +9,7 @@ Output: _posts/YYYY-MM-DD-daily-update-N.md
 import json
 import csv
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import sys
 
@@ -57,7 +57,7 @@ def load_daily_data(release_dir: Path) -> dict:
     """Load all data needed for the blog post from the daily release folder."""
     data = {
         "date": get_release_date(),
-        "timestamp": datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
         "promoted_count": 0,
         "new_words_total": 0,
         "from_rss": 0,
@@ -115,7 +115,7 @@ def generate_blog_post():
     post_content = template
     post_content = post_content.replace("{{ update_number }}", str(update_number))
     post_content = post_content.replace("{{ date }}", release_date)
-    post_content = post_content.replace("{{ full_timestamp }}", datetime.now(datetime.UTC).isoformat() + "Z")
+    post_content = post_content.replace("{{ full_timestamp }}", datetime.now(timezone.utc).isoformat() + "Z")
     post_content = post_content.replace("{{ timestamp }}", daily_data["timestamp"])
     post_content = post_content.replace("{{ promoted_count }}", str(daily_data["promoted_count"]))
     post_content = post_content.replace("{{ new_words_total }}", str(daily_data["new_words_total"]))
@@ -142,7 +142,6 @@ def generate_blog_post():
     with open(post_path, "w", encoding="utf-8") as f:
         f.write(post_content)
 
-    # Verify the file was actually written
     if post_path.exists():
         logger.info(f"SUCCESS: Blog post written to {post_path} (size: {post_path.stat().st_size} bytes)")
     else:
