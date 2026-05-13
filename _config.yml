@@ -1,0 +1,43 @@
+title: English OpenList Blog
+description: Daily updates, statistics, and insights from the English OpenList project.
+
+# Theme
+remote_theme: just-the-docs/just-the-docs
+
+# URL settings
+url: "https://ryanjosephkamp.github.io"
+baseurl: "/english-openlist"
+
+# Just the Docs settings
+search_enabled: true
+heading_anchors: true
+color_scheme: light
+
+# Navigation
+nav_sort: case_insensitive
+
+# Exclude non-blog files from Jekyll build
+exclude:
+  - scripts/
+  - templates/
+  - tests/
+  - .github/
+  - docs/
+  - initial_deliverables/
+  - ENGLISH_OPENLIST_FINAL_COMPREHENSIVE_REPORT.md
+  - PHASE3_STRATEGY.md
+  - config.py
+  - requirements.txt
+  - .env.example
+  - .gitignore
+  - manual_additions.txt
+  - README.md
+  - updates/
+  - overall_stats.json
+
+# Plugins (optional but recommended)
+plugins:
+  - jekyll-seo-tag
+
+# Footer
+footer_content: "English OpenList is an open-source project. <a href=\"https://github.com/ryanjosephkamp/english-openlist\">View on GitHub</a>"
