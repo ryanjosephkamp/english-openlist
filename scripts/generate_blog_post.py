@@ -57,7 +57,7 @@ def load_daily_data(release_dir: Path) -> dict:
     """Load all data needed for the blog post from the daily release folder."""
     data = {
         "date": get_release_date(),
-        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M:%S"),
         "promoted_count": 0,
         "new_words_total": 0,
         "from_rss": 0,
@@ -69,15 +69,13 @@ def load_daily_data(release_dir: Path) -> dict:
         "promoted_words": ""
     }
 
-    # Try to load promoted_words.txt
     promoted_file = release_dir / "promoted_words.txt"
     if promoted_file.exists():
         with open(promoted_file, "r", encoding="utf-8") as f:
             lines = [l.strip() for l in f if l.strip()]
             data["promoted_count"] = len(lines)
-            data["promoted_words"] = "\n".join(lines[:20])  # show first 20
+            data["promoted_words"] = "\n".join(lines[:20])
 
-    # Try to load update_stats.json (if exists from pipeline)
     stats_file = release_dir / "update_stats.json"
     if stats_file.exists():
         stats = load_json(stats_file)
@@ -102,7 +100,6 @@ def generate_blog_post():
     update_number = get_next_update_number()
     daily_data = load_daily_data(release_dir)
 
-    # Prepare Chart.js data
     length_dist = overall.get("word_length_distribution", {})
     letter_dist = overall.get("starting_letter_distribution", {})
 
@@ -111,16 +108,14 @@ def generate_blog_post():
     letter_labels = json.dumps(list(letter_dist.keys()))
     letter_values = json.dumps(list(letter_dist.values()))
 
-    # Read template
     template_path = TEMPLATES_DIR / "daily_blog_post.md"
     with open(template_path, "r", encoding="utf-8") as f:
         template = f.read()
 
-    # Replace placeholders
     post_content = template
     post_content = post_content.replace("{{ update_number }}", str(update_number))
     post_content = post_content.replace("{{ date }}", release_date)
-    post_content = post_content.replace("{{ full_timestamp }}", datetime.utcnow().isoformat() + "Z")
+    post_content = post_content.replace("{{ full_timestamp }}", datetime.now(datetime.UTC).isoformat() + "Z")
     post_content = post_content.replace("{{ timestamp }}", daily_data["timestamp"])
     post_content = post_content.replace("{{ promoted_count }}", str(daily_data["promoted_count"]))
     post_content = post_content.replace("{{ new_words_total }}", str(daily_data["new_words_total"]))
@@ -138,9 +133,8 @@ def generate_blog_post():
     post_content = post_content.replace("{{ from_manual }}", str(daily_data["from_manual"]))
     post_content = post_content.replace("{{ promoted_words }}", daily_data["promoted_words"])
     post_content = post_content.replace("{{ prev_number }}", str(update_number - 1) if update_number > 1 else "N/A")
-    post_content = post_content.replace("{{ prev_url }}", "#")  # placeholder for now
+    post_content = post_content.replace("{{ prev_url }}", "#")
 
-    # Write final post
     BLOG_POSTS_DIR.mkdir(parents=True, exist_ok=True)
     post_filename = f"{release_date}-daily-update-{update_number}.md"
     post_path = BLOG_POSTS_DIR / post_filename
@@ -148,7 +142,13 @@ def generate_blog_post():
     with open(post_path, "w", encoding="utf-8") as f:
         f.write(post_content)
 
-    logger.info(f"Generated blog post: {post_path}")
+    # Verify the file was actually written
+    if post_path.exists():
+        logger.info(f"SUCCESS: Blog post written to {post_path} (size: {post_path.stat().st_size} bytes)")
+    else:
+        logger.error(f"FAILED to write blog post to {post_path}")
+        raise FileNotFoundError(f"Blog post was not created: {post_path}")
+
     return post_path
 
 
