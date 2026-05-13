@@ -35,7 +35,7 @@ ENV/
 *.swo
 
 # Output files (generated data is uploaded to HF, not stored in git)
-output/
+# output/   <-- temporarily commented out so blog/stats can be committed
 
 # Large data files (stored on Hugging Face, not in git)
 initial_deliverables/
