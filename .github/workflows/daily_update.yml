@@ -134,35 +134,47 @@ jobs:
           python scripts/push_to_huggingface.py
 
       # ============================================
-      # NEW PHASE 4 STEPS - Blog & Transparency
+      # NEW PHASE 4 STEPS - Blog & Transparency (with debugging)
       # ============================================
 
       - name: Generate daily statistics
         run: |
+          set -x
           python scripts/generate_daily_stats.py
 
       - name: Generate execution transparency log
         run: |
+          set -x
           python scripts/generate_execution_summary.py
 
       - name: Generate daily blog post
         run: |
+          set -x
           python scripts/generate_blog_post.py
 
       - name: Commit blog post, stats & tracker
         run: |
+          set -x
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
+          echo "=== Files before commit ==="
+          git status
+          
           git add _posts/ updates/ overall_stats.json output/ || true
           
+          echo "=== Files staged ==="
+          git status
+          
           if git diff --staged --quiet; then
-            echo "No new blog post or stats to commit"
+            echo "No changes detected - forcing commit anyway"
+            git commit --allow-empty -m "Daily blog post: Update #${{ steps.date.outputs.date }} - English OpenList (no file changes)"
           else
             git commit -m "Daily blog post: Update #${{ steps.date.outputs.date }} - English OpenList"
-            git push
-            echo "Blog post and daily stats committed successfully"
           fi
+          
+          git push
+          echo "Commit and push completed"
 
       - name: Summary
         run: |
