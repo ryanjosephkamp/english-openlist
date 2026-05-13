@@ -6,8 +6,7 @@
 # 2. Validate ~1,000 words from the invalid list against MW APIs
 # 3. Promote validated words to the valid list
 # 4. Push full word lists to Hugging Face Datasets
-#
-# Also runs new word discovery from RSS/manual additions
+# 5. Generate daily statistics, transparency log, and blog post
 #
 # Can be triggered manually via workflow_dispatch
 
@@ -73,8 +72,6 @@ jobs:
         run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
       
       # Step 0: Download current data from Hugging Face
-      # (Data is stored on HF, not in git repo, so we need to download it first)
-      # Skip the large 11GB invalid dict to save disk space on the runner
       - name: Download data from Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -101,25 +98,19 @@ jobs:
           python scripts/validate_invalid_list.py --limit $LIMIT
       
       # Step 2.5: Generate consolidated changelog
-      # This runs after both new word discovery and invalid list validation
-      # to produce a unified changelog with all changes
       - name: Generate consolidated changelog
         run: |
           python scripts/generate_changelog.py
       
       # Step 3: Commit updated source files back to repo
-      # Note: Word list files are stored on Hugging Face (not in git), 
-      # so we only commit validation progress and output metadata
       - name: Commit changes to repository
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          # Add files that ARE tracked in git (validation progress only)
           git add validation_progress.json || true
           git add output/ || true
           
-          # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
@@ -141,10 +132,44 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python scripts/push_to_huggingface.py
-      
+
+      # ============================================
+      # NEW PHASE 4 STEPS - Blog & Transparency
+      # ============================================
+
+      - name: Generate daily statistics
+        run: |
+          python scripts/generate_daily_stats.py
+
+      - name: Generate execution transparency log
+        run: |
+          python scripts/generate_execution_summary.py
+
+      - name: Generate daily blog post
+        run: |
+          python scripts/generate_blog_post.py
+
+      - name: Commit blog post, stats & tracker
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git add _posts/ updates/ overall_stats.json output/ || true
+          
+          if git diff --staged --quiet; then
+            echo "No new blog post or stats to commit"
+          else
+            git commit -m "Daily blog post: Update #${{ steps.date.outputs.date }} - English OpenList"
+            git push
+            echo "Blog post and daily stats committed successfully"
+          fi
+
       - name: Summary
         run: |
           echo "## Daily Update Summary - ${{ steps.date.outputs.date }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Blog & Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "Daily blog post and interactive charts generated successfully." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### New Word Discovery" >> $GITHUB_STEP_SUMMARY
           if [ -f output/${{ steps.date.outputs.date }}/update_stats.json ]; then
