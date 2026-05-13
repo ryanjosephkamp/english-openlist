@@ -26,6 +26,11 @@ SCRIPTS_DIR = PHASE3_ROOT / "scripts"
 OUTPUT_DIR = PHASE3_ROOT / "output"
 TEMPLATES_DIR = PHASE3_ROOT / "templates"
 
+# Blog & Statistics paths
+UPDATES_LOG_FILE = PROJECT_ROOT / "updates" / "updates_log.csv"
+OVERALL_STATS_FILE = PROJECT_ROOT / "overall_stats.json"
+BLOG_POSTS_DIR = PROJECT_ROOT / "_posts"
+
 # Input files (from Phases 1-2)
 VALID_WORDS_FILE = INITIAL_DELIVERABLES / "merged_valid_words.txt"
 VALID_DICT_FILE = INITIAL_DELIVERABLES / "merged_valid_dict.json"
