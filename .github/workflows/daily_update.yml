@@ -161,7 +161,7 @@ jobs:
           echo "=== Files before commit ==="
           git status
           
-          git add _posts/*.md updates/ overall_stats.json output/ || true
+          git add -A _posts/ updates/ overall_stats.json output/ || true
           
           echo "=== Files staged ==="
           git status
