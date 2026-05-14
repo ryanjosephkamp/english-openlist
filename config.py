@@ -19,8 +19,11 @@ load_dotenv(Path(__file__).parent / ".env")
 # =============================================================================
 
 # Base paths
-PHASE3_ROOT = Path(__file__).parent
-PROJECT_ROOT = PHASE3_ROOT.parent
+# config.py lives at the repository root. Keep PROJECT_ROOT pointed at this
+# directory so generated files such as _posts/, updates/, and overall_stats.json
+# are written inside the Git checkout and can be committed by GitHub Actions.
+PHASE3_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = PHASE3_ROOT
 INITIAL_DELIVERABLES = PHASE3_ROOT / "initial_deliverables"
 SCRIPTS_DIR = PHASE3_ROOT / "scripts"
 OUTPUT_DIR = PHASE3_ROOT / "output"
