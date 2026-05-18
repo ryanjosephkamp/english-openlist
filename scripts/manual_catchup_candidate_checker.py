@@ -15,19 +15,17 @@ CANDIDATES = [
     "idgaf",
     "maga",
     "snog",
-    # ← Add any additional candidates here later
+    # Add any additional candidates here later
 ]
 
-def passes_rules(word: str) -> tuple[bool, str]:
-    """Return (passes, reason)"""
-    original = word
-
+def passes_rules(original_candidate: str) -> tuple[bool, str]:
+    """Return (passes, reason). Original string is never modified."""
     # Must be a unigram (no spaces, no hyphens) — non-negotiable
-    if " " in original or "-" in original:
+    if " " in original_candidate or "-" in original_candidate:
         return False, "contains space or hyphen (unigrams only)"
 
-    # Lowercase and check only a-z
-    lower = original.lower()
+    # Lowercase for checking only
+    lower = original_candidate.lower()
     if not lower.isalpha():
         return False, "contains non-letter characters"
 
@@ -45,14 +43,14 @@ def main():
     passed = []
     rejected = []
 
-    for word in CANDIDATES:
-        passes, reason = passes_rules(word)
+    for original_candidate in CANDIDATES:
+        passes, reason = passes_rules(original_candidate)
         if passes:
-            passed.append(word.lower())
-            print(f"✅ PASSED: {word}")
+            passed.append(original_candidate.lower())
+            print(f"✅ PASSED: {original_candidate}")
         else:
-            rejected.append((word, reason))
-            print(f"❌ REJECTED: {word} → {reason}")
+            rejected.append((original_candidate, reason))
+            print(f"❌ REJECTED: {original_candidate} → {reason}")
 
     print("\n" + "=" * 70)
     print("SUMMARY")
