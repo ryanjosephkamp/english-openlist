@@ -1,0 +1,5 @@
+# OED Candidates (passed rule check)
+# One unigram per line
+# These are unique words extracted from OED monthly update posts
+# that passed the English OpenList inclusion rules.
+
