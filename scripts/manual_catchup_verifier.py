@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
 Manual Catch-up MW Verifier
-Validates OED new candidates using your existing Merriam-Webster API.
-Brand-new script — no existing files modified.
+Uses the correct function name lookup_word_sync from your repo.
 """
 
 import sys
 import json
 from pathlib import Path
 
-# Import your existing dictionary API (it must be in the same scripts/ folder or PYTHONPATH)
+# Add current directory to path so it can find dictionary_api
 sys.path.append(".")
-from dictionary_api import lookup_word
+
+# Correct import - use the function that actually exists
+from dictionary_api import lookup_word_sync
 
 def main():
     input_file = "manual_catchup_2026-05/oed_new_candidates_for_mw.txt"
@@ -30,21 +31,22 @@ def main():
 
     for i, word in enumerate(candidates, 1):
         print(f"[{i:3d}/{len(candidates)}] Checking: {word}")
-        result = lookup_word(word)
+        
+        # Use the correct function name
+        result = lookup_word_sync(word)
 
         if result and result.get("status") == "valid":
             valid_words.append(result)
             print(f"   ✅ VALID: {word}")
         else:
-            reason = result.get("reason", "MW API rejected or no definition") if result else "No API response"
+            reason = result.get("reason", "MW API rejected or no definition") if isinstance(result, dict) else "No API response"
             rejected_words.append({"word": word, "reason": reason})
             print(f"   ❌ REJECTED: {word} → {reason}")
 
-    # Save valid words with full metadata
+    # Save results
     with open(output_dir / "oed_validated_words.json", "w", encoding="utf-8") as f:
         json.dump(valid_words, f, indent=2)
 
-    # Save rejected words for manual review
     with open(output_dir / "oed_mw_rejected.txt", "w", encoding="utf-8") as f:
         f.write("# OED Words Rejected by MW (for manual review)\n")
         f.write(f"# Total rejected: {len(rejected_words)}\n\n")
