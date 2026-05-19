@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
 Manual Catch-up MW Verifier
-Uses the correct function name lookup_word_sync from your repo.
+Corrected to work with WordLookupResult object returned by lookup_word_sync.
 """
 
 import sys
 import json
 from pathlib import Path
 
-# Add current directory to path so it can find dictionary_api
+# Add repo root to path
 sys.path.append(".")
 
-# Correct import - use the function that actually exists
 from dictionary_api import lookup_word_sync
 
 def main():
@@ -32,20 +31,22 @@ def main():
     for i, word in enumerate(candidates, 1):
         print(f"[{i:3d}/{len(candidates)}] Checking: {word}")
         
-        # Use the correct function name
         result = lookup_word_sync(word)
 
-        if result and result.get("status") == "valid":
-            valid_words.append(result)
+        # Handle WordLookupResult object (not dict)
+        status = getattr(result, 'status', None) if result else None
+
+        if status == "valid":
+            valid_words.append(result.__dict__ if hasattr(result, '__dict__') else {"word": word})
             print(f"   ✅ VALID: {word}")
         else:
-            reason = result.get("reason", "MW API rejected or no definition") if isinstance(result, dict) else "No API response"
+            reason = getattr(result, 'reason', str(result)) if result else "No API response"
             rejected_words.append({"word": word, "reason": reason})
             print(f"   ❌ REJECTED: {word} → {reason}")
 
     # Save results
     with open(output_dir / "oed_validated_words.json", "w", encoding="utf-8") as f:
-        json.dump(valid_words, f, indent=2)
+        json.dump(valid_words, f, indent=2, default=str)
 
     with open(output_dir / "oed_mw_rejected.txt", "w", encoding="utf-8") as f:
         f.write("# OED Words Rejected by MW (for manual review)\n")
