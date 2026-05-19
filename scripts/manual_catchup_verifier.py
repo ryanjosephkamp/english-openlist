@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
 Manual Catch-up MW Verifier
-Corrected to work with WordLookupResult object returned by lookup_word_sync.
+Rate-limit protected version (2-second delay between calls).
 """
 
 import sys
 import json
+import time
 from pathlib import Path
 
-# Add repo root to path
 sys.path.append(".")
 
 from dictionary_api import lookup_word_sync
@@ -18,7 +18,7 @@ def main():
     output_dir = Path("manual_catchup_2026-05")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("🔍 Starting MW verification on OED new candidates...")
+    print("🔍 Starting MW verification on OED new candidates (rate-limit protected)...")
 
     with open(input_file, "r", encoding="utf-8") as f:
         candidates = [line.strip() for line in f if line.strip() and not line.startswith("#")]
@@ -33,7 +33,7 @@ def main():
         
         result = lookup_word_sync(word)
 
-        # Handle WordLookupResult object (not dict)
+        # Correct handling for WordLookupResult object
         status = getattr(result, 'status', None) if result else None
 
         if status == "valid":
@@ -43,6 +43,9 @@ def main():
             reason = getattr(result, 'reason', str(result)) if result else "No API response"
             rejected_words.append({"word": word, "reason": reason})
             print(f"   ❌ REJECTED: {word} → {reason}")
+
+        # Rate-limit protection
+        time.sleep(2)
 
     # Save results
     with open(output_dir / "oed_validated_words.json", "w", encoding="utf-8") as f:
@@ -54,14 +57,14 @@ def main():
         for item in rejected_words:
             f.write(f"{item['word']} → {item['reason']}\n")
 
-    print("\n" + "="*60)
+    print("\n" + "="*70)
     print("✅ VERIFICATION COMPLETE")
     print(f"   Validated by MW : {len(valid_words)}")
     print(f"   Rejected by MW  : {len(rejected_words)}")
     print(f"   Files saved in  : {output_dir}/")
     print("   • oed_validated_words.json")
     print("   • oed_mw_rejected.txt")
-    print("="*60)
+    print("="*70)
 
 if __name__ == "__main__":
     main()
