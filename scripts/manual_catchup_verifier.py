@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Manual Catch-up MW Verifier
-Fixed to correctly handle WordLookupResult + WordStatus enum.
+Now prints full WordLookupResult for BOTH VALID and REJECTED words.
 """
 
 import sys
@@ -18,7 +18,7 @@ def main():
     output_dir = Path("manual_catchup_2026-05")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("🔍 Starting MW verification on OED new candidates (fixed version)...")
+    print("🔍 Starting MW verification on OED new candidates (detailed output)...")
 
     with open(input_file, "r", encoding="utf-8") as f:
         candidates = [line.strip() for line in f if line.strip() and not line.startswith("#")]
@@ -33,19 +33,20 @@ def main():
         
         result = lookup_word_sync(word)
 
-        # Correct handling for WordLookupResult + WordStatus enum
         status = getattr(result, 'status', None)
         status_value = status.value if hasattr(status, 'value') else str(status)
 
         if status_value == "valid":
             valid_words.append(result.__dict__ if hasattr(result, '__dict__') else {"word": word})
             print(f"   ✅ VALID: {word}")
+            print(f"      {result}")          # ← Full result printed here
         else:
             reason = getattr(result, 'reason', str(result)) if result else "No API response"
             rejected_words.append({"word": word, "reason": reason})
             print(f"   ❌ REJECTED: {word} → {reason}")
+            print(f"      {result}")          # Full result printed here too
 
-        time.sleep(2)  # rate-limit protection
+        time.sleep(2)   # rate-limit protection
 
     # Save results
     with open(output_dir / "oed_validated_words.json", "w", encoding="utf-8") as f:
