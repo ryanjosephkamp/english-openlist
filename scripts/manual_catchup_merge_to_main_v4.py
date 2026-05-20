@@ -57,4 +57,42 @@ def download_minimal_from_hf():
 
 def main():
     catchup_dir = Path("manual_catchup_2026-05")
-    validated_file = catchup_dir / "oed_validated_words.json
+    validated_file = catchup_dir / "oed_validated_words.json"
+    
+    if not validated_file.exists():
+        print("❌ Validated JSON not found!")
+        return
+    
+    # Step 1: Get the files from HF
+    download_minimal_from_hf()
+    
+    print("\n🔄 Loading your 201 validated OED words...")
+    with open(validated_file, "r", encoding="utf-8") as f:
+        validated_list = json.load(f)
+    
+    new_valid_words = []
+    for item in validated_list:
+        word = str(item.get("word") or "").lower().strip()
+        if word:
+            metadata = item if isinstance(item, dict) else {"word": word}
+            new_valid_words.append({"word": word, "metadata": metadata})
+    
+    print(f"Found {len(new_valid_words)} validated words ready to merge.")
+    
+    # Step 2: Merge
+    updater = DataUpdater()
+    output_dir = Path("output") / "2026-05-19"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    stats = updater.run_update(new_valid_words, output_dir, update_source_files=True)
+    
+    print("\n✅ Merge successful!")
+    print(f"   • Newly added to valid list : {getattr(stats, 'words_added_to_valid', 0)}")
+    print(f"   • Promoted from invalid    : {getattr(stats, 'words_removed_from_invalid', 0)}")
+    print(f"   • Total valid words now    : {getattr(stats, 'total_valid', 'N/A')}")
+    
+    print("\n🎉 All large files are ONLY in this Colab session.")
+    print("   Nothing was committed to GitHub.")
+
+if __name__ == "__main__":
+    main()
