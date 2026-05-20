@@ -38,71 +38,50 @@ The complete list of 201 words is available in the [release folder on Hugging Fa
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-// Helper to parse CSV
-async function loadCSV(url) {
-  const response = await fetch(url);
-  const text = await response.text();
-  const rows = text.trim().split('\n').slice(1); // skip header
-  return rows.map(row => {
-    const [key, value] = row.split(',');
-    return { key: key.trim(), value: parseInt(value.trim()) };
-  });
-}
+// Starting Letter Chart (full data from starting_letter_distribution.csv)
+const startingCtx = document.getElementById('startingLetterChart');
+new Chart(startingCtx, {
+  type: 'bar',
+  data: {
+    labels: ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'],
+    datasets: [{
+      label: 'Word Count',
+      data: [19510,18363,31791,23363,15294,13021,11443,18577,13142,2120,3578,9967,27177,20300,13499,35709,3218,17659,34719,19654,12267,5326,5669,774,899,1641],
+      backgroundColor: 'rgba(59, 130, 246, 0.85)',
+      borderColor: 'rgba(59, 130, 246, 1)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { mode: 'index' } },
+    scales: { y: { beginAtZero: true, title: { display: true, text: 'Number of Words' } } }
+  }
+});
 
-// Load and render charts
-async function renderCharts() {
-  const base = "https://raw.githubusercontent.com/ryanjosephkamp/english-openlist/main/releases/2026-05-19-manual-oed-catchup/";
-
-  // Starting Letter Chart
-  const letterData = await loadCSV(base + "starting_letter_distribution.csv");
-  const startingCtx = document.getElementById('startingLetterChart');
-  new Chart(startingCtx, {
-    type: 'bar',
-    data: {
-      labels: letterData.map(d => d.key.toUpperCase()),
-      datasets: [{
-        label: 'Word Count',
-        data: letterData.map(d => d.value),
-        backgroundColor: 'rgba(59, 130, 246, 0.85)',
-        borderColor: 'rgba(59, 130, 246, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false }, tooltip: { mode: 'index' } },
-      scales: { y: { beginAtZero: true, title: { display: true, text: 'Number of Words' } } }
+// Word Length Chart (full data from word_length_distribution.csv)
+const lengthCtx = document.getElementById('wordLengthChart');
+new Chart(lengthCtx, {
+  type: 'bar',
+  data: {
+    labels: Array.from({length: 47}, (_, i) => (i+1).toString()),
+    datasets: [{
+      label: 'Word Count',
+      data: [10,134,1103,4265,9762,18110,29967,41770,47774,46229,41457,35463,28704,22453,17158,11403,7729,5188,3537,2245,1429,886,617,403,276,185,110,83,64,49,31,21,16,12,11,7,5,1,2,3,1,1,0,0,0,0,3,2,1],
+      backgroundColor: 'rgba(16, 185, 129, 0.85)',
+      borderColor: 'rgba(16, 185, 129, 1)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { mode: 'index' } },
+    scales: {
+      x: { title: { display: true, text: 'Word Length (characters)' } },
+      y: { beginAtZero: true, title: { display: true, text: 'Number of Words' } }
     }
-  });
-
-  // Word Length Chart
-  const lengthData = await loadCSV(base + "word_length_distribution.csv");
-  const lengthCtx = document.getElementById('wordLengthChart');
-  new Chart(lengthCtx, {
-    type: 'bar',
-    data: {
-      labels: lengthData.map(d => d.key),
-      datasets: [{
-        label: 'Word Count',
-        data: lengthData.map(d => d.value),
-        backgroundColor: 'rgba(16, 185, 129, 0.85)',
-        borderColor: 'rgba(16, 185, 129, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false }, tooltip: { mode: 'index' } },
-      scales: {
-        x: { title: { display: true, text: 'Word Length (characters)' } },
-        y: { beginAtZero: true, title: { display: true, text: 'Number of Words' } }
-      }
-    }
-  });
-}
-
-// Run when page loads
-window.addEventListener('load', renderCharts);
+  }
+});
 </script>
 
 ## Release Files
@@ -115,4 +94,5 @@ window.addEventListener('load', renderCharts);
 
 **This was a one-time manual update.** The daily GitHub Action is now back on its normal schedule.
 
----
+
+Let me know how they look on the live page! If you’d like any tweaks (colors, titles, tooltips, etc.) or want to add more charts before we roll this into the daily posts, just say the word.
