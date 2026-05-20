@@ -1,0 +1,31 @@
+{
+  "update_date": "2026-05-19",
+  "update_type": "manual-oed-catchup",
+  "total_new_words": 201,
+  "starting_letter_distribution": {
+    "A": 10,
+    "B": 30,
+    "C": 28,
+    "D": 20,
+    "E": 5,
+    "F": 7,
+    "G": 6,
+    "H": 11,
+    "I": 1,
+    "J": 3,
+    "L": 5,
+    "M": 4,
+    "N": 24,
+    "O": 1,
+    "P": 5,
+    "R": 2,
+    "S": 12,
+    "T": 14,
+    "U": 3,
+    "V": 4,
+    "W": 3,
+    "Y": 1,
+    "Z": 2
+  },
+  "note": "Distribution of first letters for the newly added words only"
+}
