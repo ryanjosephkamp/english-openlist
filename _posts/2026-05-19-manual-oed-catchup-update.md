@@ -32,10 +32,17 @@ All 201 words that passed every stage have now been permanently added to the Eng
 ## Interactive Statistics
 
 ### Starting Letter Distribution (full valid list)
-**[Interactive Starting Letter Bar Chart will be inserted here]**
+<div class="manual-catchup-chart-container" style="position: relative; width: 100%; max-width: 900px; height: 420px; margin: 1.5rem auto;">
+  <canvas id="startingLetterChart"></canvas>
+</div>
 
 ### Word Length Distribution (full valid list)
-**[Interactive Word Length Histogram will be inserted here]**
+<div class="manual-catchup-chart-container" style="position: relative; width: 100%; max-width: 900px; height: 420px; margin: 1.5rem auto;">
+  <canvas id="wordLengthChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ '/assets/js/manual-catchup-charts.js' | relative_url }}"></script>
 
 ## Release Files
 - `promoted_words.txt` — the 201 newly added words  
