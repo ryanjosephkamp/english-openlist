@@ -29,7 +29,7 @@ tags: [update, manual, oed, dictionary, interactive]
 <canvas id="wordLengthChart" width="800" height="400" style="background:#f8fafc;border:1px solid #e2e8f0"></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="/assets/js/manual-catchup-charts.js"></script>
+<script src="english-openlist/assets/js/manual-catchup-charts.js"></script>
 
 ## Release Files
 - `promoted_words.txt` — the 201 new words  
