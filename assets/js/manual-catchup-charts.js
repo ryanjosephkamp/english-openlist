@@ -6,6 +6,11 @@ console.log('🚀 manual-catchup-charts.js loaded successfully');
 document.addEventListener('DOMContentLoaded', function () {
   console.log('✅ DOM ready – rendering interactive charts for manual OED catch-up');
 
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js is required for manual catch-up charts but was not loaded.');
+    return;
+  }
+
   // === STARTING LETTER DISTRIBUTION (full valid list) ===
   const startingCtx = document.getElementById('startingLetterChart');
   if (startingCtx) {
@@ -41,14 +46,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // === WORD LENGTH DISTRIBUTION (full valid list) ===
   const lengthCtx = document.getElementById('wordLengthChart');
+  const wordLengthData = [10, 134, 1103, 4265, 9762, 18110, 29967, 41770, 47774, 46229, 41457, 35463, 28704, 22453, 17158, 11403, 7729, 5188, 3537, 2245, 1429, 886, 617, 403, 276, 185, 110, 83, 64, 49, 31, 21, 16, 12, 11, 7, 5, 1, 2, 3, 1, 1, 0, 0, 0, 0, 3, 2, 1];
   if (lengthCtx) {
     new Chart(lengthCtx, {
       type: 'bar',
       data: {
-        labels: Array.from({ length: 47 }, (_, i) => (i + 1).toString()),
+        labels: Array.from({ length: wordLengthData.length }, (_, i) => (i + 1).toString()),
         datasets: [{
           label: 'Word Count',
-          data: [10, 134, 1103, 4265, 9762, 18110, 29967, 41770, 47774, 46229, 41457, 35463, 28704, 22453, 17158, 11403, 7729, 5188, 3537, 2245, 1429, 886, 617, 403, 276, 185, 110, 83, 64, 49, 31, 21, 16, 12, 11, 7, 5, 1, 2, 3, 1, 1, 0, 0, 0, 0, 3, 2, 1],
+          data: wordLengthData,
           backgroundColor: 'rgba(16, 185, 129, 0.85)',
           borderColor: 'rgba(16, 185, 129, 1)',
           borderWidth: 1
