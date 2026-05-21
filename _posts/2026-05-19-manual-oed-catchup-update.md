@@ -1,7 +1,7 @@
 ---
 title: "Manual OED Catch-Up Update — May 19, 2026"
 date: 2026-05-19
-tags: [update, manual, oed, dictionary, interactive]
+tags: [update, manual, oed, dictionary]
 ---
 
 # Manual OED Catch-Up Update — May 19, 2026
@@ -10,33 +10,52 @@ tags: [update, manual, oed, dictionary, interactive]
 **Words added:** 201 new validated English unigrams  
 **Source:** Oxford English Dictionary monthly update posts
 
-## Process Followed
-1. Extracted candidates from ~40 OED monthly updates.  
-2. Applied strict unigram rules.  
-3. Deduplicated.  
-4. Checked novelty.  
-5. Validated with Merriam-Webster API.
+## What Happened
+During the period when the daily GitHub Action was inactive, several months of new-word additions from the Oxford English Dictionary were missed. This one-time manual catch-up was performed to bring the English OpenList fully up to date.
 
-## MW-Rejected Candidates
-1,064 OED candidates did **not** validate under Merriam-Webster. Full list preserved in `manual_catchup_2026-05/oed_mw_rejected.txt`.
+## Detailed Process
+1. **Candidate Acquisition** — All new-word candidates were extracted from approximately 40 recent OED monthly update articles. Two distinct parsing methods were used: one for articles containing hyperlinked new words and another for articles using plain-text bullet lists.
+
+2. **Rule Validation** — Every extracted candidate was passed through the strict English OpenList inclusion rules: unigrams only (no spaces or hyphens), letters a–z only, and length between 2 and 45 characters.
+
+3. **Deduplication** — The full set of rule-passing candidates was deduplicated to remove any repeated entries across the different OED posts.
+
+4. **Novelty Check** — The deduplicated list was compared against the current `merged_valid_words.txt` to remove any words already present in the English OpenList.
+
+5. **Merriam-Webster Validation** — The remaining novel candidates were validated using the Merriam-Webster API (with Free Dictionary fallback). Only candidates that returned a clear `VALID` status were retained.
+
+All 201 words that passed every stage have now been permanently added to the English OpenList.
+
+## MW-Rejected OED Candidates
+1,064 candidates from the OED updates did **not** validate as standard English words under Merriam-Webster (they were either not found, abbreviations, proper nouns, or otherwise excluded). The full list is preserved in `manual_catchup_2026-05/oed_mw_rejected.txt` for manual review.
 
 ## Interactive Statistics
 
 ### Starting Letter Distribution (full valid list)
-<canvas id="startingLetterChart" width="800" height="400" style="background:#f8fafc;border:1px solid #e2e8f0"></canvas>
+**[Interactive Starting Letter Bar Chart will be inserted here]**
 
 ### Word Length Distribution (full valid list)
-<canvas id="wordLengthChart" width="800" height="400" style="background:#f8fafc;border:1px solid #e2e8f0"></canvas>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="english-openlist/assets/js/manual-catchup-charts.js"></script>
+**[Interactive Word Length Histogram will be inserted here]**
 
 ## Release Files
-- `promoted_words.txt` — the 201 new words  
-- `CHANGELOG.md` — full process log  
-- `update_stats.json`  
-- `starting_letter_distribution.csv` & `word_length_distribution.csv`
+- `promoted_words.txt` — the 201 newly added words  
+- `CHANGELOG.md` — detailed process log  
+- `update_stats.json` — machine-readable summary  
+- `starting_letter_distribution.csv` & `word_length_distribution.csv` — full-list versions used for the charts above
 
 ---
 
-**This was a one-time manual update.** The daily GitHub Action is now back on schedule.
+**This was a one-time manual update.** The daily automated GitHub Action is now back on its normal schedule and will continue adding new words each day.
+
+---
+
+---
+
+I have stopped here for your review.
+
+Please let me know:
+- If the process description is accurate and detailed enough (or if you want any part expanded/reworded).
+- Whether you want the chart placeholders kept exactly like this or changed.
+- Any other edits before we add the actual interactive Chart.js code.
+
+Ready for your feedback!
