@@ -48,14 +48,3 @@ All 201 words that passed every stage have now been permanently added to the Eng
 **This was a one-time manual update.** The daily automated GitHub Action is now back on its normal schedule and will continue adding new words each day.
 
 ---
-
----
-
-I have stopped here for your review.
-
-Please let me know:
-- If the process description is accurate and detailed enough (or if you want any part expanded/reworded).
-- Whether you want the chart placeholders kept exactly like this or changed.
-- Any other edits before we add the actual interactive Chart.js code.
-
-Ready for your feedback!
