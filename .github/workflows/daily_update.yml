@@ -119,6 +119,12 @@ jobs:
             echo "Changes committed and pushed"
           fi
       
+      - name: Generate Brrrdle artifacts
+        run: |
+          python scripts/generate_brrrdle_artifacts.py \
+            --output-dir output/${{ steps.date.outputs.date }}/brrrdle \
+            --date ${{ steps.date.outputs.date }}
+       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
