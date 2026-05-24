@@ -36,6 +36,9 @@ ENV/
 
 # Output files (generated data is uploaded to HF, not stored in git)
 # output/   <-- temporarily commented out so blog/stats can be committed
+output/**/brrrdle/
+latest/
+data/brrrdle/
 
 # Large data files (stored on Hugging Face, not in git)
 initial_deliverables/
