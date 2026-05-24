@@ -42,6 +42,9 @@ initial_deliverables/
 initial_deliverables.zip
 *.json
 !templates/*.json
+!overall_stats.json
+!output/**/update_stats.json
+!output/**/daily_execution_summary.json
 
 # Logs
 logs/

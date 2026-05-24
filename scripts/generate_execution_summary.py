@@ -1,22 +1,22 @@
 """
 Execution Transparency Generator
-Creates a detailed daily_execution_summary.json with API health,
-source breakdown, and proof that the pipeline ran successfully.
-
-This gives full visibility even on days with zero new words.
+Creates a daily_execution_summary.json with recorded pipeline status and honest
+"not recorded" values for metrics that are not captured by the current run.
 """
 
 import json
-from pathlib import Path
-from datetime import datetime
 import logging
 import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import get_release_dir, get_release_date
+from config import get_release_date, get_release_dir
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
+NOT_RECORDED = "not recorded"
 
 
 def generate_execution_summary() -> Path:
@@ -25,40 +25,38 @@ def generate_execution_summary() -> Path:
 
     summary = {
         "date": release_date,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "pipeline_status": "SUCCESS",
         "api_health": {
             "merriam_webster": {
-                "calls_made": 1240,
-                "success_rate": 99.8,
-                "status": "healthy"
+                "calls_made": NOT_RECORDED,
+                "success_rate": NOT_RECORDED,
+                "status": NOT_RECORDED,
             },
             "wordnik": {
-                "calls_made": 87,
-                "success_rate": 100.0,
-                "status": "healthy"
-            }
+                "calls_made": NOT_RECORDED,
+                "success_rate": NOT_RECORDED,
+                "status": NOT_RECORDED,
+            },
         },
         "words_by_source": {
-            "merriam_webster_rss": 12,
-            "merriam_webster_new_words": 8,
-            "wordnik_wotd": 5,
-            "invalid_list_validation": 47,
-            "manual_additions": 0
+            "merriam_webster_rss": NOT_RECORDED,
+            "merriam_webster_new_words": NOT_RECORDED,
+            "wordnik_wotd": NOT_RECORDED,
+            "invalid_list_validation": NOT_RECORDED,
+            "manual_additions": NOT_RECORDED,
         },
-        "total_new_words_discovered": 72,
-        "total_words_promoted": 47,
-        "notes": "All systems operational. Pipeline completed successfully."
+        "total_new_words_discovered": NOT_RECORDED,
+        "total_words_promoted": NOT_RECORDED,
+        "notes": "Pipeline completed; detailed API/source metrics were not recorded by this run.",
     }
-
-    # In a real run, these numbers would come from the actual scripts.
-    # For now we use realistic placeholders that will be replaced in future versions.
 
     output_file = release_dir / "daily_execution_summary.json"
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
+        f.write("\n")
 
-    logger.info(f"Created execution summary: {output_file}")
+    logger.info("Created execution summary: %s", output_file)
     return output_file
 
 
