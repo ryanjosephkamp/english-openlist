@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Daily English OpenList Update - 2026-05-24"
-date: 2026-05-24T02:16:49.802284+00:00
+date: 2026-05-24T23:49:42.366943+00:00
 categories: [daily-updates]
 tags: [daily, statistics, words]
 excerpt: "Automated English OpenList daily update for 2026-05-24."
@@ -9,17 +9,17 @@ excerpt: "Automated English OpenList daily update for 2026-05-24."
 
 # Daily English OpenList Update — 2026-05-24
 
-**Generated automatically at 2026-05-24 02:16:49 UTC**
+**Generated automatically at 2026-05-24 23:49:42 UTC**
 
 This automated post follows the English OpenList Blog Constitution by reporting only recorded values. Missing historical metrics are marked as `not recorded` or `unavailable`.
 
 ## Today's Results
 
-- **Total words added today:** not recorded
-- **New words discovered today:** not recorded
-- **Words promoted from invalid list:** not recorded
+- **Total words added today:** 0
+- **New words discovered today:** 0
+- **Words promoted from invalid list:** 0
 - **Total valid words now:** **378,883**
-- **Total invalid entries tracked:** 9,275,000
+- **Total invalid entries tracked:** 0
 
 ## Interactive Statistics
 
@@ -60,5 +60,7 @@ Missing historical metrics are shown as `not recorded` rather than reconstructed
 - `starting_letter_distribution.csv` — starting-letter distribution used for charts when available
 - `word_length_distribution.csv` — word-length distribution used for charts when available
 - `CHANGELOG.md` — detailed process log
+- `update_stats.json` — machine-readable update summary
+- `daily_execution_summary.json` — machine-readable execution transparency summary
 
 *Generated automatically by the English OpenList daily pipeline.*
