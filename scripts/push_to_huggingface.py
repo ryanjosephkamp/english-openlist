@@ -35,6 +35,8 @@ from config import (
 )
 
 logger = logging.getLogger(__name__)
+BRRRDLE_ARTIFACTS_DIRNAME = "brrrdle"
+BRRRDLE_REMOTE_PATHS = ("latest/brrrdle", "data/brrrdle")
 
 
 class HuggingFaceUploader:
@@ -211,7 +213,52 @@ class HuggingFaceUploader:
                 all_success = False
         
         return all_success
-    
+
+    def upload_brrrdle_artifacts(
+        self,
+        brrrdle_dir: Optional[Path] = None,
+        release_dir: Optional[Path] = None,
+    ) -> bool:
+        """
+        Upload generated Brrrdle artifacts to remote-only dataset folders.
+
+        Args:
+            brrrdle_dir: Directory containing generated Brrrdle artifacts
+            release_dir: Release directory containing the brrrdle artifact folder
+
+        Returns:
+            True if upload successful
+        """
+        release_dir = release_dir or get_release_dir()
+        brrrdle_dir = brrrdle_dir or (release_dir / BRRRDLE_ARTIFACTS_DIRNAME)
+
+        if not brrrdle_dir.exists():
+            logger.error(f"Brrrdle artifacts directory not found: {brrrdle_dir}")
+            return False
+
+        if not self.authenticate():
+            return False
+
+        if not self.ensure_repo_exists():
+            return False
+
+        all_success = True
+        for remote_path in BRRRDLE_REMOTE_PATHS:
+            try:
+                self.api.upload_folder(
+                    folder_path=str(brrrdle_dir),
+                    path_in_repo=remote_path,
+                    repo_id=self.repo_id,
+                    repo_type="dataset",
+                    commit_message=f"Update Brrrdle artifacts: {remote_path}",
+                )
+                logger.info(f"Uploaded Brrrdle artifacts to {remote_path}")
+            except Exception as e:
+                logger.error(f"Failed to upload Brrrdle artifacts to {remote_path}: {e}")
+                all_success = False
+
+        return all_success
+
     def upload_dataset_card(self, readme_path: Optional[Path] = None) -> bool:
         """
         Upload or update the dataset card (README.md).
@@ -251,6 +298,7 @@ def main():
     parser.add_argument("--release-dir", type=Path, help="Release directory to upload")
     parser.add_argument("--date", type=str, help="Release date (YYYY-MM-DD)")
     parser.add_argument("--skip-full", action="store_true", help="Skip uploading full word lists")
+    parser.add_argument("--skip-brrrdle", action="store_true", help="Skip uploading Brrrdle artifacts")
     parser.add_argument("--only-full", action="store_true", help="Only upload full word lists (skip release)")
     parser.add_argument("--update-readme", action="store_true", help="Update the dataset card (README.md)")
     args = parser.parse_args()
@@ -269,7 +317,17 @@ def main():
         else:
             print("✗ Failed to upload release files")
             success = False
-    
+
+    if not args.only_full and not args.skip_brrrdle:
+        brrrdle_success = uploader.upload_brrrdle_artifacts(
+            release_dir=args.release_dir
+        )
+        if brrrdle_success:
+            print("✓ Uploaded Brrrdle artifacts to latest/brrrdle/ and data/brrrdle/")
+        else:
+            print("✗ Failed to upload Brrrdle artifacts")
+            success = False
+
     # Upload full word lists unless --skip-full is set
     if not args.skip_full:
         full_success = uploader.upload_full_wordlists()
