@@ -167,14 +167,12 @@ jobs:
           git status
           
           if git diff --staged --quiet; then
-            echo "No changes detected - forcing commit anyway"
-            git commit --allow-empty -m "Daily blog post: Update #${{ steps.date.outputs.date }} - English OpenList (no file changes)"
+            echo "No blog changes detected"
           else
             git commit -m "Daily blog post: Update #${{ steps.date.outputs.date }} - English OpenList"
+            git push
+            echo "Commit and push completed"
           fi
-          
-          git push
-          echo "Commit and push completed"
 
       - name: Summary
         run: |
