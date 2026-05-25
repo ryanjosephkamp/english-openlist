@@ -35,6 +35,9 @@
 - Keep legacy length-5 files for one transition period, then remove them in a later major update.
 - Update the manifest to focus on the new per-length files.
 - Add a lightweight verification step before upload to ensure all 34 expected length-specific JSON files exist.
+- Document that `words_length_{N}.json` files are the new primary Brrrdle artifacts.
+- Add a clear follow-up task to remove legacy length-5 compatibility files after the transition period.
+- Include a `schema_version` field in `manifest.json` for future compatibility.
 
 ## Goal
 
@@ -74,6 +77,7 @@ The generated files should remain transient build outputs and should continue to
 3. Phase out legacy artifacts safely.
    - Keep `brrrdle_words.txt` and `brrrdle_words.json` for one transition period as length-5 compatibility artifacts.
    - Keep `manifest.json`, but update it to focus on the new `words_length_{N}.json` files and per-length counts.
+   - Include a `schema_version` field in `manifest.json` so downstream consumers can distinguish the new multi-length artifact format from the legacy single-length format.
    - Keep `README.md`, but update it to document the new primary per-length files and note that the old length-5 files are transitional compatibility outputs.
    - Do not add new repository data folders for `latest/brrrdle/` or `data/brrrdle/`.
 
@@ -94,13 +98,25 @@ The generated files should remain transient build outputs and should continue to
    - Add tests confirming each length file is a JSON array of objects with `word`.
    - Add tests confirming `definition` is included when available and omitted when unavailable.
    - Add tests confirming the manifest lists all 34 primary files and their per-length counts.
+   - Add tests confirming the manifest includes the expected `schema_version`.
    - Add tests confirming the transitional length-5 legacy artifacts are still generated for now.
    - Keep existing Hugging Face upload tests focused on folder upload paths, since remote path behavior should remain unchanged.
 
-7. Validate.
+7. Update documentation.
+   - Update repository documentation, generated artifact documentation, or the Hugging Face dataset card to state that `words_length_{N}.json` files are the new primary Brrrdle artifacts.
+   - Document the supported Brrrdle length range as 2 through 35.
+   - Document that the legacy length-5 files are transitional compatibility artifacts and will be removed in a future major update.
+   - Document that `definition` is omitted when unavailable.
+
+8. Track follow-up removal.
+   - Add a clear follow-up item for the next major update to remove the legacy length-5 compatibility files.
+   - The follow-up should cover removing `brrrdle_words.txt`, `brrrdle_words.json`, and any legacy-only manifest or README behavior that remains after this transition period.
+
+9. Validate.
    - Run the existing test suite with `pytest tests/ -v`.
    - Run a local generator invocation into a temporary directory and verify exactly the expected 34 primary length JSON files are created.
    - Verify the manifest lists every `words_length_{N}.json` file from 2 through 35.
+   - Verify the manifest includes the expected `schema_version`.
    - Verify legacy length-5 compatibility files are present for the transition period.
    - Confirm no generated `latest/`, `data/brrrdle/`, or `output/**/brrrdle/` artifacts are staged for commit.
 
@@ -110,9 +126,7 @@ None.
 
 ## Additional recommendations
 
-- Document in `README.md` or the Hugging Face dataset card that `words_length_{N}.json` files are the new primary Brrrdle artifacts.
-- Add a follow-up task to remove the legacy length-5 compatibility files after the transition period.
-- Consider including a `schema_version` field in `manifest.json` so downstream consumers can distinguish the new multi-length artifact format from the legacy single-length format.
+None.
 
 ## Halt point
 
