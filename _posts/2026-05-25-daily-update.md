@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Daily English OpenList Update - 2026-05-25"
-date: 2026-05-25T00:36:34.534443+00:00
+date: 2026-05-25T01:31:29.774003+00:00
 categories: [daily-updates]
 tags: [daily, statistics, words]
 excerpt: "Automated English OpenList daily update for 2026-05-25."
@@ -9,7 +9,7 @@ excerpt: "Automated English OpenList daily update for 2026-05-25."
 
 # Daily English OpenList Update — 2026-05-25
 
-**Generated automatically at 2026-05-25 00:36:34 UTC**
+**Generated automatically at 2026-05-25 01:31:29 UTC**
 
 This automated post follows the English OpenList Blog Constitution by reporting only recorded values. Missing historical metrics are marked as `not recorded` or `unavailable`.
 
