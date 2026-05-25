@@ -86,6 +86,26 @@ latest/
 └── CHANGELOG.md
 ```
 
+### Brrrdle Artifacts
+
+Brrrdle-compatible artifacts are generated during daily automation and uploaded to:
+
+```
+latest/brrrdle/
+data/brrrdle/
+```
+
+The primary Brrrdle files are `words_length_{N}.json` for every supported length
+from 2 through 35. Each file is a JSON array of objects with a required `word`
+field. A `definition` field is included only when a non-empty top-level
+definition is available in `merged_valid_dict.json`; words without a definition
+omit the key.
+
+During the transition to length-specific artifacts, the legacy length-5
+compatibility files `brrrdle_words.txt` and `brrrdle_words.json` are still
+published. These legacy files should be removed in the next major Brrrdle
+artifact update, along with any legacy-only manifest or generated README behavior.
+
 ### Data Fields
 
 **Valid Dictionary Entry:**

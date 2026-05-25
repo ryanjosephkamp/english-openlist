@@ -140,6 +140,22 @@ Each daily release generates (in `output/YYYY-MM-DD/`):
 | `CHANGELOG.md` | Consolidated summary of all changes |
 | `update_stats.json` | Machine-readable statistics |
 
+Daily automation also generates transient Brrrdle artifacts in `output/YYYY-MM-DD/brrrdle/`.
+These files are uploaded to Hugging Face under both `latest/brrrdle/` and `data/brrrdle/`,
+but are not committed as repository data folders.
+
+### Brrrdle Artifacts
+
+`words_length_{N}.json` files are the primary Brrrdle artifacts, with one file for
+each word length from 2 through 35. Each file is a JSON array of objects with a
+`word` field. A `definition` field is included only when a non-empty top-level
+definition is available from `merged_valid_dict.json`; otherwise it is omitted.
+
+For one transition period, the generator also publishes the legacy length-5
+compatibility files `brrrdle_words.txt` and `brrrdle_words.json`. In the next
+major Brrrdle artifact update, remove those legacy files and any legacy-only
+manifest or generated README behavior that remains.
+
 ## Testing
 
 ```bash

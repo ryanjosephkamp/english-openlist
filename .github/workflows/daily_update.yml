@@ -124,7 +124,26 @@ jobs:
           python scripts/generate_brrrdle_artifacts.py \
             --output-dir output/${{ steps.date.outputs.date }}/brrrdle \
             --date ${{ steps.date.outputs.date }}
-       
+      
+      - name: Verify Brrrdle artifacts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          brrrdle_dir = Path("output/${{ steps.date.outputs.date }}/brrrdle")
+          missing = [
+              brrrdle_dir / f"words_length_{word_length}.json"
+              for word_length in range(2, 36)
+              if not (brrrdle_dir / f"words_length_{word_length}.json").is_file()
+          ]
+          if missing:
+              raise SystemExit(
+                  "Missing Brrrdle length artifacts: "
+                  + ", ".join(str(path) for path in missing)
+              )
+          print("Verified 34 Brrrdle length artifacts.")
+          PY
+        
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
