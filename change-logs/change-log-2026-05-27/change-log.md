@@ -19,9 +19,16 @@
 
 - Baseline before implementation: `pytest tests/ -v` — 27 passed.
 - After generator/test update: `python -m pytest tests/test_generate_brrrdle_artifacts.py -v` — 5 passed.
-
-## Remaining verification
-
-- Run full repository tests after all edits.
-- Generate Brrrdle artifacts into `/tmp` and verify all per-length payloads.
-- Run the final security check.
+- Final full test suite: `pytest tests/ -v` — 30 passed.
+- Manual artifact generation and shape verification:
+  - The default generator command could not run in this sandbox because `initial_deliverables/merged_valid_words.txt` is not present in the checkout.
+  - Re-ran generation with the current checked-in output word list: `python scripts/generate_brrrdle_artifacts.py --input output/2026-05-27/merged_valid_words.txt --dictionary output/2026-05-27/merged_valid_dict.json --output-dir /tmp/brrrdle-curation-check --date 2026-05-27`.
+  - The dictionary metadata path was absent in the sandbox, so generation continued with the existing warning behavior and no definitions.
+  - Verified all `words_length_2.json` through `words_length_35.json` files exist.
+  - Verified each payload has `metadata.curation.method == "stratified_quality_score_v1"`.
+  - Verified each payload has seed `42 + length`.
+  - Verified each payload has list-valued `answers` and `validGuesses`.
+  - Verified no `answers` list is longer than its `validGuesses` list.
+  - Verified every answer word is present in `validGuesses`.
+- Documentation/search verification: `grep -R "validGuesses\\|stratified_quality_score_v1\\|answers" README.md templates scripts/generate_brrrdle_artifacts.py .github/workflows/daily_update.yml` found the expected references.
+- Diff whitespace check: `git diff --check` — passed.
