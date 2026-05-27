@@ -128,6 +128,7 @@ jobs:
       - name: Verify Brrrdle artifacts
         run: |
           python - <<'PY'
+          import json
           from pathlib import Path
 
           brrrdle_dir = Path("output/${{ steps.date.outputs.date }}/brrrdle")
@@ -141,7 +142,21 @@ jobs:
                   "Missing Brrrdle length artifacts: "
                   + ", ".join(str(path) for path in missing)
               )
-          print("Verified 34 Brrrdle length artifacts.")
+          for word_length in range(2, 36):
+              path = brrrdle_dir / f"words_length_{word_length}.json"
+              payload = json.loads(path.read_text())
+              curation = payload.get("metadata", {}).get("curation", {})
+              if curation.get("method") != "stratified_quality_score_v1":
+                  raise SystemExit(f"Missing Brrrdle curation metadata in {path}")
+              if curation.get("seed") != 42 + word_length:
+                  raise SystemExit(f"Invalid Brrrdle curation seed in {path}")
+              answers = payload.get("answers")
+              valid_guesses = payload.get("validGuesses")
+              if not isinstance(answers, list) or not isinstance(valid_guesses, list):
+                  raise SystemExit(f"Invalid Brrrdle answers/validGuesses payload in {path}")
+              if len(valid_guesses) < len(answers):
+                  raise SystemExit(f"Brrrdle answers exceed validGuesses in {path}")
+          print("Verified 34 Brrrdle length artifacts with curated answers.")
           PY
         
       - name: Upload artifacts
