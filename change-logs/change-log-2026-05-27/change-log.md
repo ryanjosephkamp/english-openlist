@@ -34,3 +34,8 @@
    - Verified every answer word is present in `validGuesses`.
 - Documentation/search verification: `grep -R "validGuesses\\|stratified_quality_score_v1\\|answers" README.md templates scripts/generate_brrrdle_artifacts.py .github/workflows/daily_update.yml` found the expected references.
 - Diff whitespace check: `git diff --check` — passed.
+- Final completion pass on 2026-05-28:
+  - Re-ran `pytest tests/ -v` — 30 passed.
+  - Generated current artifacts from `output/2026-05-28/merged_valid_words.txt` into `/tmp/brrrdle-curation-check`.
+  - Verified all `words_length_2.json` through `words_length_35.json` payloads contain `metadata.curation`, string-only `answers`, string-only `validGuesses`, seed `42 + length`, and `answers` as a subset of `validGuesses`.
+  - Confirmed the `1000 <= len(validGuesses) < 2000` edge case preserves the spec-defined target sample size while returning all available valid guesses so `answers` never exceeds `validGuesses`.

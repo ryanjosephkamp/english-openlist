@@ -90,6 +90,15 @@ def test_select_curated_answers_is_deterministic_stratified_subset_for_large_lis
     assert sum(1 for word in answers if word.startswith("b")) == 1000
 
 
+def test_select_curated_answers_never_exceeds_available_valid_guesses():
+    valid_words = make_words("a", 1500)
+
+    answers, target_sample_size = select_curated_answers(valid_words, 5)
+
+    assert target_sample_size == 2000
+    assert answers == valid_words
+
+
 def test_write_brrrdle_artifacts_outputs_primary_length_files_manifest_readme_and_legacy_files(tmp_path):
     source_path = tmp_path / "merged_valid_words.txt"
     dictionary_path = tmp_path / "merged_valid_dict.json"
