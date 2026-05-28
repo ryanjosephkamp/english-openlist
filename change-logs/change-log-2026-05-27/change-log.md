@@ -11,8 +11,9 @@
 - Added curation metadata with `method`, `seed`, `target_sample_size`, `curation_date`, and `note`.
 - Added stratified starting-letter answer selection with quality-score ranking.
 - Preserved complete per-length `validGuesses` while adding curated `answers`.
+- Aligned primary per-length `answers` and `validGuesses` payloads to the spec's plain word-string list shape.
 - Updated Brrrdle artifact tests for target sizing, metadata, small-list behavior, deterministic large-list curation, primary artifact shape, and legacy compatibility files.
-- Updated daily workflow verification to validate curation metadata, `answers`, and `validGuesses`.
+- Updated daily workflow verification to validate curation metadata, string-only `answers` and `validGuesses`, and subset membership.
 - Updated Brrrdle documentation in `README.md`, `templates/dataset_card.md`, and the generated artifact README text.
 
 ## Verification performed

@@ -156,6 +156,10 @@ jobs:
                   raise SystemExit(f"Invalid Brrrdle answers/validGuesses payload in {path}")
               if len(valid_guesses) < len(answers):
                   raise SystemExit(f"Brrrdle answers exceed validGuesses in {path}")
+              if not all(isinstance(word, str) for word in answers + valid_guesses):
+                  raise SystemExit(f"Brrrdle answers/validGuesses must contain only strings in {path}")
+              if not set(answers).issubset(set(valid_guesses)):
+                  raise SystemExit(f"Brrrdle answers must be a subset of validGuesses in {path}")
           print("Verified 34 Brrrdle length artifacts with curated answers.")
           PY
         

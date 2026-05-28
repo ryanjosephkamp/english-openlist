@@ -60,7 +60,7 @@ def test_get_target_sample_size_uses_spec_formula_and_caps():
 
 def test_create_word_list_json_uses_full_sorted_list_for_small_answer_sets():
     generated_at = datetime(2026, 5, 27, 18, 0, tzinfo=timezone.utc)
-    valid_guesses = [{"word": "aa"}, {"word": "ab", "definition": "an abdominal muscle"}]
+    valid_guesses = ["aa", "ab"]
 
     payload = create_word_list_json(valid_guesses, 2, generated_at)
 
@@ -134,23 +134,17 @@ def test_write_brrrdle_artifacts_outputs_primary_length_files_manifest_readme_an
         "curation_date": "2026-05-24T00:00:00Z",
         "note": CURATION_NOTE,
     }
-    assert length_2_payload["answers"] == [{"word": "aa", "definition": "a rough basaltic lava"}]
-    assert length_2_payload["validGuesses"] == [{"word": "aa", "definition": "a rough basaltic lava"}]
+    assert length_2_payload["answers"] == ["aa"]
+    assert length_2_payload["validGuesses"] == ["aa"]
 
     length_3_payload = json.loads((output_dir / "words_length_3.json").read_text())
-    assert length_3_payload["answers"] == [{"word": "abc"}]
-    assert length_3_payload["validGuesses"] == [{"word": "abc"}]
+    assert length_3_payload["answers"] == ["abc"]
+    assert length_3_payload["validGuesses"] == ["abc"]
 
     length_5_payload = json.loads((output_dir / "words_length_5.json").read_text())
     assert length_5_payload["metadata"]["curation"]["seed"] == 47
-    assert length_5_payload["answers"] == [
-        {"word": "apple", "definition": "a fruit"},
-        {"word": "berry"},
-    ]
-    assert length_5_payload["validGuesses"] == [
-        {"word": "apple", "definition": "a fruit"},
-        {"word": "berry"},
-    ]
+    assert length_5_payload["answers"] == ["apple", "berry"]
+    assert length_5_payload["validGuesses"] == ["apple", "berry"]
 
     assert (output_dir / "brrrdle_words.txt").read_text() == "apple\nberry\n"
     legacy_payload = json.loads((output_dir / "brrrdle_words.json").read_text())
@@ -174,5 +168,6 @@ def test_write_brrrdle_artifacts_outputs_primary_length_files_manifest_readme_an
     assert "metadata.curation" in readme
     assert "answers" in readme
     assert "validGuesses" in readme
+    assert "word arrays" in readme
     assert "stratified_quality_score_v1" in readme
     assert "transition period" in readme
