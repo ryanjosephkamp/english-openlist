@@ -96,8 +96,11 @@ data/brrrdle/
 ```
 
 The primary Brrrdle files are `words_length_{N}.json` for every supported length
-from 2 through 35. Each file is a JSON array of objects with a required `word`
-field. A `definition` field is included only when a non-empty top-level
+from 2 through 35. Each file contains `metadata.curation`, curated `answers`, and
+complete `validGuesses`. The `validGuesses` array remains the full per-length
+list, while `answers` is generated with the deterministic
+`stratified_quality_score_v1` method using seed `42 + length`. Entries include a
+required `word` field, and a `definition` field only when a non-empty top-level
 definition is available in `merged_valid_dict.json`; words without a definition
 omit the key.
 
