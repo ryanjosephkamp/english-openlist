@@ -271,16 +271,14 @@ def select_curated_answers(valid_words: list[str], length: int) -> tuple[list[st
     return sorted(selected_answers), target_sample_size
 
 
-def create_word_list_json(valid_guesses: list[dict[str, str]], length: int, generated_at: datetime) -> dict[str, Any]:
+def create_word_list_json(valid_guesses: list[str], length: int, generated_at: datetime) -> dict[str, Any]:
     """Build the per-length Brrrdle JSON payload with curated answers and full valid guesses."""
-    valid_words = [entry["word"] for entry in valid_guesses]
-    answer_words, target_sample_size = select_curated_answers(valid_words, length)
-    entries_by_word = {entry["word"]: entry for entry in valid_guesses}
+    answer_words, target_sample_size = select_curated_answers(valid_guesses, length)
     return {
         "metadata": {
             "curation": build_curation_metadata(length, target_sample_size, generated_at),
         },
-        "answers": [entries_by_word[word] for word in answer_words],
+        "answers": answer_words,
         "validGuesses": valid_guesses,
     }
 
@@ -334,8 +332,7 @@ def write_brrrdle_artifacts(
 
     for word_length, brrrdle_words in grouped_words.items():
         length_path = output_dir / length_artifact_filename(word_length)
-        length_payload = [build_word_entry(word, dictionary_metadata) for word in brrrdle_words]
-        word_list_payload = create_word_list_json(length_payload, word_length, generated_at)
+        word_list_payload = create_word_list_json(brrrdle_words, word_length, generated_at)
         length_path.write_text(json.dumps(word_list_payload, indent=2) + "\n", encoding="utf-8")
 
     words_path = output_dir / ARTIFACT_WORDS_FILENAME
@@ -359,9 +356,7 @@ def write_brrrdle_artifacts(
         "## Primary files\n\n"
         "`words_length_{N}.json` files are the primary Brrrdle artifacts. "
         "Each file includes `metadata.curation`, curated `answers`, and complete "
-        "`validGuesses`. Entries include a `word` field, and a `definition` field "
-        "only when a non-empty top-level definition is available from the valid "
-        "dictionary metadata. `answers` are generated with the "
+        "`validGuesses` word arrays. `answers` are generated with the "
         "`stratified_quality_score_v1` method; `validGuesses` remains the full "
         "per-length list.\n\n"
         "## Transitional compatibility files\n\n"

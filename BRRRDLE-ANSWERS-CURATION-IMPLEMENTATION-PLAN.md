@@ -85,14 +85,14 @@ Add a focused payload builder in `scripts/generate_brrrdle_artifacts.py`.
 
 Planned function:
 
-- `create_word_list_json(valid_entries: list[dict[str, str]], length: int, generated_at: datetime) -> dict[str, Any]`
+- `create_word_list_json(valid_guesses: list[str], length: int, generated_at: datetime) -> dict[str, Any]`
 
 Behavior:
 
-1. Extract sorted words from the current full `valid_entries`.
+1. Use the sorted words from the current full per-length list.
 2. Select curated answer words using `select_curated_answers`.
-3. Preserve `validGuesses` as the complete current full list for that length.
-4. Populate `answers` as the selected subset, preserving the same entry shape used by `validGuesses`.
+3. Preserve `validGuesses` as the complete current full word-string list for that length.
+4. Populate `answers` as the selected subset of word strings.
 5. Add `metadata.curation` exactly as required by the spec.
 
 The output object for each `words_length_N.json` should be:
@@ -318,8 +318,10 @@ for n in range(2, 36):
     assert isinstance(curation['target_sample_size'], int)
     assert curation['note'] == 'Stratified by starting letter + quality score (frequency 0.45, positional 0.30, vowel balance 0.15, uniqueness 0.10)'
     assert len(payload['validGuesses']) >= len(payload['answers'])
-    valid_words = {entry['word'] if isinstance(entry, dict) else entry for entry in payload['validGuesses']}
-    answer_words = {entry['word'] if isinstance(entry, dict) else entry for entry in payload['answers']}
+    assert all(isinstance(word, str) for word in payload['validGuesses'])
+    assert all(isinstance(word, str) for word in payload['answers'])
+    valid_words = set(payload['validGuesses'])
+    answer_words = set(payload['answers'])
     assert answer_words <= valid_words
 print('Final Brrrdle curation verification passed')
 PY

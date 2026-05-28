@@ -150,9 +150,8 @@ but are not committed as repository data folders.
 each word length from 2 through 35. Each file contains `metadata.curation`,
 curated `answers`, and complete `validGuesses`. The `validGuesses` array remains
 the full per-length list, while `answers` is generated with the deterministic
-`stratified_quality_score_v1` method using seed `42 + length`. Entries include a
-`word` field, and a `definition` field only when a non-empty top-level definition
-is available from `merged_valid_dict.json`; otherwise it is omitted.
+`stratified_quality_score_v1` method using seed `42 + length`. Both arrays contain
+plain word strings.
 
 For one transition period, the generator also publishes the legacy length-5
 compatibility files `brrrdle_words.txt` and `brrrdle_words.json`. In the next
