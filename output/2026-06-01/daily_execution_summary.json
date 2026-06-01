@@ -1,0 +1,27 @@
+{
+  "date": "2026-06-01",
+  "timestamp": "2026-06-01T00:39:38.556881+00:00",
+  "pipeline_status": "SUCCESS",
+  "api_health": {
+    "merriam_webster": {
+      "calls_made": "not recorded",
+      "success_rate": "not recorded",
+      "status": "not recorded"
+    },
+    "wordnik": {
+      "calls_made": "not recorded",
+      "success_rate": "not recorded",
+      "status": "not recorded"
+    }
+  },
+  "words_by_source": {
+    "merriam_webster_rss": "not recorded",
+    "merriam_webster_new_words": "not recorded",
+    "wordnik_wotd": "not recorded",
+    "invalid_list_validation": "not recorded",
+    "manual_additions": "not recorded"
+  },
+  "total_new_words_discovered": "not recorded",
+  "total_words_promoted": "not recorded",
+  "notes": "Pipeline completed; detailed API/source metrics were not recorded by this run."
+}
