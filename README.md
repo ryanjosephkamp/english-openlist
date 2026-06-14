@@ -1,8 +1,61 @@
-# Phase 3: Updating Pipeline
+# English OpenList
 
-## Overview
+A free, open, and continuously maintained list of valid English words.
 
-Phase 3 transforms the English OpenList from a static dataset into a **living, continuously updated lexical resource**. This phase implements:
+- 📦 **Hugging Face dataset:** [huggingface.co/datasets/ryanjosephkamp/english-openlist](https://huggingface.co/datasets/ryanjosephkamp/english-openlist)
+- 💻 **GitHub repository:** [github.com/ryanjosephkamp/english-openlist](https://github.com/ryanjosephkamp/english-openlist)
+
+## Overview & Purpose
+
+**English OpenList is a freely available, openly licensed list of valid English words**, maintained as a public good. It is distributed as plain text and JSON files so anyone can download, inspect, and use the data without registration, payment, or restrictive terms.
+
+The project exists to solve a common problem: high-quality English word lists are often paywalled, locked behind proprietary licenses, or only available as outdated and inconsistent copies scattered across the internet. Word lists used for games, research, and software are frequently either expensive to license or unreliable in quality. English OpenList provides a single, transparent, and openly maintained alternative.
+
+It is built for a broad audience:
+
+- **Word game players and makers** who need a dependable list of playable words (for Scrabble-style games, crosswords, Wordle-style games, and more).
+- **Researchers and educators** working in linguistics, natural language processing, or data analysis.
+- **Developers** who want a clean, machine-readable word list they can drop into an application.
+- **Non-technical users** who simply want to download a reliable list of English words.
+
+### Why This Matters
+
+Before projects like this, getting a trustworthy English word list usually meant one of three things: paying to license a proprietary dictionary, accepting a stale or unvetted list of unknown origin, or assembling and cleaning the data yourself. Each of these creates a barrier — cost, quality, or effort — that keeps useful word data out of reach for many people.
+
+English OpenList removes those barriers by creating durable, open infrastructure. Words are validated against a recognized dictionary source, the data is version-controlled, and updates are published automatically on a daily basis. Because the project is open and continuously maintained, the community gains a resource that stays current over time rather than one that decays. Anyone can use it, build on it, and contribute back — and the data remains available to everyone, freely.
+
+## Quick Start / How to Use
+
+The easiest ways to access the data:
+
+- **Hugging Face (recommended for data):** Download the latest valid and invalid word lists directly from the [Hugging Face dataset](https://huggingface.co/datasets/ryanjosephkamp/english-openlist). Files are available in both plain text (`.txt`) and JSON (`.json`) formats.
+
+  ```bash
+  # Download the current valid word list
+  wget https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_valid_words.txt
+  ```
+
+  Or load it in Python:
+
+  ```python
+  from datasets import load_dataset
+
+  dataset = load_dataset("ryanjosephkamp/english-openlist")
+  ```
+
+- **GitHub (recommended for code and contributions):** Browse the source, automation, and project history in the [GitHub repository](https://github.com/ryanjosephkamp/english-openlist). To suggest new words, add them to `manual_additions.txt` and open a pull request.
+
+That's all most users need. The sections below document how the data is built and maintained, and can be safely skipped if you only want to use the word lists.
+
+---
+
+## How the Data Is Maintained (Technical Documentation)
+
+The remaining sections describe the automation pipeline that keeps English OpenList current. They are intended for contributors and developers; everyday users do not need to read them to use the data.
+
+### Pipeline Overview
+
+The English OpenList updating pipeline transforms a static dataset into a **living, continuously updated lexical resource**. It implements:
 
 - 🔄 **Daily automated word discovery** via GitHub Actions
 - 🔍 **Multi-source discovery** from Merriam-Webster RSS, MW New Words page, and Wordnik API
@@ -11,16 +64,16 @@ Phase 3 transforms the English OpenList from a static dataset into a **living, c
 - 📊 **Statistical reports and visualizations** for each update
 - 📝 **Version-controlled releases** with consolidated changelogs
 
-## Quick Start
+### Running the Pipeline Locally
 
-### 1. Install Dependencies
+#### 1. Install Dependencies
 
 ```bash
 cd phase3
 pip install -r requirements.txt
 ```
 
-### 2. Configure API Keys
+#### 2. Configure API Keys
 
 Create a `.env` file or set environment variables:
 
@@ -36,19 +89,19 @@ Get your API keys:
 - **Wordnik:** [developer.wordnik.com](https://developer.wordnik.com/) (Free tier: 100 requests/day)
 - **Hugging Face:** [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
-### 3. Run Manual Update
+#### 3. Run Manual Update
 
 ```bash
 python scripts/run_weekly_update.py
 ```
 
-### 4. Upload to Hugging Face
+#### 4. Upload to Hugging Face
 
 ```bash
 python scripts/push_to_huggingface.py
 ```
 
-## Project Structure
+### Project Structure
 
 ```
 phase3/
@@ -80,11 +133,11 @@ phase3/
 └── logs/                       # Pipeline logs
 ```
 
-## GitHub Actions Automation
+### GitHub Actions Automation
 
 The workflow at `.github/workflows/daily_update.yml` runs **daily at 00:00 UTC**.
 
-### Daily Pipeline
+#### Daily Pipeline
 
 1. **New Word Discovery** - Discovers words from multiple sources:
    - Merriam-Webster RSS feed (Word of the Day)
@@ -98,7 +151,7 @@ The workflow at `.github/workflows/daily_update.yml` runs **daily at 00:00 UTC**
 
 4. **Hugging Face Upload** - Pushes updated word lists to HF Datasets
 
-### Required Secrets
+#### Required Secrets
 
 Set these in your GitHub repository settings:
 
@@ -109,14 +162,14 @@ Set these in your GitHub repository settings:
 | `WORDNIK_API_KEY` | Wordnik API key (optional, for WOTD discovery) |
 | `HF_TOKEN` | Hugging Face write token |
 
-### Manual Trigger
+#### Manual Trigger
 
 You can trigger the workflow manually from the GitHub Actions tab with optional parameters:
 - `validation_limit` - Number of invalid words to validate (default: 1000)
 - `skip_upload` - Skip uploading to Hugging Face
 - `skip_invalid_validation` - Skip invalid list validation
 
-## Validation Rules
+### Validation Rules
 
 Words are valid if they:
 
@@ -126,7 +179,7 @@ Words are valid if they:
 ❌ Are NOT proper nouns  
 ❌ Are NOT abbreviations or acronyms  
 
-## Output Files
+### Output Files
 
 Each daily release generates (in `output/YYYY-MM-DD/`):
 
@@ -144,7 +197,7 @@ Daily automation also generates transient Brrrdle artifacts in `output/YYYY-MM-D
 These files are uploaded to Hugging Face under both `latest/brrrdle/` and `data/brrrdle/`,
 but are not committed as repository data folders.
 
-### Brrrdle Artifacts
+#### Brrrdle Artifacts
 
 `words_length_{N}.json` files are the primary Brrrdle artifacts, with one file for
 each word length from 2 through 35. Each file contains `metadata.curation`,
@@ -158,19 +211,19 @@ compatibility files `brrrdle_words.txt` and `brrrdle_words.json`. In the next
 major Brrrdle artifact update, remove those legacy files and any legacy-only
 manifest or generated README behavior that remains.
 
-## Testing
+### Testing
 
 ```bash
 cd phase3
 pytest tests/ -v
 ```
 
-## Documentation
+### Documentation
 
 - [PHASE3_STRATEGY.md](PHASE3_STRATEGY.md) - Full strategy and architecture
 - [templates/dataset_card.md](templates/dataset_card.md) - Hugging Face dataset description
 
-## Word Discovery Sources
+### Word Discovery Sources
 
 The pipeline automatically discovers new words from multiple sources:
 
@@ -182,7 +235,7 @@ The pipeline automatically discovers new words from multiple sources:
 | Manual Additions | `manual_additions.txt` file | On commit |
 | Invalid List Recovery | Validates candidates from invalid list | ~1,000/day |
 
-## Status
+### Status
 
 | Component | Status |
 |-----------|--------|
@@ -204,4 +257,4 @@ The pipeline automatically discovers new words from multiple sources:
 
 ---
 
-*Phase 3 - English OpenList Updating Pipeline*
+*English OpenList - Open, freely available English word data, continuously maintained.*
