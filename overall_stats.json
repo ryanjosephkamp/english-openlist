@@ -1,8 +1,8 @@
 {
-  "last_updated": "2026-06-16",
-  "total_valid_words": 378884,
+  "last_updated": "2026-06-17",
+  "total_valid_words": 378885,
   "total_invalid_entries": 0,
-  "total_updates": 25,
+  "total_updates": 26,
   "word_length_distribution": {
     "1": 10,
     "2": 134,
@@ -14,7 +14,7 @@
     "9": 47790,
     "10": 46247,
     "7": 29992,
-    "11": 41476,
+    "11": 41477,
     "13": 28705,
     "14": 22458,
     "12": 35475,
@@ -52,7 +52,7 @@
   },
   "starting_letter_distribution": {
     "a": 19520,
-    "b": 18393,
+    "b": 18394,
     "c": 31819,
     "d": 23384,
     "e": 15299,
