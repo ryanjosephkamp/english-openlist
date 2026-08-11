@@ -1,0 +1,31 @@
+name: Tests
+
+# Pull requests only, deliberately. The daily pipeline pushes to main twice a
+# day's worth of generated content, and running the suite on those commits would
+# add noise without adding signal -- nothing the pipeline generates can change
+# whether the code passes its tests.
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    name: pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest tests/ -v

@@ -1,0 +1,305 @@
+# English OpenList
+
+A free, open, and continuously maintained list of valid English words.
+
+- 📦 **Hugging Face dataset:** [huggingface.co/datasets/ryanjosephkamp/english-openlist](https://huggingface.co/datasets/ryanjosephkamp/english-openlist)
+- 💻 **GitHub repository:** [github.com/ryanjosephkamp/english-openlist](https://github.com/ryanjosephkamp/english-openlist)
+
+## Overview & Purpose
+
+**English OpenList is a freely available, openly licensed list of valid English words**, maintained as a public good. It is distributed as plain text and JSON files so anyone can download, inspect, and use the data without registration, payment, or restrictive terms.
+
+The project exists to solve a common problem: high-quality English word lists are often paywalled, locked behind proprietary licenses, or only available as outdated and inconsistent copies scattered across the internet. Word lists used for games, research, and software are frequently either expensive to license or unreliable in quality. English OpenList provides a single, transparent, and openly maintained alternative.
+
+It is built for a broad audience:
+
+- **Word game players and makers** who need a dependable list of playable words (for Scrabble-style games, crosswords, Wordle-style games, and more).
+- **Researchers and educators** working in linguistics, natural language processing, or data analysis.
+- **Developers** who want a clean, machine-readable word list they can drop into an application.
+- **Non-technical users** who simply want to download a reliable list of English words.
+
+### Why This Matters
+
+Before projects like this, getting a trustworthy English word list usually meant one of three things: paying to license a proprietary dictionary, accepting a stale or unvetted list of unknown origin, or assembling and cleaning the data yourself. Each of these creates a barrier — cost, quality, or effort — that keeps useful word data out of reach for many people.
+
+English OpenList removes those barriers by creating durable, open infrastructure. Words are validated against a recognized dictionary source, the data is version-controlled, and updates are published automatically on a daily basis. Because the project is open and continuously maintained, the community gains a resource that stays current over time rather than one that decays. Anyone can use it, build on it, and contribute back — and the data remains available to everyone, freely.
+
+## Quick Start / How to Use
+
+The easiest ways to access the data:
+
+- **Hugging Face (recommended for data):** Download the latest valid and invalid word lists directly from the [Hugging Face dataset](https://huggingface.co/datasets/ryanjosephkamp/english-openlist). Files are available in both plain text (`.txt`) and JSON (`.json`) formats.
+
+  ```bash
+  # Download the current valid word list
+  wget https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_valid_words.txt
+  ```
+
+  Or load it in Python. The dataset's default configuration is the valid word
+  list, so this returns ~379,000 rows in a `text` column:
+
+  ```python
+  from datasets import load_dataset
+
+  dataset = load_dataset("ryanjosephkamp/english-openlist", split="train")
+  ```
+
+  To read the file directly instead:
+
+  ```python
+  from huggingface_hub import hf_hub_download
+
+  path = hf_hub_download(
+      "ryanjosephkamp/english-openlist",
+      "data/merged_valid_words.txt",
+      repo_type="dataset",
+  )
+  words = set(open(path).read().split())
+  ```
+
+  > The default config is declared in `templates/dataset_card.md`. Without it the
+  > loader globs every file in the repository — including all 176 daily release
+  > folders — and resolves to roughly 64.7 million rows.
+
+- **GitHub (recommended for code and contributions):** Browse the source, automation, and project history in the [GitHub repository](https://github.com/ryanjosephkamp/english-openlist). To suggest new words, add them to `manual_additions.txt` and open a pull request.
+
+That's all most users need. The sections below document how the data is built and maintained, and can be safely skipped if you only want to use the word lists.
+
+---
+
+## How the Data Is Maintained (Technical Documentation)
+
+The remaining sections describe the automation pipeline that keeps English OpenList current. They are intended for contributors and developers; everyday users do not need to read them to use the data.
+
+### Pipeline Overview
+
+The English OpenList updating pipeline transforms a static dataset into a **living, continuously updated lexical resource**. It implements:
+
+- 🔄 **Daily automated word discovery** via GitHub Actions
+- 🔍 **Multi-source discovery** from Merriam-Webster RSS, MW New Words page, and Wordnik API
+- 🔎 **Invalid list recovery** - validates ~1,000 words/day from the invalid list
+- 📦 **Public distribution** on Hugging Face Datasets
+- 📊 **Statistical reports and visualizations** for each update
+- 📝 **Version-controlled releases** with consolidated changelogs
+
+### Running the Pipeline Locally
+
+#### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+#### 2. Configure API Keys
+
+Create a `.env` file or set environment variables:
+
+```bash
+export MW_API_KEY="your-merriam-webster-api-key"
+export MW_MEDICAL_API_KEY="your-merriam-webster-medical-api-key"  # Optional
+export WORDNIK_API_KEY="your-wordnik-api-key"  # Optional, for Word of the Day
+export HF_TOKEN="your-huggingface-token"
+```
+
+Get your API keys:
+- **Merriam-Webster:** [dictionaryapi.com](https://www.dictionaryapi.com/) (Free tier: 1000 requests/day)
+- **Wordnik:** [developer.wordnik.com](https://developer.wordnik.com/) (Free tier: 100 requests/day)
+- **Hugging Face:** [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+
+#### 3. Run Manual Update
+
+```bash
+python scripts/run_weekly_update.py
+```
+
+#### 4. Upload to Hugging Face
+
+```bash
+python scripts/push_to_huggingface.py
+```
+
+### Project Structure
+
+```
+.
+├── README.md                   # This file
+├── config.py                   # Configuration settings
+├── requirements.txt            # Python dependencies
+├── manual_additions.txt        # Words submitted by hand (open a PR to add)
+├── scripts/
+│   ├── dictionary_api.py       # Merriam-Webster API wrapper
+│   ├── word_validator.py       # Scrabble-compatible validation
+│   ├── data_updater.py         # List/dictionary update logic
+│   ├── run_weekly_update.py    # Main orchestration (new word discovery)
+│   ├── validate_invalid_list.py # Invalid list recovery pipeline
+│   ├── generate_changelog.py   # Consolidated changelog generator
+│   ├── generate_brrrdle_artifacts.py # Per-length Brrrdle files
+│   ├── dictionary_api.py       # Merriam-Webster API wrapper (imported)
+│   ├── data_updater.py         # List/dictionary update logic (imported)
+│   ├── word_validator.py       # Scrabble-compatible validation (imported)
+│   ├── generate_daily_stats.py # Daily statistics
+│   ├── generate_blog_post.py   # Release write-up
+│   ├── download_from_huggingface.py # Download data from HF
+│   └── push_to_huggingface.py  # Hugging Face upload (incl. dataset card)
+├── templates/
+│   ├── dataset_card.md         # Hugging Face dataset card -- see note below
+│   ├── CHANGELOG_TEMPLATE.md   # Changelog format
+│   └── STATISTICAL_REPORT_TEMPLATE.md
+├── tests/                      # Unit tests, run on every pull request
+├── docs/                       # Strategy and design documents
+├── archive/                    # Historical records kept out of the way
+│   ├── daily-metrics/          # Per-day distribution CSVs and run summaries
+│   ├── change-logs/            # Development journal
+│   └── manual_catchup_2026-05/ # One-off OED backfill
+└── output/                     # Generated each run, gitignored -- see below
+```
+
+> **`output/` is not committed.** Everything a run generates is published to
+> Hugging Face under `releases/{date}/`, so keeping a copy in git duplicated
+> roughly 379 MB to no purpose. The per-day metrics that only ever existed here
+> are preserved in `archive/daily-metrics/`.
+
+> **The Hugging Face dataset card is generated from this repo.**
+> `scripts/push_to_huggingface.py` uploads `templates/dataset_card.md` as the
+> dataset's `README.md` on every run. Edit the template here — changes made on the
+> Hugging Face website will be overwritten by the next daily run.
+
+### GitHub Actions Automation
+
+The workflow at `.github/workflows/daily_update.yml` runs **daily at 00:00 UTC**.
+
+#### Daily Pipeline
+
+1. **New Word Discovery** - Discovers words from multiple sources:
+   - Merriam-Webster RSS feed (Word of the Day)
+   - Merriam-Webster "New Words in the Dictionary" page
+   - Wordnik Word of the Day (past 30 days)
+   - Manual additions file (`manual_additions.txt`)
+
+2. **Invalid List Validation** - Validates ~1,000 words/day from the invalid list against MW API, promoting valid words
+
+3. **Changelog Generation** - Creates consolidated changelog with all changes
+
+4. **Hugging Face Upload** - Pushes updated word lists to HF Datasets
+
+#### Required Secrets
+
+Set these in your GitHub repository settings:
+
+| Secret | Description |
+|--------|-------------|
+| `MW_API_KEY` | Merriam-Webster Collegiate API key |
+| `MW_MEDICAL_API_KEY` | Merriam-Webster Medical API key (optional) |
+| `WORDNIK_API_KEY` | Wordnik API key (optional, for WOTD discovery) |
+| `HF_TOKEN` | Hugging Face write token |
+
+#### Manual Trigger
+
+You can trigger the workflow manually from the GitHub Actions tab with optional parameters:
+- `validation_limit` - Number of invalid words to validate (default: 1000)
+- `skip_upload` - Skip uploading to Hugging Face
+- `skip_invalid_validation` - Skip invalid list validation
+
+### Validation Rules
+
+These are the rules the daily pipeline applies to **newly discovered** words:
+
+✅ Contain only lowercase letters (a-z)  
+✅ Are recognized by Merriam-Webster  
+❌ Are NOT proper nouns  
+❌ Are NOT abbreviations or acronyms  
+
+Words already in the list arrived through earlier intakes and were not all checked
+against Merriam-Webster. Roughly 46% came from a tournament word list, 35% through
+the verification pipeline, and 17% are synthetic candidates (`source:
+"synthetic_generation"`) such as `abacteremicer`. These are kept deliberately — the
+list aims to be broad — but applications wanting only conventional vocabulary
+should filter on `source`.
+
+Lengths run from 1 to 47 characters, from `a` to
+`phosphoribosylaminoimidazolesuccinocarboxamides`.
+
+> **What the JSON metadata contains.** `merged_valid_dict.json` records *how each
+> word was validated* — attesting sources, checks passed, dates. It does **not**
+> contain definitions, parts of speech, pronunciations, or frequency data. Entry
+> shapes differ by intake, so check for a field before reading it.
+
+### Output Files
+
+Each daily release generates (in `output/YYYY-MM-DD/`):
+
+| File | Description |
+|------|-------------|
+| `merged_valid_words.txt` | Updated valid word list |
+| `merged_valid_dict.json` | Updated valid dictionary |
+| `merged_invalid_words.txt` | Updated invalid list |
+| `merged_invalid_dict.json` | Updated invalid dictionary |
+| `promoted_words.txt` | Words promoted from invalid → valid today |
+| `CHANGELOG.md` | Consolidated summary of all changes |
+| `update_stats.json` | Machine-readable statistics |
+
+Daily automation also generates transient Brrrdle artifacts in `output/YYYY-MM-DD/brrrdle/`.
+These files are uploaded to Hugging Face under both `latest/brrrdle/` and `data/brrrdle/`,
+but are not committed as repository data folders.
+
+#### Brrrdle Artifacts
+
+`words_length_{N}.json` files are the primary Brrrdle artifacts, with one file for
+each word length from 2 through 35. Each file contains `metadata.curation`,
+curated `answers`, and complete `validGuesses`. The `validGuesses` array remains
+the full per-length list, while `answers` is generated with the deterministic
+`stratified_quality_score_v1` method using seed `42 + length`. Both arrays contain
+plain word strings.
+
+For one transition period, the generator also publishes the legacy length-5
+compatibility files `brrrdle_words.txt` and `brrrdle_words.json`. In the next
+major Brrrdle artifact update, remove those legacy files and any legacy-only
+manifest or generated README behavior that remains.
+
+### Testing
+
+```bash
+pytest tests/ -v
+```
+
+### Documentation
+
+- [docs/PHASE3_STRATEGY.md](docs/PHASE3_STRATEGY.md) - Full strategy and architecture
+- [docs/CONSTITUTION.md](docs/CONSTITUTION.md) - Project principles
+- [templates/dataset_card.md](templates/dataset_card.md) - Hugging Face dataset description
+
+### Word Discovery Sources
+
+The pipeline automatically discovers new words from multiple sources:
+
+| Source | Description | Frequency |
+|--------|-------------|----------|
+| MW RSS Feed | Merriam-Webster Word of the Day | Daily |
+| MW New Words Page | Newly added dictionary entries | Daily |
+| Wordnik WOTD | Wordnik Word of the Day (past 30 days) | Daily |
+| Manual Additions | `manual_additions.txt` file | On commit |
+| Invalid List Recovery | Validates candidates from invalid list | ~1,000/day |
+
+### Status
+
+| Component | Status |
+|-----------|--------|
+| Strategy Document | ✅ Complete |
+| Configuration | ✅ Complete |
+| Dictionary API | ✅ Complete |
+| Word Validator | ✅ Complete |
+| Data Updater | ✅ Complete |
+| Main Pipeline | ✅ Complete |
+| Multi-Source Discovery | ✅ Complete |
+| Invalid List Validator | ✅ Complete |
+| Abbreviation Filtering | ✅ Complete |
+| Consolidated Changelog | ✅ Complete |
+| HF Uploader | ✅ Complete |
+| GitHub Actions | ✅ Complete |
+| Unit Tests | ✅ Complete |
+| Integration Testing | ✅ Complete |
+| First Live Update | ✅ Complete (175 daily releases published, 2026-01-12 onward) |
+
+---
+
+*English OpenList - Open, freely available English word data, continuously maintained.*

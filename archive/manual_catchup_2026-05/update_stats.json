@@ -1,0 +1,17 @@
+{
+  "update_date": "2026-05-19",
+  "update_type": "manual-oed-catchup",
+  "words_added_to_valid": 201,
+  "words_removed_from_invalid": 0,
+  "total_valid_words": "See HF dataset card for current count",
+  "source": "Oxford English Dictionary monthly updates",
+  "validation_method": "Merriam-Webster API + Free Dictionary fallback",
+  "process_steps": [
+    "OED extraction",
+    "Rule validation",
+    "Deduplication",
+    "Novelty check",
+    "MW validation"
+  ],
+  "rejected_candidates": 1064
+}

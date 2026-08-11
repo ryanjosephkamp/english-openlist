@@ -1,0 +1,233 @@
+# GitHub Actions Workflow: Daily Dictionary Validation
+# English OpenList Phase 3 - Invalid List Recovery + Blog Automation
+#
+# This workflow runs daily at 00:00 UTC to:
+# 1. Download current word lists from Hugging Face
+# 2. Validate ~1,000 words from the invalid list against MW APIs
+# 3. Promote validated words to the valid list
+# 4. Push full word lists to Hugging Face Datasets
+# 5. Generate daily statistics, transparency log, and blog post
+#
+# Can be triggered manually via workflow_dispatch
+
+name: Daily Dictionary Update
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    # Run every day at 00:00 UTC
+    - cron: '0 0 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      validation_limit:
+        description: 'Number of invalid words to validate'
+        required: false
+        default: '1000'
+        type: string
+      skip_upload:
+        description: 'Skip uploading to Hugging Face'
+        required: false
+        default: 'false'
+        type: boolean
+      skip_invalid_validation:
+        description: 'Skip invalid list validation'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  update:
+    name: Run Daily Update
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          lfs: true
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'requirements.txt'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      
+      # Step 0: Download current data from Hugging Face
+      - name: Download data from Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python scripts/download_from_huggingface.py --method snapshot --skip-large-dicts
+      
+      # Step 1: New Word Discovery (RSS + manual additions)
+      - name: Run new word discovery
+        env:
+          MW_API_KEY: ${{ secrets.MW_API_KEY }}
+          MW_MEDICAL_API_KEY: ${{ secrets.MW_MEDICAL_API_KEY }}
+          WORDNIK_API_KEY: ${{ secrets.WORDNIK_API_KEY }}
+        run: |
+          python scripts/run_weekly_update.py --skip-invalid
+      
+      # Step 2: Invalid List Validation
+      - name: Validate invalid word list
+        if: ${{ github.event.inputs.skip_invalid_validation != 'true' }}
+        env:
+          MW_API_KEY: ${{ secrets.MW_API_KEY }}
+          MW_MEDICAL_API_KEY: ${{ secrets.MW_MEDICAL_API_KEY }}
+        run: |
+          LIMIT="${{ github.event.inputs.validation_limit || '1000' }}"
+          python scripts/validate_invalid_list.py --limit $LIMIT
+      
+      # Step 2.5: Generate consolidated changelog
+      - name: Generate consolidated changelog
+        run: |
+          python scripts/generate_changelog.py
+      
+      # Step 3: Commit updated source files back to repo
+      - name: Generate Brrrdle artifacts
+        run: |
+          python scripts/generate_brrrdle_artifacts.py \
+            --output-dir output/${{ steps.date.outputs.date }}/brrrdle \
+            --date ${{ steps.date.outputs.date }}
+      
+      - name: Verify Brrrdle artifacts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          brrrdle_dir = Path("output/${{ steps.date.outputs.date }}/brrrdle")
+          missing = [
+              brrrdle_dir / f"words_length_{word_length}.json"
+              for word_length in range(2, 36)
+              if not (brrrdle_dir / f"words_length_{word_length}.json").is_file()
+          ]
+          if missing:
+              raise SystemExit(
+                  "Missing Brrrdle length artifacts: "
+                  + ", ".join(str(path) for path in missing)
+              )
+          for word_length in range(2, 36):
+              path = brrrdle_dir / f"words_length_{word_length}.json"
+              payload = json.loads(path.read_text())
+              curation = payload.get("metadata", {}).get("curation", {})
+              if curation.get("method") != "stratified_quality_score_v1":
+                  raise SystemExit(f"Missing Brrrdle curation metadata in {path}")
+              if curation.get("seed") != 42 + word_length:
+                  raise SystemExit(f"Invalid Brrrdle curation seed in {path}")
+              answers = payload.get("answers")
+              valid_guesses = payload.get("validGuesses")
+              if not isinstance(answers, list) or not isinstance(valid_guesses, list):
+                  raise SystemExit(f"Invalid Brrrdle answers/validGuesses payload in {path}")
+              if len(valid_guesses) < len(answers):
+                  raise SystemExit(f"Brrrdle answers exceed validGuesses in {path}")
+              if not all(isinstance(word, str) for word in answers + valid_guesses):
+                  raise SystemExit(f"Brrrdle answers/validGuesses must contain only strings in {path}")
+              if not set(answers).issubset(set(valid_guesses)):
+                  raise SystemExit(f"Brrrdle answers must be a subset of validGuesses in {path}")
+          print("Verified 34 Brrrdle length artifacts with curated answers.")
+          PY
+        
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ steps.date.outputs.date }}
+          path: output/
+          retention-days: 90
+      
+      - name: Push to Hugging Face
+        if: ${{ github.event.inputs.skip_upload != 'true' }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python scripts/push_to_huggingface.py
+
+      # ============================================
+      # NEW PHASE 4 STEPS - Blog & Transparency (with debugging)
+      # ============================================
+
+      - name: Generate daily statistics
+        run: |
+          set -x
+          python scripts/generate_daily_stats.py
+
+      - name: Generate execution transparency log
+        run: |
+          set -x
+          python scripts/generate_execution_summary.py
+
+      - name: Generate daily blog post
+        run: |
+          set -x
+          python scripts/generate_blog_post.py
+
+      # Everything the day produced goes in one commit and one push.
+      # Pushing twice meant the second push cancelled the Pages build the first
+      # one started, which is why a cancelled pages-build-deployment appeared
+      # every single day. One push, one build.
+      - name: Commit and push the day's changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # Stage each path on its own. `git add` aborts the entire command if
+          # any one pathspec matches nothing, so combining these meant a missing
+          # validation_progress.json silently stopped everything else from being
+          # staged -- and a trailing `|| true` hid the failure while the step
+          # still reported success. The existence check avoids the error rather
+          # than masking it.
+          for path in validation_progress.json _posts/ updates/ overall_stats.json; do
+            if [ -e "$path" ]; then
+              git add -A -- "$path"
+            else
+              echo "skipping $path (not present)"
+            fi
+          done
+
+          echo "=== Staged ==="
+          git status --short
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Daily update ${{ steps.date.outputs.date }}: word list, stats and blog post"
+            git push
+            echo "Committed and pushed"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## Daily Update Summary - ${{ steps.date.outputs.date }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Blog & Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "Daily blog post and interactive charts generated successfully." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### New Word Discovery" >> $GITHUB_STEP_SUMMARY
+          if [ -f output/${{ steps.date.outputs.date }}/update_stats.json ]; then
+            cat output/${{ steps.date.outputs.date }}/update_stats.json >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Invalid List Validation" >> $GITHUB_STEP_SUMMARY
+          if [ -f output/${{ steps.date.outputs.date }}/promoted_words.txt ]; then
+            echo "Promoted words:" >> $GITHUB_STEP_SUMMARY
+            cat output/${{ steps.date.outputs.date }}/promoted_words.txt >> $GITHUB_STEP_SUMMARY
+          fi
