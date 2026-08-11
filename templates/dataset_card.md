@@ -80,18 +80,23 @@ Daily updates with changelog and statistics:
 ```
 releases/
 └── {YYYY-MM-DD}/
-    ├── promoted_words.txt      # Words promoted from invalid to valid that day
-    ├── update_stats.json       # Statistics for the update
+    ├── update_stats.json       # Statistics for the update, including the
+    │                           # `promoted_words` and `new_words` lists
     └── CHANGELOG.md            # Changelog for the update
 ```
 
+A release folder is the record of what changed that day, not a second copy of
+the dataset — the complete lists are in `data/`, and the current snapshot is in
+`latest/`.
+
 ### Latest Update Reference (latest/)
 
-Copy of the most recent release for convenience:
+The most recent release, plus a copy of the current full lists, for convenience:
 
 ```
 latest/
-├── promoted_words.txt
+├── merged_valid_words.txt
+├── merged_valid_dict.json
 ├── update_stats.json
 └── CHANGELOG.md
 ```
