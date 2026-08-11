@@ -16,12 +16,19 @@ import sys
 from pathlib import Path
 
 from huggingface_hub import hf_hub_download, HfApi
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import (
     HF_TOKEN, HF_DATASET_REPO,
     VALID_WORDS_FILE, VALID_DICT_FILE, INVALID_WORDS_FILE, INVALID_DICT_FILE,
-    INITIAL_DELIVERABLES
+    INITIAL_DELIVERABLES, MAX_RETRIES, RETRY_DELAY
 )
 
 logging.basicConfig(
@@ -30,6 +37,58 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 logger = logging.getLogger(__name__)
+
+
+# Hugging Face rate-limits this repo's metadata endpoint from time to time.
+# Every historical failure of the daily pipeline was a single 429 on the very
+# first call, with no retry -- one transient hiccup killed the whole day's run.
+# These are the statuses worth waiting out; 401/403/404 are not, because
+# retrying a bad token or a missing file just fails more slowly.
+TRANSIENT_STATUS = {408, 425, 429, 500, 502, 503, 504}
+
+
+def _is_transient(error: BaseException) -> bool:
+    """True when retrying stands a chance of succeeding."""
+    status = getattr(getattr(error, "response", None), "status_code", None)
+    if status is not None:
+        return status in TRANSIENT_STATUS
+
+    if isinstance(error, (ConnectionError, TimeoutError)):
+        return True
+
+    # huggingface_hub wraps some failures in ways that lose the response object,
+    # so fall back to the text. Narrow on purpose: a substring match that is too
+    # eager would retry genuine errors forever.
+    text = str(error).lower()
+    return any(
+        marker in text
+        for marker in ("429", "too many requests", "rate limit", "503", "504",
+                       "connection reset", "connection aborted", "timed out")
+    )
+
+
+# MAX_RETRIES is retries, not attempts, so the first try is on top of it.
+# RETRY_DELAY seeds the backoff: 5s, 10s, 20s with the shipped values.
+_retry_transient = retry(
+    retry=retry_if_exception(_is_transient),
+    stop=stop_after_attempt(MAX_RETRIES + 1),
+    wait=wait_exponential(multiplier=RETRY_DELAY, min=RETRY_DELAY, max=60),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+    reraise=True,
+)
+
+
+@_retry_transient
+def _snapshot_download_with_retry(**kwargs):
+    """snapshot_download, retried on rate limits and server hiccups."""
+    from huggingface_hub import snapshot_download
+    return snapshot_download(**kwargs)
+
+
+@_retry_transient
+def _hf_hub_download_with_retry(**kwargs):
+    """hf_hub_download, retried on rate limits and server hiccups."""
+    return hf_hub_download(**kwargs)
 
 
 class HuggingFaceDownloader:
@@ -58,7 +117,7 @@ class HuggingFaceDownloader:
             local_path.parent.mkdir(parents=True, exist_ok=True)
             
             # Download file
-            downloaded_path = hf_hub_download(
+            downloaded_path = _hf_hub_download_with_retry(
                 repo_id=self.repo_id,
                 filename=remote_path,
                 repo_type="dataset",
@@ -130,7 +189,6 @@ class HuggingFaceDownloader:
         Returns:
             True if download successful
         """
-        from huggingface_hub import snapshot_download
         import shutil
         
         try:
@@ -148,7 +206,7 @@ class HuggingFaceDownloader:
                 logger.info("Skipping large invalid dict download (--skip-large-dicts)")
             
             # Download the data folder
-            local_dir = snapshot_download(
+            local_dir = _snapshot_download_with_retry(
                 repo_id=self.repo_id,
                 repo_type="dataset",
                 token=self.token if self.token else None,

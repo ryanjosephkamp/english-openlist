@@ -49,14 +49,14 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           lfs: true
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -103,22 +103,6 @@ jobs:
           python scripts/generate_changelog.py
       
       # Step 3: Commit updated source files back to repo
-      - name: Commit changes to repository
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          
-          git add validation_progress.json || true
-          git add output/ || true
-          
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Daily update: ${{ steps.date.outputs.date }}"
-            git push
-            echo "Changes committed and pushed"
-          fi
-      
       - name: Generate Brrrdle artifacts
         run: |
           python scripts/generate_brrrdle_artifacts.py \
@@ -164,7 +148,7 @@ jobs:
           PY
         
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-${{ steps.date.outputs.date }}
           path: output/
@@ -196,26 +180,26 @@ jobs:
           set -x
           python scripts/generate_blog_post.py
 
-      - name: Commit blog post, stats & tracker
+      # Everything the day produced goes in one commit and one push.
+      # Pushing twice meant the second push cancelled the Pages build the first
+      # one started, which is why a cancelled pages-build-deployment appeared
+      # every single day. One push, one build.
+      - name: Commit and push the day's changes
         run: |
-          set -x
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          
-          echo "=== Files before commit ==="
-          git status
-          
-          git add -A _posts/ updates/ overall_stats.json output/ || true
-          
-          echo "=== Files staged ==="
-          git status
-          
+
+          git add -A validation_progress.json _posts/ updates/ overall_stats.json output/ || true
+
+          echo "=== Staged ==="
+          git status --short
+
           if git diff --staged --quiet; then
-            echo "No blog changes detected"
+            echo "No changes to commit"
           else
-            git commit -m "Daily blog post: Update #${{ steps.date.outputs.date }} - English OpenList"
+            git commit -m "Daily update ${{ steps.date.outputs.date }}: word list, stats and blog post"
             git push
-            echo "Commit and push completed"
+            echo "Committed and pushed"
           fi
 
       - name: Summary
