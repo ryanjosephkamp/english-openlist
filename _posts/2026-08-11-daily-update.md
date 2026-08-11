@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Daily English OpenList Update - 2026-08-11"
-date: 2026-08-11T00:14:43.450015+00:00
+date: 2026-08-11T04:08:58.643069+00:00
 categories: [daily-updates]
 tags: [daily, statistics, words]
 excerpt: "Automated English OpenList daily update for 2026-08-11."
@@ -9,23 +9,17 @@ excerpt: "Automated English OpenList daily update for 2026-08-11."
 
 # Daily English OpenList Update — 2026-08-11
 
-**Generated automatically at 2026-08-11 00:14:43 UTC**
+**Generated automatically at 2026-08-11 04:08:58 UTC**
 
 This automated post follows the English OpenList Blog Constitution by reporting only recorded values. Missing historical metrics are marked as `not recorded` or `unavailable`.
 
 ## Today's Results
 
-- **Total words added today:** 1
-- **New words discovered today:** 1
+- **Total words added today:** 0
+- **New words discovered today:** 0
 - **Words promoted from invalid list:** 0
 - **Total valid words now:** **378,888**
 - **Total invalid entries tracked:** 0
-
-### New Words Discovered Today
-
-```text
-shicer
-```
 
 ## Interactive Statistics
 
