@@ -38,6 +38,16 @@ logger = logging.getLogger(__name__)
 BRRRDLE_ARTIFACTS_DIRNAME = "brrrdle"
 BRRRDLE_REMOTE_PATHS = ("latest/brrrdle", "data/brrrdle")
 
+# Files that belong in data/ and latest/ but not in every releases/{date}/
+# folder. See upload_release() for why.
+RELEASE_EXCLUDES = [
+    "merged_valid_dict.json",
+    "merged_valid_words.txt",
+    "merged_invalid_dict.json",
+    "merged_invalid_words.txt",
+    f"{BRRRDLE_ARTIFACTS_DIRNAME}/**",
+]
+
 
 class HuggingFaceUploader:
     """
@@ -138,13 +148,22 @@ class HuggingFaceUploader:
             return False
         
         try:
-            # Upload to releases/{date}/ folder (daily changes only)
+            # Upload to releases/{date}/ folder (the day's record only).
+            #
+            # A release folder is meant to be the record of what changed that
+            # day, not a second copy of the whole dataset -- the current full
+            # lists live in data/ and latest/, one copy each. Uploading the
+            # 290 MB dictionary here as well put 168 near-identical snapshots in
+            # releases/, and once daily promotion resumes each one is genuinely
+            # distinct, which is roughly 106 GB a year. So the heavy files are
+            # excluded here and here only; latest/ below still gets them all.
             self.api.upload_folder(
                 folder_path=str(release_dir),
                 path_in_repo=f"releases/{release_date}",
                 repo_id=self.repo_id,
                 repo_type="dataset",
-                commit_message=f"Daily update: {release_date}"
+                commit_message=f"Daily update: {release_date}",
+                ignore_patterns=RELEASE_EXCLUDES,
             )
             logger.info(f"Uploaded release {release_date}")
             

@@ -28,6 +28,18 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
+# The invalid list only ever shrinks by the words promoted out of it -- on the
+# order of 1,000 a day against ~9.2 million -- so a write that would drop more
+# than half of what this run loaded is a symptom, not an update.
+#
+# This exists because merged_invalid_words.txt was written unconditionally while
+# merged_invalid_dict.json was guarded by `if self.invalid_dict:`. On 2026-01-25
+# the words file arrived empty, the empty set was written over the real 91 MB
+# file, the empty file was uploaded, and the next morning's run downloaded that
+# empty file and did it again. The list stayed at 0 bytes for 199 days. The dict
+# survived only because its guard refused the same write.
+MAX_SHRINK_RATIO = 0.5
+
 
 @dataclass
 class UpdateStats:
@@ -84,7 +96,12 @@ class DataManager:
         self.valid_dict: dict = {}
         self.invalid_words: set = set()
         self.invalid_dict: dict = {}
-        
+
+        # Entry counts as they were loaded, so a save can tell an ordinary
+        # update from a wipe. See MAX_SHRINK_RATIO.
+        self._invalid_words_loaded = 0
+        self._invalid_dict_loaded = 0
+
         self._loaded = False
     
     def load_data(self) -> None:
@@ -118,7 +135,13 @@ class DataManager:
             # For very large files, just count and keep path for reference
             with open(self.invalid_words_path, 'r', encoding='utf-8') as f:
                 self.invalid_words = set(line.strip() for line in f if line.strip())
+            self._invalid_words_loaded = len(self.invalid_words)
             logger.info(f"Loaded {len(self.invalid_words)} invalid words")
+            if not self.invalid_words:
+                logger.error(
+                    f"{self.invalid_words_path} exists but is empty. The copy on "
+                    "Hugging Face is damaged; this run will not write over it."
+                )
         else:
             logger.warning(f"Invalid words file not found: {self.invalid_words_path}")
         
@@ -127,6 +150,7 @@ class DataManager:
             try:
                 with open(self.invalid_dict_path, 'rb') as f:
                     self.invalid_dict = orjson.loads(f.read())
+                self._invalid_dict_loaded = len(self.invalid_dict)
                 logger.info(f"Loaded invalid dictionary with {len(self.invalid_dict)} entries")
             except Exception as e:
                 logger.warning(f"Could not load invalid dict (may be too large): {e}")
@@ -136,6 +160,32 @@ class DataManager:
         
         self._loaded = True
     
+    def _may_write_invalid(self, count: int, loaded: int, label: str) -> bool:
+        """
+        Decide whether it is safe to write `count` invalid entries.
+
+        Refuses an empty write outright, and refuses any write that would drop
+        more than MAX_SHRINK_RATIO of what this run loaded. Either case means
+        the source data did not arrive, and writing would destroy the good copy
+        that is still on Hugging Face.
+        """
+        if count == 0:
+            logger.warning(
+                f"Not writing {label}: no entries loaded this run. "
+                "Leaving the existing copy untouched."
+            )
+            return False
+
+        if loaded and count < loaded * MAX_SHRINK_RATIO:
+            logger.error(
+                f"Refusing to write {label}: {count:,} entries would replace the "
+                f"{loaded:,} loaded this run. That is a wipe, not an update. "
+                "Leaving the existing copy untouched."
+            )
+            return False
+
+        return True
+
     def save_data(self, output_dir: Optional[Path] = None) -> None:
         """
         Save all data to files.
@@ -162,20 +212,23 @@ class DataManager:
         logger.info(f"Saved valid dictionary")
         
         # Save invalid words list (sorted)
-        invalid_words_file = output_dir / "merged_invalid_words.txt"
-        with open(invalid_words_file, 'w', encoding='utf-8') as f:
-            for word in sorted(self.invalid_words):
-                f.write(f"{word}\n")
-        logger.info(f"Saved {len(self.invalid_words)} invalid words")
-        
+        if self._may_write_invalid(
+            len(self.invalid_words), self._invalid_words_loaded, "merged_invalid_words.txt"
+        ):
+            invalid_words_file = output_dir / "merged_invalid_words.txt"
+            with open(invalid_words_file, 'w', encoding='utf-8') as f:
+                for word in sorted(self.invalid_words):
+                    f.write(f"{word}\n")
+            logger.info(f"Saved {len(self.invalid_words)} invalid words")
+
         # Save invalid dictionary (only if we have data - it may be skipped for space)
-        if self.invalid_dict:
+        if self._may_write_invalid(
+            len(self.invalid_dict), self._invalid_dict_loaded, "merged_invalid_dict.json"
+        ):
             invalid_dict_file = output_dir / "merged_invalid_dict.json"
             with open(invalid_dict_file, 'wb') as f:
                 f.write(orjson.dumps(self.invalid_dict, option=orjson.OPT_INDENT_2))
             logger.info(f"Saved invalid dictionary")
-        else:
-            logger.info("Skipping invalid dictionary (no data loaded)")
     
     def save_source_files(self) -> None:
         """
@@ -200,18 +253,21 @@ class DataManager:
         logger.info(f"Updated {VALID_DICT_FILE}")
         
         # Save invalid words list (sorted)
-        with open(INVALID_WORDS_FILE, 'w', encoding='utf-8') as f:
-            for word in sorted(self.invalid_words):
-                f.write(f"{word}\n")
-        logger.info(f"Updated {INVALID_WORDS_FILE} with {len(self.invalid_words)} words")
-        
+        if self._may_write_invalid(
+            len(self.invalid_words), self._invalid_words_loaded, str(INVALID_WORDS_FILE)
+        ):
+            with open(INVALID_WORDS_FILE, 'w', encoding='utf-8') as f:
+                for word in sorted(self.invalid_words):
+                    f.write(f"{word}\n")
+            logger.info(f"Updated {INVALID_WORDS_FILE} with {len(self.invalid_words)} words")
+
         # Save invalid dictionary (only if we have data - it may be skipped for space)
-        if self.invalid_dict:
+        if self._may_write_invalid(
+            len(self.invalid_dict), self._invalid_dict_loaded, str(INVALID_DICT_FILE)
+        ):
             with open(INVALID_DICT_FILE, 'wb') as f:
                 f.write(orjson.dumps(self.invalid_dict, option=orjson.OPT_INDENT_2))
             logger.info(f"Updated {INVALID_DICT_FILE}")
-        else:
-            logger.info(f"Skipping {INVALID_DICT_FILE} (no data loaded)")
     
     def add_valid_word(
         self,
