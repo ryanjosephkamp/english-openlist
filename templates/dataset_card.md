@@ -25,6 +25,11 @@ task_categories:
   - text-classification
 task_ids:
   - text-classification-other-word-validation
+configs:
+  - config_name: default
+    data_files:
+      - split: train
+        path: data/merged_valid_words.txt
 ---
 
 # English OpenList
@@ -211,22 +216,28 @@ should filter on `source`.
 
 ### Python (Hugging Face Datasets)
 
-> **Point at a file.** A bare `load_dataset("ryanjosephkamp/english-openlist")`
-> globs every file in the repo — including all 175 daily release folders — and
-> resolves to roughly **64.7 million rows**. Name the file you want and you get
-> the ~379,000 you were after.
+The default configuration is the valid word list, one word per row in a `text`
+column:
 
 ```python
 from datasets import load_dataset
 
-dataset = load_dataset(
-    "ryanjosephkamp/english-openlist",
-    data_files="data/merged_valid_words.txt",
-    split="train",
-)
+dataset = load_dataset("ryanjosephkamp/english-openlist", split="train")
 
 for entry in dataset:
     print(entry["text"])
+```
+
+Every other file in the repository — the metadata dictionary, the daily releases,
+the Brrrdle artifacts — remains browsable and downloadable; they are simply not
+part of the default load. Point at one explicitly to read it:
+
+```python
+dataset = load_dataset(
+    "ryanjosephkamp/english-openlist",
+    data_files="releases/2026-08-11/merged_valid_words.txt",
+    split="train",
+)
 ```
 
 Or fetch the file directly, which is usually what you want for a word list:

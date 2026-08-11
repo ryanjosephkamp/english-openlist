@@ -35,9 +35,16 @@ The easiest ways to access the data:
   wget https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_valid_words.txt
   ```
 
-  Or load it in Python. **Name the file** — a bare `load_dataset` call globs every
-  file in the repo, including all the daily release folders, and resolves to about
-  64.7 million rows instead of the ~379,000 you want:
+  Or load it in Python. The dataset's default configuration is the valid word
+  list, so this returns ~379,000 rows in a `text` column:
+
+  ```python
+  from datasets import load_dataset
+
+  dataset = load_dataset("ryanjosephkamp/english-openlist", split="train")
+  ```
+
+  To read the file directly instead:
 
   ```python
   from huggingface_hub import hf_hub_download
@@ -49,6 +56,10 @@ The easiest ways to access the data:
   )
   words = set(open(path).read().split())
   ```
+
+  > The default config is declared in `templates/dataset_card.md`. Without it the
+  > loader globs every file in the repository — including all 176 daily release
+  > folders — and resolves to roughly 64.7 million rows.
 
 - **GitHub (recommended for code and contributions):** Browse the source, automation, and project history in the [GitHub repository](https://github.com/ryanjosephkamp/english-openlist). To suggest new words, add them to `manual_additions.txt` and open a pull request.
 
