@@ -189,7 +189,19 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-          git add -A validation_progress.json _posts/ updates/ overall_stats.json output/ || true
+          # Stage each path on its own. `git add` aborts the entire command if
+          # any one pathspec matches nothing, so combining these meant a missing
+          # validation_progress.json silently stopped everything else from being
+          # staged -- and a trailing `|| true` hid the failure while the step
+          # still reported success. The existence check avoids the error rather
+          # than masking it.
+          for path in validation_progress.json _posts/ updates/ overall_stats.json output/; do
+            if [ -e "$path" ]; then
+              git add -A -- "$path"
+            else
+              echo "skipping $path (not present)"
+            fi
+          done
 
           echo "=== Staged ==="
           git status --short
