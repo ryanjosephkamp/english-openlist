@@ -35,12 +35,19 @@ The easiest ways to access the data:
   wget https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_valid_words.txt
   ```
 
-  Or load it in Python:
+  Or load it in Python. **Name the file** — a bare `load_dataset` call globs every
+  file in the repo, including all the daily release folders, and resolves to about
+  64.7 million rows instead of the ~379,000 you want:
 
   ```python
-  from datasets import load_dataset
+  from huggingface_hub import hf_hub_download
 
-  dataset = load_dataset("ryanjosephkamp/english-openlist")
+  path = hf_hub_download(
+      "ryanjosephkamp/english-openlist",
+      "data/merged_valid_words.txt",
+      repo_type="dataset",
+  )
+  words = set(open(path).read().split())
   ```
 
 - **GitHub (recommended for code and contributions):** Browse the source, automation, and project history in the [GitHub repository](https://github.com/ryanjosephkamp/english-openlist). To suggest new words, add them to `manual_additions.txt` and open a pull request.
@@ -69,7 +76,6 @@ The English OpenList updating pipeline transforms a static dataset into a **livi
 #### 1. Install Dependencies
 
 ```bash
-cd phase3
 pip install -r requirements.txt
 ```
 
@@ -104,16 +110,13 @@ python scripts/push_to_huggingface.py
 ### Project Structure
 
 ```
-phase3/
+.
 ├── PHASE3_STRATEGY.md          # Comprehensive strategy document
+├── CONSTITUTION.md             # Project principles
 ├── README.md                   # This file
 ├── config.py                   # Configuration settings
 ├── requirements.txt            # Python dependencies
-├── initial_deliverables/       # Input data from Phases 1-2
-│   ├── merged_valid_words.txt
-│   ├── merged_valid_dict.json
-│   ├── merged_invalid_words.txt
-│   └── merged_invalid_dict.json
+├── manual_additions.txt        # Words submitted by hand (open a PR to add)
 ├── scripts/
 │   ├── dictionary_api.py       # Merriam-Webster API wrapper
 │   ├── word_validator.py       # Scrabble-compatible validation
@@ -121,17 +124,24 @@ phase3/
 │   ├── run_weekly_update.py    # Main orchestration (new word discovery)
 │   ├── validate_invalid_list.py # Invalid list recovery pipeline
 │   ├── generate_changelog.py   # Consolidated changelog generator
+│   ├── generate_brrrdle_artifacts.py # Per-length Brrrdle files
+│   ├── generate_daily_stats.py # Daily statistics
+│   ├── generate_blog_post.py   # Release write-up
 │   ├── download_from_huggingface.py # Download data from HF
-│   └── push_to_huggingface.py  # Hugging Face upload
+│   └── push_to_huggingface.py  # Hugging Face upload (incl. dataset card)
 ├── templates/
-│   ├── dataset_card.md         # Hugging Face README template
+│   ├── dataset_card.md         # Hugging Face dataset card -- see note below
 │   ├── CHANGELOG_TEMPLATE.md   # Changelog format
 │   └── STATISTICAL_REPORT_TEMPLATE.md
-├── tests/
-│   └── test_word_validator.py  # Unit tests
-├── output/                     # Generated release files
-└── logs/                       # Pipeline logs
+├── tests/                      # Unit tests
+├── docs/                       # GitHub Pages site
+└── output/                     # Generated release files
 ```
+
+> **The Hugging Face dataset card is generated from this repo.**
+> `scripts/push_to_huggingface.py` uploads `templates/dataset_card.md` as the
+> dataset's `README.md` on every run. Edit the template here — changes made on the
+> Hugging Face website will be overwritten by the next daily run.
 
 ### GitHub Actions Automation
 
@@ -171,13 +181,27 @@ You can trigger the workflow manually from the GitHub Actions tab with optional 
 
 ### Validation Rules
 
-Words are valid if they:
+These are the rules the daily pipeline applies to **newly discovered** words:
 
 ✅ Contain only lowercase letters (a-z)  
-✅ Are 2-45 characters in length  
 ✅ Are recognized by Merriam-Webster  
 ❌ Are NOT proper nouns  
 ❌ Are NOT abbreviations or acronyms  
+
+Words already in the list arrived through earlier intakes and were not all checked
+against Merriam-Webster. Roughly 46% came from a tournament word list, 35% through
+the verification pipeline, and 17% are synthetic candidates (`source:
+"synthetic_generation"`) such as `abacteremicer`. These are kept deliberately — the
+list aims to be broad — but applications wanting only conventional vocabulary
+should filter on `source`.
+
+Lengths run from 1 to 47 characters, from `a` to
+`phosphoribosylaminoimidazolesuccinocarboxamides`.
+
+> **What the JSON metadata contains.** `merged_valid_dict.json` records *how each
+> word was validated* — attesting sources, checks passed, dates. It does **not**
+> contain definitions, parts of speech, pronunciations, or frequency data. Entry
+> shapes differ by intake, so check for a field before reading it.
 
 ### Output Files
 
@@ -214,7 +238,6 @@ manifest or generated README behavior that remains.
 ### Testing
 
 ```bash
-cd phase3
 pytest tests/ -v
 ```
 
@@ -253,7 +276,7 @@ The pipeline automatically discovers new words from multiple sources:
 | GitHub Actions | ✅ Complete |
 | Unit Tests | ✅ Complete |
 | Integration Testing | ✅ Complete |
-| First Live Update | ✅ Complete (94+ successful daily runs; workflow re-enabled after inactivity) |
+| First Live Update | ✅ Complete (175 daily releases published, 2026-01-12 onward) |
 
 ---
 
