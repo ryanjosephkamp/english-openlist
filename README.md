@@ -122,8 +122,6 @@ python scripts/push_to_huggingface.py
 
 ```
 .
-├── PHASE3_STRATEGY.md          # Comprehensive strategy document
-├── CONSTITUTION.md             # Project principles
 ├── README.md                   # This file
 ├── config.py                   # Configuration settings
 ├── requirements.txt            # Python dependencies
@@ -136,6 +134,9 @@ python scripts/push_to_huggingface.py
 │   ├── validate_invalid_list.py # Invalid list recovery pipeline
 │   ├── generate_changelog.py   # Consolidated changelog generator
 │   ├── generate_brrrdle_artifacts.py # Per-length Brrrdle files
+│   ├── dictionary_api.py       # Merriam-Webster API wrapper (imported)
+│   ├── data_updater.py         # List/dictionary update logic (imported)
+│   ├── word_validator.py       # Scrabble-compatible validation (imported)
 │   ├── generate_daily_stats.py # Daily statistics
 │   ├── generate_blog_post.py   # Release write-up
 │   ├── download_from_huggingface.py # Download data from HF
@@ -144,10 +145,19 @@ python scripts/push_to_huggingface.py
 │   ├── dataset_card.md         # Hugging Face dataset card -- see note below
 │   ├── CHANGELOG_TEMPLATE.md   # Changelog format
 │   └── STATISTICAL_REPORT_TEMPLATE.md
-├── tests/                      # Unit tests
-├── docs/                       # GitHub Pages site
-└── output/                     # Generated release files
+├── tests/                      # Unit tests, run on every pull request
+├── docs/                       # Strategy and design documents
+├── archive/                    # Historical records kept out of the way
+│   ├── daily-metrics/          # Per-day distribution CSVs and run summaries
+│   ├── change-logs/            # Development journal
+│   └── manual_catchup_2026-05/ # One-off OED backfill
+└── output/                     # Generated each run, gitignored -- see below
 ```
+
+> **`output/` is not committed.** Everything a run generates is published to
+> Hugging Face under `releases/{date}/`, so keeping a copy in git duplicated
+> roughly 379 MB to no purpose. The per-day metrics that only ever existed here
+> are preserved in `archive/daily-metrics/`.
 
 > **The Hugging Face dataset card is generated from this repo.**
 > `scripts/push_to_huggingface.py` uploads `templates/dataset_card.md` as the
@@ -254,7 +264,8 @@ pytest tests/ -v
 
 ### Documentation
 
-- [PHASE3_STRATEGY.md](PHASE3_STRATEGY.md) - Full strategy and architecture
+- [docs/PHASE3_STRATEGY.md](docs/PHASE3_STRATEGY.md) - Full strategy and architecture
+- [docs/CONSTITUTION.md](docs/CONSTITUTION.md) - Project principles
 - [templates/dataset_card.md](templates/dataset_card.md) - Hugging Face dataset description
 
 ### Word Discovery Sources

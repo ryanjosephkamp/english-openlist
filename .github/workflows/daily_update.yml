@@ -195,7 +195,7 @@ jobs:
           # staged -- and a trailing `|| true` hid the failure while the step
           # still reported success. The existence check avoids the error rather
           # than masking it.
-          for path in validation_progress.json _posts/ updates/ overall_stats.json output/; do
+          for path in validation_progress.json _posts/ updates/ overall_stats.json; do
             if [ -e "$path" ]; then
               git add -A -- "$path"
             else

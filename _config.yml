@@ -23,9 +23,9 @@ exclude:
   - tests/
   - .github/
   - docs/
+  - archive/
+  - output/
   - initial_deliverables/
-  - ENGLISH_OPENLIST_FINAL_COMPREHENSIVE_REPORT.md
-  - PHASE3_STRATEGY.md
   - config.py
   - requirements.txt
   - .env.example

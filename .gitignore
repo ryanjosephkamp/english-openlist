@@ -34,9 +34,11 @@ ENV/
 *.swp
 *.swo
 
-# Output files (generated data is uploaded to HF, not stored in git)
-# output/   <-- temporarily commented out so blog/stats can be committed
-output/**/brrrdle/
+# Generated release data. Everything here is published to Hugging Face under
+# releases/, so committing it duplicated ~379 MB into the repository for no gain.
+# The per-day metrics that only ever existed here are preserved in
+# archive/daily-metrics/.
+output/
 latest/
 data/brrrdle/
 
@@ -46,8 +48,11 @@ initial_deliverables.zip
 *.json
 !templates/*.json
 !overall_stats.json
-!output/**/update_stats.json
-!output/**/daily_execution_summary.json
+# The archived per-day metrics are the only surviving copy of these files, so
+# they must survive the blanket *.json rule above. This negation works because
+# archive/ is not itself excluded -- git will not re-include a file whose parent
+# directory is ignored.
+!archive/**/*.json
 
 # Logs
 logs/
