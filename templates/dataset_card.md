@@ -35,10 +35,15 @@ task_ids:
 
 English OpenList is a comprehensive, continuously updated dictionary of valid English words. It provides:
 
-- **378,666+ validated English words** following Scrabble-compatible rules
-- **Rich metadata** including part of speech, definitions, and pronunciation
-- **Weekly updates** from authoritative dictionary sources
+- **~379,000 validated English words** following Scrabble-compatible rules
+- **Validation provenance** for every word: which sources attested it, and when
+- **Daily updates** from authoritative dictionary sources
 - **Version history** with changelogs for every update
+
+> **What the metadata is.** `merged_valid_dict.json` records *how each word was
+> validated* — the sources that attested it, the checks it passed, and the dates.
+> It does **not** contain definitions, parts of speech, pronunciations, or
+> frequency data. If you need those, pair this list with WordNet or Wiktionary.
 
 ### Why Use English OpenList?
 
@@ -57,7 +62,7 @@ English OpenList is a comprehensive, continuously updated dictionary of valid En
 
 ```
 data/
-├── merged_valid_words.txt      # FULL valid word list (378,666+ words, one per line)
+├── merged_valid_words.txt      # FULL valid word list (~379,000 words, one per line)
 ├── merged_valid_dict.json      # FULL dictionary with metadata for all valid words
 ├── merged_invalid_words.txt    # FULL invalid/rejected entries list
 └── merged_invalid_dict.json    # FULL invalid dictionary with rejection reasons
@@ -109,50 +114,133 @@ artifact update, along with any legacy-only manifest or generated README behavio
 
 ### Data Fields
 
-**Valid Dictionary Entry:**
+Entries are **not** uniformly shaped. The list was assembled from several
+intakes, and each kept the fields its own pipeline produced. Read defensively:
+check for a field before using it.
+
+**Tournament word list intake** — the largest group:
+
 ```json
 {
-  "word": "example",
-  "source": "merriam-webster",
-  "part_of_speech": "noun",
-  "definition": "one that serves as a pattern...",
-  "pronunciation": "ig-ˈzam-pəl",
+  "word": "broth",
+  "source": "twl_scrabble_dictionary",
   "validation_status": "valid",
-  "added_date": "2026-01-12T00:00:00"
+  "added_date": "2026-01-10",
+  "length": 5
 }
 ```
 
+**Verification pipeline intake** — carries `candidate_source`, whose entries are
+suffixed `_valid` or `_unlikely`. Count only the `_valid` ones; a word can carry
+eight sources that all say *unlikely*:
+
+```json
+{
+  "word": "a",
+  "status": "valid",
+  "validation_source": "verification_pipeline",
+  "candidate_source": ["google_ngrams_valid", "wordnet_valid", "nltk_valid"],
+  "advanced_validation": { "passed": true, "confidence": 1.0 },
+  "statistical_validation": { "passed": true, "perplexity": 1.0 },
+  "proper_noun_check": { "checked": true, "is_proper_noun": false },
+  "added_date": "2025-12-17"
+}
+```
+
+**Synthetic intake** — algorithmically constructed candidates, identifiable by
+`source: "synthetic_generation"`:
+
+```json
+{
+  "source": "synthetic_generation",
+  "category": "Medical",
+  "valid": 1,
+  "validated": true,
+  "notes": "Synthetic candidate awaiting validation",
+  "created_date": "2026-01-11T12:19:00"
+}
+```
+
+Note the synthetic records have no `word` field — the word is the object key.
+
 ### Validation Rules (Scrabble-Compatible)
 
-Words are included if they:
+These are the rules applied to **newly discovered words** by the daily pipeline:
+
 - ✅ Contain only lowercase letters (a-z)
 - ✅ Are recognized by Merriam-Webster Collegiate Dictionary
-- ✅ Are 2-45 characters in length
 - ❌ Are NOT proper nouns (unless commonly used as verbs)
 - ❌ Are NOT abbreviations or acronyms
+
+Words already in the list arrived through earlier intakes and were not all
+checked against Merriam-Webster — see *Composition* below. Lengths run from 1 to
+47 characters (`a` at one end, `phosphoribosylaminoimidazolesuccinocarboxamides`
+at the other).
 
 ## Dataset Statistics
 
 | Metric | Value |
 |--------|-------|
-| Total Valid Words | 378,666+ |
+| Total Valid Words | ~379,000 (grows daily) |
 | Total Invalid Entries | 9,275,000+ |
 | Update Frequency | Daily (00:00 UTC) |
-| Primary Source | Merriam-Webster Collegiate Dictionary |
+| Primary Source for New Words | Merriam-Webster Collegiate Dictionary |
+
+Counts here are approximate by design — the list grows every day. For the exact
+current figure see [`latest/update_stats.json`](https://huggingface.co/datasets/ryanjosephkamp/english-openlist/blob/main/latest/update_stats.json).
+
+### Composition
+
+The list was assembled from several intakes over time, and they are not
+interchangeable. Anyone filtering or scoring this data should know the mix:
+
+| Intake | Share | How to identify |
+|--------|-------|-----------------|
+| Tournament word list | ~46% | `source: "twl_scrabble_dictionary"` |
+| Verification pipeline | ~35% | `validation_source: "verification_pipeline"` |
+| Synthetic candidates | ~17% | `source: "synthetic_generation"` |
+| Other / unattested | ~2% | none of the above |
+
+The synthetic group contains algorithmically constructed forms such as
+`abacteremicer` and `nonlivabler`. They are kept deliberately — this list aims
+to be broad, and removing them would narrow it — but they are the group most
+likely to surprise you, and applications wanting only conventional vocabulary
+should filter on `source`.
 
 ## Usage
 
 ### Python (Hugging Face Datasets)
 
+> **Point at a file.** A bare `load_dataset("ryanjosephkamp/english-openlist")`
+> globs every file in the repo — including all 175 daily release folders — and
+> resolves to roughly **64.7 million rows**. Name the file you want and you get
+> the ~379,000 you were after.
+
 ```python
 from datasets import load_dataset
 
-# Load the valid word list
-dataset = load_dataset("english-openlist/english-openlist", split="train")
+dataset = load_dataset(
+    "ryanjosephkamp/english-openlist",
+    data_files="data/merged_valid_words.txt",
+    split="train",
+)
 
-# Access words
 for entry in dataset:
-    print(entry["word"])
+    print(entry["text"])
+```
+
+Or fetch the file directly, which is usually what you want for a word list:
+
+```python
+from huggingface_hub import hf_hub_download
+
+path = hf_hub_download(
+    "ryanjosephkamp/english-openlist",
+    "data/merged_valid_words.txt",
+    repo_type="dataset",
+)
+words = set(open(path).read().split())
+print("hello" in words)   # True
 ```
 
 ### Direct Download
@@ -160,7 +248,7 @@ for entry in dataset:
 **Download the complete word lists:**
 
 ```bash
-# Download FULL valid words list (378,666+ words)
+# Download the FULL valid word list
 wget https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_valid_words.txt
 
 # Download FULL valid dictionary with metadata
@@ -193,11 +281,14 @@ with open("merged_valid_words.txt", "r") as f:
 print("hello" in words)  # True
 print("asdf" in words)   # False
 
-# Load dictionary for metadata
+# Load the dictionary for validation provenance.
+# Note this file is ~290 MB; stream it if memory is tight.
 with open("merged_valid_dict.json", "r") as f:
     dictionary = json.load(f)
 
-print(dictionary["example"]["definition"])
+entry = dictionary["broth"]
+print(entry["source"])             # twl_scrabble_dictionary
+print(entry.get("candidate_source"))  # None on this intake -- check before use
 ```
 
 ## Methodology
