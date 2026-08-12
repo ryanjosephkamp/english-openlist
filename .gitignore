@@ -53,6 +53,13 @@ initial_deliverables.zip
 # archive/ is not itself excluded -- git will not re-include a file whose parent
 # directory is ignored.
 !archive/**/*.json
+# Which words have already been checked against the dictionary APIs, and the one
+# thing carrying that knowledge between runs. Without it every run starts from
+# "Already validated: 0" and re-samples the same 9.27 million words, spending API
+# quota on entries that were already settled. The blanket *.json above was
+# catching it, and nothing noticed because validation produced no output for 199
+# days -- the file was never written, so the rule was never exercised.
+!validation_progress.json
 
 # Logs
 logs/

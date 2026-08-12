@@ -216,3 +216,37 @@ def test_a_damaged_download_cannot_perpetuate_itself(tmp_path, monkeypatch):
 
     assert remote_copy.read_text(encoding="utf-8") == "qqqq\nxyzzy\nzzzz\n"
     assert not (out / "merged_invalid_words.txt").exists()
+
+
+# --- reported totals -----------------------------------------------------------
+
+def test_counts_invalid_words_without_loading_them(tmp_path):
+    """
+    The daily job runs with skip_invalid, so the set is empty by design. The
+    count still has to be the truth -- it is published to Hugging Face in
+    update_stats.json every day, and reporting 0 against a 9.27M-word list is
+    exactly the kind of quiet falsehood this project keeps finding.
+    """
+    words = ("qqqq", "xyzzy", "zzzz")
+    manager = make_manager(tmp_path, invalid_words=words)
+    manager.invalid_words = set()  # what skip_invalid leaves behind
+
+    assert manager.count_invalid_words() == 3
+
+
+def test_counts_from_memory_when_the_list_was_loaded(tmp_path):
+    manager = make_manager(tmp_path, invalid_words=("qqqq", "xyzzy"))
+    assert manager.count_invalid_words() == 2
+
+
+def test_counts_zero_when_there_is_no_file(tmp_path):
+    manager = make_manager(tmp_path)
+    manager.invalid_words_path.unlink()
+    assert manager.count_invalid_words() == 0
+
+
+def test_blank_lines_do_not_inflate_the_count(tmp_path):
+    manager = make_manager(tmp_path)
+    manager.invalid_words_path.write_text("qqqq\n\n  \nxyzzy\n", encoding="utf-8")
+    manager.invalid_words = set()
+    assert manager.count_invalid_words() == 2

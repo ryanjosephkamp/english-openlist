@@ -195,12 +195,25 @@ jobs:
           # staged -- and a trailing `|| true` hid the failure while the step
           # still reported success. The existence check avoids the error rather
           # than masking it.
+          #
+          # `git add` aborts on a .gitignore'd path too -- a different cause with
+          # the same blast radius, and the one that broke 2026-08-12, when
+          # validation_progress.json was written for the first time in 199 days
+          # and the blanket *.json rule was still catching it. Every path below
+          # is one this job is meant to commit, so being ignored is a
+          # misconfiguration rather than something to step around quietly: say
+          # what is wrong, and stop.
           for path in validation_progress.json _posts/ updates/ overall_stats.json; do
-            if [ -e "$path" ]; then
-              git add -A -- "$path"
-            else
+            if [ ! -e "$path" ]; then
               echo "skipping $path (not present)"
+              continue
             fi
+            if git check-ignore -q "$path"; then
+              echo "::error::$path was produced but .gitignore excludes it, so it cannot be committed."
+              echo "This job needs that path in the repository. Add a negation to .gitignore."
+              exit 1
+            fi
+            git add -A -- "$path"
           done
 
           echo "=== Staged ==="
