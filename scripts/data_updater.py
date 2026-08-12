@@ -157,9 +157,31 @@ class DataManager:
                 self.invalid_dict = {}
         else:
             logger.warning(f"Invalid dict file not found: {self.invalid_dict_path}")
-        
+
         self._loaded = True
-    
+
+    def count_invalid_words(self) -> int:
+        """
+        How many invalid words there are, whether or not they were loaded.
+
+        The daily job runs with skip_invalid so it never pulls 9.27 million
+        words into memory, which left the reported total at 0 -- accidentally
+        true while the list was empty, and a published falsehood from the moment
+        it was restored. Counting lines costs one pass over 91 MB and no
+        allocation.
+        """
+        if self.invalid_words:
+            return len(self.invalid_words)
+        if not self.invalid_words_path.exists():
+            return 0
+
+        total = 0
+        with open(self.invalid_words_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.strip():
+                    total += 1
+        return total
+
     def _may_write_invalid(self, count: int, loaded: int, label: str) -> bool:
         """
         Decide whether it is safe to write `count` invalid entries.
@@ -368,7 +390,7 @@ class DataUpdater:
         
         # Record initial counts
         self.stats.total_valid_before = len(self.data_manager.valid_words)
-        self.stats.total_invalid_before = len(self.data_manager.invalid_words)
+        self.stats.total_invalid_before = self.data_manager.count_invalid_words()
         
         # Process new words
         for entry in new_valid_words:
@@ -392,7 +414,13 @@ class DataUpdater:
         
         # Record final counts
         self.stats.total_valid_after = len(self.data_manager.valid_words)
-        self.stats.total_invalid_after = len(self.data_manager.invalid_words)
+        # Promotions in this run came out of the list, and with skip_invalid the
+        # file on disk has not been rewritten to reflect that yet.
+        self.stats.total_invalid_after = (
+            self.data_manager.count_invalid_words() - self.stats.words_removed_from_invalid
+            if not self.data_manager.invalid_words
+            else len(self.data_manager.invalid_words)
+        )
         
         # Save updated data to release directory
         self.data_manager.save_data(output_dir)
