@@ -13,6 +13,7 @@ import { UsePage } from './pages/UsePage.tsx';
 import { ShapePage } from './pages/ShapePage.tsx';
 import { AsItIsPage } from './pages/AsItIsPage.tsx';
 import { PlaceholderPage } from './pages/PlaceholderPage.tsx';
+import { BlogIndex, BlogPost, usePosts } from './pages/BlogPage.tsx';
 import { n, millis, bytes } from './util/format.ts';
 
 export function App() {
@@ -62,12 +63,8 @@ export function App() {
           <ShapePage />
         ) : route.path === '/as-it-is' ? (
           <AsItIsPage manifest={search.manifest} />
-        ) : route.path === '/blog' ? (
-          <PlaceholderPage
-            soon
-            title="The daily log is not here yet"
-            body="Every night the pipeline validates about a thousand entries from the invalid list and writes up what it found. Those posts still live on the old site; moving them here, in this design and with these charts, is the last piece of work planned for this one."
-          />
+        ) : route.path.startsWith('/blog') ? (
+          <Blog path={route.path} />
         ) : route.path === '/' ? (
           <Explorer query={query} search={search} update={update} />
         ) : (
@@ -165,6 +162,39 @@ function Explorer({
   );
 }
 
+function Blog({ path }: { path: string }) {
+  const { posts, error } = usePosts();
+
+  if (error) {
+    return (
+      <Notice title="The daily log could not be loaded" body={error} />
+    );
+  }
+  if (!posts) return <p className="py-16 text-center text-ink-faint">Reading the log…</p>;
+
+  const date = path === '/blog' ? null : path.slice('/blog/'.length).replace(/\/$/, '');
+  if (!date) return <BlogIndex posts={posts} />;
+
+  const at = posts.findIndex((p) => p.date === date);
+  if (at === -1) {
+    return (
+      <PlaceholderPage
+        title={`No post for ${date}`}
+        body={`The pipeline has written ${posts.length} of these, from ${posts[posts.length - 1]?.date} to ${posts[0]?.date}, but not one for that day. Two days in June are genuinely missing rather than hidden.`}
+      />
+    );
+  }
+
+  // Newest first, so the earlier post is the *next* index.
+  return (
+    <BlogPost
+      post={posts[at]!}
+      {...(posts[at + 1] ? { previous: posts[at + 1]! } : {})}
+      {...(posts[at - 1] ? { next: posts[at - 1]! } : {})}
+    />
+  );
+}
+
 const SITE = 'English OpenList';
 
 function titleFor(path: string, word: string | null): string {
@@ -181,6 +211,7 @@ function titleFor(path: string, word: string | null): string {
     case '/blog':
       return `Daily log — ${SITE}`;
     default:
+      if (path.startsWith('/blog/')) return `${path.slice('/blog/'.length)} — daily log — ${SITE}`;
       return `Not found — ${SITE}`;
   }
 }

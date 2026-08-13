@@ -93,6 +93,11 @@ initial_deliverables.zip
 # above because the last matching rule wins.
 site/public/data/
 site/public/downloads/
+# Regenerated from _posts/ on every build. Committing them would put a new
+# feed.xml in history every morning for no gain.
+site/public/feed.xml
+site/public/sitemap.xml
+site/public/robots.txt
 node_modules/
 .cache/
 

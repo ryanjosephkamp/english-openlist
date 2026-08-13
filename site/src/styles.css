@@ -156,6 +156,69 @@
     animation: settle 220ms var(--ease-out-quart) both;
   }
 
+  /*
+   * Rendered daily-log posts.
+   *
+   * The markdown comes from the pipeline's generator, so the element set is
+   * small and fixed: headings, paragraphs, lists, one code fence of promoted
+   * words, and the odd bold run. Styled here rather than with per-element
+   * classes because the HTML arrives as a string.
+   */
+  .post h2 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+    margin-top: 0.75rem;
+  }
+
+  .post h3 {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+    margin-top: 0.5rem;
+  }
+
+  .post p,
+  .post li {
+    font-size: 0.95rem;
+  }
+
+  .post ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-left: 1.1rem;
+    list-style: disc;
+  }
+
+  .post strong {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  .post pre {
+    background: var(--color-sunken);
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    padding: 0.7rem 0.9rem;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--color-ink);
+  }
+
+  .post code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+
+  .post em {
+    color: var(--color-ink-faint);
+  }
+
   /* The one micro-caps recipe, used for every field label and section eyebrow.
      Ars Magna repeats this inline in six places across three files; naming it
      once here is the only structural change to the inherited system. */

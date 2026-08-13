@@ -75,7 +75,64 @@ export function UsePage() {
       </section>
 
       <Recipes />
+      <GameArtifacts />
     </div>
+  );
+}
+
+/**
+ * The per-length answer sets the pipeline already publishes.
+ *
+ * They are regenerated every night, cover lengths 2 through 35, and are
+ * currently reachable only by knowing the path — no page anywhere links to
+ * them. For anyone building a word game they are the most immediately useful
+ * thing in the dataset.
+ */
+function GameArtifacts() {
+  return (
+    <section className="flex flex-col gap-6 border-t border-rule-strong pt-10">
+      <div className="flex flex-col gap-2">
+        <h2 className="font-display text-2xl tracking-tight">
+          Building a word game? Start here instead
+        </h2>
+        <p className="max-w-[64ch] text-sm text-ink-soft">
+          The pipeline generates curated answer sets every night for every length from 2 to 35, so
+          you do not have to pick answers out of 378,891 words yourself. Each file holds a
+          deterministic stratified sample as <code className="font-mono text-xs">answers</code> and
+          the complete list for that length as <code className="font-mono text-xs">validGuesses</code>
+          . Length 5 gives you 2,175 answers against 9,777 accepted guesses.
+        </p>
+      </div>
+
+      <Snippet
+        id="brrrdle"
+        title="Every length, one URL pattern"
+        note="Answers are sampled by starting letter and a quality score — frequency, letter position, vowel balance, uniqueness — with seed 42 + length, so the same file is reproducible."
+        code={`BASE = ("https://huggingface.co/datasets/ryanjosephkamp/"
+        "english-openlist/resolve/main/data/brrrdle")
+
+# words_length_2.json ... words_length_35.json
+import json, urllib.request
+
+with urllib.request.urlopen(f"{BASE}/words_length_5.json") as r:
+    data = json.load(r)
+
+answers = data["answers"]              # curated, playable
+guesses = set(data["validGuesses"])    # everything accepted
+
+print(len(answers), len(guesses))
+print(data["metadata"]["curation"]["seed"])`}
+        output={`2175 9777
+47`}
+      />
+
+      <p className="max-w-[64ch] text-sm text-ink-soft">
+        The legacy <code className="font-mono text-xs">brrrdle_words.txt</code> and{' '}
+        <code className="font-mono text-xs">brrrdle_words.json</code> in the same folder are
+        length-5 only and are scheduled for removal. Build against{' '}
+        <code className="font-mono text-xs">words_length_&#123;N&#125;.json</code>.
+      </p>
+    </section>
   );
 }
 
