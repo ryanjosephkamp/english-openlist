@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "fetch": "node --max-old-space-size=4096 src/fetch.ts",
+    "fetch-data": "node --max-old-space-size=4096 src/fetch.ts",
     "build": "node --max-old-space-size=4096 src/main.ts"
   },
   "dependencies": {

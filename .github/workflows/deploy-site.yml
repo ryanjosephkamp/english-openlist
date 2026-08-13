@@ -54,6 +54,12 @@ jobs:
           path: .cache/hf
           key: eol-data-${{ steps.dataset.outputs.sha }}
 
+      # The script is `fetch-data`, not `fetch`, and it is invoked through
+      # `pnpm run`. `pnpm fetch` is a built-in command that populates the
+      # virtual store from the lockfile, and it wins over a package script of
+      # the same name -- so the first version of this step quietly ran pnpm's
+      # own command, exited 0, downloaded nothing, and left the next step to
+      # fail on a missing file.
       - name: Fetch dataset
         run: pnpm data:fetch
 
