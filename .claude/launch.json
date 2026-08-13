@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "eol-site",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@eol/site", "dev"],
+      "port": 5174
+    }
+  ]
+}

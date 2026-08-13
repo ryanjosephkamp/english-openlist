@@ -1,0 +1,7 @@
+packages:
+  - site
+  - packages/*
+  - tools/*
+allowBuilds:
+  # esbuild ships a prebuilt native binary; its install script just unpacks it.
+  esbuild: true

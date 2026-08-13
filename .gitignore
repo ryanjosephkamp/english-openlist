@@ -61,6 +61,41 @@ initial_deliverables.zip
 # days -- the file was never written, so the rule was never exercised.
 !validation_progress.json
 
+# --- Website -----------------------------------------------------------------
+# Two things above fight a JavaScript workspace, and both fail silently.
+#
+# The blanket `*.json` swallows package.json, every tsconfig, and the web app
+# manifest. It is the same rule that broke the 2026-08-12 daily run, and the
+# daily workflow now hard-errors on a produced-but-ignored path rather than
+# skipping it, so anything missed here surfaces as a red build rather than a
+# quiet omission.
+#
+# The Python template's generic directory names -- `lib/`, `build/`, `dist/`,
+# `downloads/` -- match ordinary source paths anywhere in the tree, not just at
+# the root. `site/src/lib/` would have been ignored wholesale. The source tree
+# uses `util/` instead of `lib/` so that trap cannot be re-sprung by a later
+# rename, and the rest are re-included by name below.
+!package.json
+!tsconfig*.json
+!site/package.json
+!site/tsconfig*.json
+!site/src/**/*.json
+!site/public/**/*.json
+!tools/eol-build/package.json
+!tools/eol-build/tsconfig*.json
+# How to start the dev server. Worth committing: it is the answer to "how do I
+# run this", and the blanket *.json above would otherwise hide it.
+!.claude/launch.json
+
+# Generated on every build by tools/eol-build, from Hugging Face. Committing it
+# would put a fresh ~700 KB of binary in git history daily for no gain -- the
+# deploy rebuilds it from the live dataset anyway. Listed after the negations
+# above because the last matching rule wins.
+site/public/data/
+site/public/downloads/
+node_modules/
+.cache/
+
 # Logs
 logs/
 *.log
