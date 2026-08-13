@@ -10,6 +10,7 @@ import { Filters } from './components/Filters.tsx';
 import { ResultList } from './components/ResultList.tsx';
 import { WordPage } from './pages/WordPage.tsx';
 import { UsePage } from './pages/UsePage.tsx';
+import { ShapePage } from './pages/ShapePage.tsx';
 import { n, millis, bytes } from './util/format.ts';
 
 export function App() {
@@ -48,6 +49,8 @@ export function App() {
           <WordPage word={word} search={search} />
         ) : route.path === '/use' ? (
           <UsePage />
+        ) : route.path === '/shape' ? (
+          <ShapePage />
         ) : (
           <Explorer query={query} search={search} update={update} />
         )}

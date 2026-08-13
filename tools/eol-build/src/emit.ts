@@ -55,11 +55,20 @@ export async function emit(key: string, extension: string, data: Uint8Array): Pr
 /**
  * Delete artifacts from previous builds.
  *
- * Without this the output directory accumulates every dictionary ever built,
- * and the deploy uploads all of them.
+ * Without this the output directory accumulates every word list ever built and
+ * the deploy uploads all of them.
+ *
+ * `alsoKeep` is not optional in practice: anything written into this directory
+ * that is not a content-hashed artifact has to be named here or it is deleted
+ * moments after being written. That is exactly what happened to `stats.json`
+ * the first time, and the failure surfaced only in the browser, as the Shape
+ * page fetching JSON and being handed `index.html` by the SPA fallback.
  */
-export async function clearStale(keep: readonly Artifact[]): Promise<number> {
-  const wanted = new Set<string>();
+export async function clearStale(
+  keep: readonly Artifact[],
+  alsoKeep: readonly string[],
+): Promise<number> {
+  const wanted = new Set<string>(alsoKeep);
   for (const artifact of keep) {
     wanted.add(artifact.name);
     wanted.add(`${artifact.name}.br`);
