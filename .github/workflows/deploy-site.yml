@@ -1,0 +1,90 @@
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+    # The daily pipeline commits _posts/, updates/ and overall_stats.json every
+    # morning, which is what rebuilds the site with the day's data. Nothing here
+    # touches the pipeline; it just runs behind it.
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '!templates/dataset_card.md'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Without Cloudflare credentials there is nothing to deploy to, and a run
+    # that fails on a missing secret every morning trains people to ignore red
+    # builds. Skip cleanly instead.
+    if: ${{ vars.CLOUDFLARE_PROJECT_NAME != '' }}
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The dataset revision, resolved before the cache key is computed. The
+      # 291 MB metadata file only changes on days a word is actually promoted,
+      # so on most mornings this restores instead of downloading.
+      - name: Resolve dataset revision
+        id: dataset
+        run: |
+          sha=$(curl -sSf https://huggingface.co/api/datasets/ryanjosephkamp/english-openlist \
+                | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "English OpenList at $sha"
+
+      - uses: actions/cache@v4
+        with:
+          path: .cache/hf
+          key: eol-data-${{ steps.dataset.outputs.sha }}
+
+      - name: Fetch dataset
+        run: pnpm data:fetch
+
+      # Fails the build if the dataset has changed shape — see
+      # tools/eol-build/src/expected.ts. A silent change in what the intake
+      # fields mean would otherwise ship as a wrong site.
+      - name: Build data artifacts
+        run: pnpm data:build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build site
+        run: pnpm build
+
+      # Wrangler is invoked directly rather than through cloudflare/wrangler-action.
+      # That action installs its own copy with a bare `pnpm add wrangler@...`,
+      # which pnpm refuses in a workspace root without `-w` -- so in a repo shaped
+      # like this one it fails before it ever reaches Cloudflare, and the error it
+      # prints is about pnpm rather than about the deploy.
+      #
+      # Pinned rather than floating: this is the version the deploy was verified
+      # against, and a publish step is the wrong place to pick up a surprise.
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: >-
+          pnpm dlx wrangler@4.121.0 pages deploy site/dist
+          --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }}
+          --branch=main

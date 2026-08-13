@@ -1,0 +1,7 @@
+# Every route is rendered by the single-page app, so a deep link — a shared
+# search, a word page — has to reach index.html rather than a 404. Status 200
+# rather than 302 so the URL the visitor typed is the URL they keep.
+#
+# Listed after nothing: Pages evaluates _redirects top to bottom and stops at
+# the first match, so this catch-all must stay last if others are ever added.
+/*  /index.html  200

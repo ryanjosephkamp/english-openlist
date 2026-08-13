@@ -1,0 +1,51 @@
+# Cloudflare Pages response headers.
+#
+# Pages applies EVERY rule whose pattern matches, in file order, appending each
+# one's values. It does not pick the most specific. So two rules that both match
+# a path produce `Cache-Control: public, max-age=300, must-revalidate, public,
+# max-age=31536000, immutable`, and a stray `immutable` in there is not
+# overridden by the earlier max-age.
+#
+# That is why the artifact rules below are written per extension rather than as
+# `/data/*`: a wildcard would also match manifest.json and quietly make the one
+# file that must stay fresh cacheable for a year.
+
+# The manifest points at the content-hashed artifacts. If it were cached hard, a
+# rebuild would never be picked up — the browser would keep asking for filenames
+# that no longer exist. The daily pipeline rebuilds this site every morning, so
+# this is the file that has to notice.
+/data/manifest.json
+  Cache-Control: public, max-age=300, must-revalidate
+
+# The pre-compressed artifacts. These are brotli streams on disk, served under
+# their own URL rather than negotiated — Pages does not pick between sibling
+# files — so the encoding has to be declared here or the browser hands the
+# decoder raw brotli. The worker checks the decoded length against the manifest
+# and falls back to the plain `.bin` if this header ever goes missing.
+#
+# Without this the word list crosses the wire uncompressed: octet-stream is not
+# on Cloudflare's on-the-fly compression list, so 3.1 MB instead of 666 KB.
+/data/*.br
+  Content-Encoding: br
+  Cache-Control: public, max-age=31536000, immutable
+
+# Artifacts carry a content hash in the filename, so a change is a new URL and
+# these can never go stale. Listed by extension so manifest.json above keeps its
+# short life — see the note at the top.
+/data/*.bin
+  Cache-Control: public, max-age=31536000, immutable
+
+# Vite's own output is content-hashed too.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Derived word lists are rebuilt every deploy and keep their names, so they are
+# revalidated rather than pinned. A day is long enough to be free for repeat
+# visitors and short enough that a promoted word shows up promptly.
+/downloads/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN

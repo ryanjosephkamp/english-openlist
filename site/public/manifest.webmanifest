@@ -1,0 +1,12 @@
+{
+  "name": "English OpenList",
+  "short_name": "OpenList",
+  "description": "378,891 English words, and where each one came from.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfbfc",
+  "theme_color": "#fbfbfc",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
