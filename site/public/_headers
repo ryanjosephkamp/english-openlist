@@ -17,6 +17,13 @@
 /data/manifest.json
   Cache-Control: public, max-age=300, must-revalidate
 
+# Same class as the manifest: rebuilt every deploy, keeps its name, so it cannot
+# be pinned. Without a rule it falls through to Cloudflare's default of
+# max-age=0, must-revalidate, which spends a round trip on every visit to the
+# Shape page to be told nothing changed.
+/data/stats.json
+  Cache-Control: public, max-age=300, must-revalidate
+
 # The pre-compressed artifacts. These are brotli streams on disk, served under
 # their own URL rather than negotiated — Pages does not pick between sibling
 # files — so the encoding has to be declared here or the browser hands the
