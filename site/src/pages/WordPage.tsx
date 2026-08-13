@@ -3,6 +3,8 @@ import { WordFlag } from '@eol/wordlist/format';
 import type { Row } from '../worker/protocol.ts';
 import type { useSearch } from '../state/useSearch.ts';
 import { INTAKE_NOTE, intakeLabel, intakeName } from '../util/format.ts';
+import { useProvenance } from '../state/useProvenance.ts';
+import { ProvenanceCard } from '../components/ProvenanceCard.tsx';
 
 const INTAKE_DOT: Record<string, string> = {
   twl: 'bg-intake-twl',
@@ -13,6 +15,9 @@ const INTAKE_DOT: Record<string, string> = {
 
 export function WordPage({ word, search }: { word: string; search: ReturnType<typeof useSearch> }) {
   const [row, setRow] = useState<Row | null | undefined>(undefined);
+  // Requested as soon as the word is known rather than after the lookup
+  // resolves: the shard is ~6.4 KB and the two round trips overlap.
+  const provenance = useProvenance(row === null ? null : word, search.manifest?.provenance.shards);
 
   useEffect(() => {
     if (search.status !== 'ready') return;
@@ -105,6 +110,17 @@ export function WordPage({ word, search }: { word: string; search: ReturnType<ty
             )}
           </ul>
         </div>
+      )}
+
+      {provenance.status === 'ready' && provenance.provenance && search.manifest && (
+        <ProvenanceCard provenance={provenance.provenance} manifest={search.manifest} />
+      )}
+
+      {provenance.status === 'failed' && (
+        <p className="text-sm text-ink-faint">
+          The validation record could not be loaded ({provenance.message}). Everything above comes
+          from the word list itself and is unaffected.
+        </p>
       )}
 
       <div className="flex flex-wrap gap-2">

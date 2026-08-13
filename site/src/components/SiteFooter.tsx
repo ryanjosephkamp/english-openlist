@@ -2,6 +2,8 @@ type Link = {
   readonly label: string;
   readonly href: string;
   readonly note: string;
+  /** No destination yet. Rendered as a disabled control rather than a dead link. */
+  readonly pending?: boolean;
 };
 
 const DATASET_LINKS: Link[] = [
@@ -20,6 +22,16 @@ const DATASET_LINKS: Link[] = [
     href: 'https://ars-magna.pages.dev',
     note: 'anagrams from this list',
   },
+  // Waiting on a public URL. Deliberately not linked to the GitHub repo, which
+  // is private and would 404 for every visitor; and not an <a> with a dead href,
+  // which looks identical to a broken link. Swap `pending` for the real address
+  // when there is one.
+  {
+    label: 'Amordle',
+    href: '',
+    note: 'word games on this list',
+    pending: true,
+  },
 ];
 
 const AUTHOR_LINKS: Link[] = [
@@ -34,6 +46,21 @@ const AUTHOR_LINKS: Link[] = [
  * than as a strip of chrome bolted underneath it.
  */
 function LinkButton({ link }: { link: Link }) {
+  if (link.pending) {
+    return (
+      <span
+        aria-disabled="true"
+        title="Not published yet"
+        className="flex cursor-default items-baseline gap-2 rounded-[3px] border border-dashed
+                   border-rule bg-transparent px-3 py-1.5 text-sm text-ink-faint"
+      >
+        <span className="font-medium">{link.label}</span>
+        <span className="font-mono text-[10px]">{link.note}</span>
+        <span className="font-mono text-[10px] text-ink-faint/70">soon</span>
+      </span>
+    );
+  }
+
   return (
     <a
       href={link.href}
