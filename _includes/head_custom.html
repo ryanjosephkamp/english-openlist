@@ -1,1 +1,31 @@
 <link rel="stylesheet" href="{{ '/assets/css/blog.css' | relative_url }}">
+
+{%- comment -%}
+The daily log moved to https://english-openlist.pages.dev, where it is rendered
+in the same design as the rest of the site and its charts are drawn without
+loading an unpinned Chart.js from a CDN.
+
+This file is Just the Docs' hook for extra <head> content and is included on
+every page, which makes it the one place that can forward all 92 posts and every
+future one without touching the pipeline. Post permalinks here are
+/english-openlist/daily-updates/YYYY/MM/DD/daily-update.html and become
+/blog/YYYY-MM-DD there; everything else lands on the new home page.
+
+Both a meta refresh and a script: the meta tag works with JavaScript disabled,
+the script fires immediately and uses `replace` so the back button returns to
+wherever the reader came from rather than bouncing them here again.
+
+To undo this, delete everything below the stylesheet line. Nothing else in the
+Jekyll site was changed, so it keeps building exactly as before.
+{%- endcomment -%}
+
+<link rel="canonical" href="https://english-openlist.pages.dev/">
+<meta http-equiv="refresh" content="0; url=https://english-openlist.pages.dev/">
+<script>
+  (function () {
+    var NEW_SITE = 'https://english-openlist.pages.dev';
+    var post = window.location.pathname.match(/(\d{4})\/(\d{2})\/(\d{2})\/daily-update/);
+    var target = post ? NEW_SITE + '/blog/' + post[1] + '-' + post[2] + '-' + post[3] : NEW_SITE + '/';
+    window.location.replace(target);
+  })();
+</script>

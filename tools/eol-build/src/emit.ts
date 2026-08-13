@@ -64,9 +64,18 @@ export async function emit(key: string, extension: string, data: Uint8Array): Pr
  * the first time, and the failure surfaced only in the browser, as the Shape
  * page fetching JSON and being handed `index.html` by the SPA fallback.
  */
+/**
+ * Everything written into the data directory that is not a content-hashed
+ * artifact. Adding a file to the build without adding it here deletes it
+ * moments after it is written — which has now happened twice, to `stats.json`
+ * and to `posts.json`, so the list lives beside the deleting code rather than
+ * at a call site where it reads as an afterthought.
+ */
+export const GENERATED = ['stats.json', 'posts.json', 'prov'] as const;
+
 export async function clearStale(
   keep: readonly Artifact[],
-  alsoKeep: readonly string[],
+  alsoKeep: readonly string[] = GENERATED,
 ): Promise<number> {
   const wanted = new Set<string>(alsoKeep);
   for (const artifact of keep) {

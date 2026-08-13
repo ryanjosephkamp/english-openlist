@@ -13,6 +13,7 @@
     "stream-json": "^1.9.1"
   },
   "devDependencies": {
-    "@types/stream-json": "^1.7.8"
+    "@types/stream-json": "^1.7.8",
+    "marked": "^18.0.9"
   }
 }

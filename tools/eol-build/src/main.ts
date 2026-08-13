@@ -8,6 +8,8 @@ import { emit, clearStale, kb, type Artifact } from './emit.ts';
 import { writeDownloads } from './downloads.ts';
 import { buildGrowth, buildStats } from './stats.ts';
 import { buildProvenance, SHARD_COUNT } from './provenance.ts';
+import { loadPosts } from './posts.ts';
+import { writeFeeds } from './feeds.ts';
 import { EXPECTED, check, assertExpectations } from './expected.ts';
 import { DATA_DIR, INVALID_WORDS } from './paths.ts';
 
@@ -213,8 +215,21 @@ console.log(
     ` · ${provenance.sources.length} candidate sources`,
 );
 
+const posts = await loadPosts();
+const postsJson = `${JSON.stringify(posts)}\n`;
+await writeFile(resolve(DATA_DIR, 'posts.json'), postsJson);
+console.log(
+  `      posts.json             ${kb(Buffer.byteLength(postsJson)).padStart(10)}` +
+    `  ${posts.length} posts, ${posts[0]?.date ?? '—'} back to ${posts[posts.length - 1]?.date ?? '—'}`,
+);
+
+const feeds = await writeFeeds(posts);
+console.log(`      ${feeds.join(', ')}`);
+
 const manifest = {
   builtAt: new Date().toISOString(),
+  posts: posts.length,
+  latestPost: posts[0]?.date ?? null,
   provenance: {
     shards: SHARD_COUNT,
     sources: provenance.sources,
@@ -241,7 +256,7 @@ const manifest = {
 };
 
 await writeFile(resolve(DATA_DIR, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-const removed = await clearStale(artifacts, ['stats.json', 'prov']);
+const removed = await clearStale(artifacts);
 console.log(`      manifest.json written, ${removed} stale file${removed === 1 ? '' : 's'} removed`);
 
 assertExpectations();
