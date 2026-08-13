@@ -46,6 +46,12 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Provenance shards are addressed by word hash, so `0.json` keeps its name across
+# rebuilds and cannot be pinned. A day is long enough to be free for anyone
+# reading several words and short enough to pick up the next promotion.
+/data/prov/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
 # Derived word lists are rebuilt every deploy and keep their names, so they are
 # revalidated rather than pinned. A day is long enough to be free for repeat
 # visitors and short enough that a promoted word shows up promptly.

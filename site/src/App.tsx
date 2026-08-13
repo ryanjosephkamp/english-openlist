@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { DEFAULT_QUERY, type Query } from '@eol/wordlist/query';
 import { useRoute, useLinkInterception } from './util/router.ts';
 import { paramsToQuery, queryToUrl } from './util/urlState.ts';
@@ -11,6 +11,8 @@ import { ResultList } from './components/ResultList.tsx';
 import { WordPage } from './pages/WordPage.tsx';
 import { UsePage } from './pages/UsePage.tsx';
 import { ShapePage } from './pages/ShapePage.tsx';
+import { AsItIsPage } from './pages/AsItIsPage.tsx';
+import { PlaceholderPage } from './pages/PlaceholderPage.tsx';
 import { n, millis, bytes } from './util/format.ts';
 
 export function App() {
@@ -35,6 +37,13 @@ export function App() {
     ? decodeURIComponent(route.path.slice('/word/'.length))
     : null;
 
+  // The title is the tab, the history entry, and what a shared link is called.
+  // A single-page app has to set it per route or every page is named after the
+  // first one — which is what /shape and /use were called until now.
+  useEffect(() => {
+    document.title = titleFor(route.path, word);
+  }, [route.path, word]);
+
   return (
     <>
       <SiteHeader path={route.path} />
@@ -51,8 +60,21 @@ export function App() {
           <UsePage />
         ) : route.path === '/shape' ? (
           <ShapePage />
-        ) : (
+        ) : route.path === '/as-it-is' ? (
+          <AsItIsPage manifest={search.manifest} />
+        ) : route.path === '/blog' ? (
+          <PlaceholderPage
+            soon
+            title="The daily log is not here yet"
+            body="Every night the pipeline validates about a thousand entries from the invalid list and writes up what it found. Those posts still live on the old site; moving them here, in this design and with these charts, is the last piece of work planned for this one."
+          />
+        ) : route.path === '/' ? (
           <Explorer query={query} search={search} update={update} />
+        ) : (
+          <PlaceholderPage
+            title="There is nothing at this address"
+            body={`Nothing on this site answers to ${route.path}. If you were looking for a particular word, the search will find it.`}
+          />
         )}
 
         <SiteFooter builtAt={search.manifest?.builtAt ?? null} />
@@ -141,6 +163,26 @@ function Explorer({
       )}
     </div>
   );
+}
+
+const SITE = 'English OpenList';
+
+function titleFor(path: string, word: string | null): string {
+  if (word) return `${word} — ${SITE}`;
+  switch (path) {
+    case '/':
+      return `${SITE} — 378,891 English words, and where each one came from`;
+    case '/shape':
+      return `The shape of the list — ${SITE}`;
+    case '/use':
+      return `Use it in your own thing — ${SITE}`;
+    case '/as-it-is':
+      return `The list as it is — ${SITE}`;
+    case '/blog':
+      return `Daily log — ${SITE}`;
+    default:
+      return `Not found — ${SITE}`;
+  }
 }
 
 function Notice({ title, body }: { title: string; body: string }) {

@@ -7,6 +7,7 @@ import { loadFacts } from './facts.ts';
 import { emit, clearStale, kb, type Artifact } from './emit.ts';
 import { writeDownloads } from './downloads.ts';
 import { buildGrowth, buildStats } from './stats.ts';
+import { buildProvenance, SHARD_COUNT } from './provenance.ts';
 import { EXPECTED, check, assertExpectations } from './expected.ts';
 import { DATA_DIR, INVALID_WORDS } from './paths.ts';
 
@@ -199,8 +200,31 @@ console.log(
     ` (${growth.recordedFrom} → ${growth.recordedTo})`,
 );
 
+const provenance = await buildProvenance((n) =>
+  process.stdout.write(`      ${n.toLocaleString()} records\r`),
+);
+console.log(
+  `      prov/ ${SHARD_COUNT} shards      ${kb(provenance.shardBytes).padStart(10)} total,` +
+    ` ${kb(provenance.shardBytes / SHARD_COUNT)} average, ${kb(provenance.largestShard)} largest`,
+);
+console.log(
+  `      ${provenance.written.toLocaleString()} words carry provenance` +
+    ` · ${provenance.withDefinition} carry a real definition` +
+    ` · ${provenance.sources.length} candidate sources`,
+);
+
 const manifest = {
   builtAt: new Date().toISOString(),
+  provenance: {
+    shards: SHARD_COUNT,
+    sources: provenance.sources,
+    manualSources: provenance.manualSources,
+    llms: provenance.llms,
+    categories: provenance.categories,
+    statuses: provenance.statuses,
+    words: provenance.written,
+    withDefinition: provenance.withDefinition,
+  },
   wordCount: words.length,
   dateTable,
   intakeCounts,
@@ -217,7 +241,7 @@ const manifest = {
 };
 
 await writeFile(resolve(DATA_DIR, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-const removed = await clearStale(artifacts, ['stats.json']);
+const removed = await clearStale(artifacts, ['stats.json', 'prov']);
 console.log(`      manifest.json written, ${removed} stale file${removed === 1 ? '' : 's'} removed`);
 
 assertExpectations();

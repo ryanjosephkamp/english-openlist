@@ -22,6 +22,23 @@ export type Manifest = {
   readonly wordCount: number;
   readonly dateTable: readonly string[];
   readonly intakeCounts: Readonly<Record<string, number>>;
+  readonly statusInvalid: number;
+  readonly alsoInvalid: number;
+  readonly alsoInvalidWords: readonly string[];
+  readonly nonAlpha: number;
+  readonly addedSingly: number;
+  readonly bulkDates: readonly { date: string; count: number }[];
+  /** String tables the provenance shards index into, rather than repeating. */
+  readonly provenance: {
+    readonly shards: number;
+    readonly sources: readonly string[];
+    readonly manualSources: readonly string[];
+    readonly llms: readonly string[];
+    readonly categories: readonly string[];
+    readonly statuses: readonly string[];
+    readonly words: number;
+    readonly withDefinition: number;
+  };
   readonly files: Readonly<Record<string, { name: string; bytes: number; brotliBytes: number }>>;
 };
 
