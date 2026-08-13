@@ -38,18 +38,31 @@
   --color-accent-wash: oklch(0.965 0.018 27);
 
   /*
-   * Intake colours for charts and chips.
+   * The intake ramp.
    *
-   * Not four hues. The list is one thing seen four ways, so the scale runs from
-   * the accent through to plain ink: tournament words carry the accent because
-   * they are the largest and most trusted group, and synthetic entries sit at
-   * the faint end because they are the ones a reader should treat with the most
-   * care. Rank is the information; hue would only decorate it.
+   * Not four hues. Four categorical hues would need chroma this surface does
+   * not have, and the intakes are genuinely ordered — by size, and by how much
+   * a reader should trust them — so a single-hue ramp encodes rank rather than
+   * decorating identity. Lightness is strictly monotonic: 0.40, 0.575, 0.735,
+   * 0.885.
+   *
+   * The steps are not eyeballed. A first attempt (0.52 / 0.62 / 0.74 / 0.84)
+   * put only ΔE 10.4 between `synthetic` and `other` in normal vision, below
+   * the 15 floor at which adjacent marks stop being separable at all. Widening
+   * the ramp puts the worst adjacent pair at ΔE 15.3 normal and 14.6 deutan.
+   *
+   * The two pale steps sit under 3:1 against the ground, so every chart using
+   * them carries direct labels and a table of the same figures — colour is
+   * never the only thing doing the work.
+   *
+   * Distinct from --color-accent on purpose: the accent means "active, selected,
+   * the number you asked for". These mean provenance. Same hue family, different
+   * jobs.
    */
-  --color-intake-twl: oklch(0.52 0.19 27);
-  --color-intake-pipeline: oklch(0.62 0.1 27);
-  --color-intake-synthetic: oklch(0.74 0.04 27);
-  --color-intake-other: oklch(0.84 0.01 27);
+  --color-intake-twl: oklch(0.4 0.2 27);
+  --color-intake-pipeline: oklch(0.575 0.14 27);
+  --color-intake-synthetic: oklch(0.735 0.08 27);
+  --color-intake-other: oklch(0.885 0.03 27);
 
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 }

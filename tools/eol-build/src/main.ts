@@ -6,6 +6,7 @@ import { loadWords, loadWordSet } from './words.ts';
 import { loadFacts } from './facts.ts';
 import { emit, clearStale, kb, type Artifact } from './emit.ts';
 import { writeDownloads } from './downloads.ts';
+import { buildGrowth, buildStats } from './stats.ts';
 import { EXPECTED, check, assertExpectations } from './expected.ts';
 import { DATA_DIR, INVALID_WORDS } from './paths.ts';
 
@@ -185,6 +186,19 @@ for (const d of downloads) {
   console.log(`      ${d.file.padEnd(22)} ${d.words.toLocaleString().padStart(9)} words  ${kb(d.bytes).padStart(10)}`);
 }
 
+const growth = await buildGrowth();
+const stats = buildStats(words, intake, growth);
+const statsJson = `${JSON.stringify(stats)}\n`;
+await writeFile(resolve(DATA_DIR, 'stats.json'), statsJson);
+console.log(
+  `      stats.json             ${kb(Buffer.byteLength(statsJson)).padStart(10)}` +
+    `  ${stats.lengths.length} lengths, ${stats.growth.events.length} growth events`,
+);
+console.log(
+  `      the list moved ${growth.last - growth.first} words across ${growth.daysRecorded} recorded days` +
+    ` (${growth.recordedFrom} → ${growth.recordedTo})`,
+);
+
 const manifest = {
   builtAt: new Date().toISOString(),
   wordCount: words.length,
@@ -203,7 +217,7 @@ const manifest = {
 };
 
 await writeFile(resolve(DATA_DIR, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-const removed = await clearStale(artifacts);
+const removed = await clearStale(artifacts, ['stats.json']);
 console.log(`      manifest.json written, ${removed} stale file${removed === 1 ? '' : 's'} removed`);
 
 assertExpectations();
