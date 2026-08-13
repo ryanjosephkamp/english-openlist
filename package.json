@@ -10,8 +10,8 @@
     "dev": "pnpm --filter @eol/site dev",
     "build": "pnpm --filter @eol/site build",
     "preview": "pnpm --filter @eol/site preview",
-    "data:fetch": "pnpm --filter @eol/build fetch",
-    "data:build": "pnpm --filter @eol/build build",
+    "data:fetch": "pnpm --filter @eol/build run fetch-data",
+    "data:build": "pnpm --filter @eol/build run build",
     "typecheck": "tsc --noEmit -p site && tsc --noEmit -p tools/eol-build",
     "test": "vitest run"
   },
