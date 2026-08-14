@@ -1,61 +1,301 @@
 stem,stage,stratum,outcome,action,forms,n_forms,forms_listed,forms_missing,deciding_source,stem_status,mw_stems,part_of_speech,decided_date
 angry,3,agent-plural,inflection-absent,none,angriers,1,,angriers,collegiate,valid,angrier angriest angrily angriness angrinesses angry,adjective,2026-08-14
+barky,3,agent-plural,inflection-absent,none,barkiers,1,,barkiers,collegiate,valid,barkier barkiest barky,adjective,2026-08-14
+barmie,3,agent-plural,mw-absent,none,barmiers,1,,,,,,,2026-08-14
+chesty,3,agent-plural,inflection-absent,none,chestiers,1,,chestiers,collegiate,valid,chestier chestiest chesty,adjective,2026-08-14
+cliquy,3,agent-plural,inflection-absent,none,cliquiers,1,,cliquiers,collegiate,valid,clique cliques cliquey cliquier cliquiest cliquish cliquishly cliquishness cliquishnesses cliquy,noun,2026-08-14
 discreet,3,agent-plural,inflection-absent,none,discreeters,1,,discreeters,collegiate,valid,discreet discreeter discreetest discreetly discreetness discreetnesses,adjective,2026-08-14
+distinct,3,agent-plural,inflection-absent,none,distincters,1,,distincters,collegiate,valid,distinct distincter distinctest distinctly distinctness distinctnesses,adjective,2026-08-14
+dropside,3,agent-plural,mw-absent,none,dropsiders,1,,,,,,,2026-08-14
+drossy,3,agent-plural,inflection-absent,none,drossiers,1,,drossiers,collegiate,valid,dross drosses drossier drossiest drossy,noun,2026-08-14
+elmy,3,agent-plural,mw-absent,none,elmiers,1,,,,,,,2026-08-14
 flappy,3,agent-plural,inflection-absent,none,flappiers,1,,flappiers,collegiate,valid,flappier flappiest flappy,adjective,2026-08-14
+forky,3,agent-plural,inflection-absent,none,forkiers,1,,forkiers,collegiate,valid,forkier forkiest forky,adjective,2026-08-14
+forlorn,3,agent-plural,inflection-absent,none,forlorners,1,,forlorners,collegiate,valid,forlorn forlorner forlornest forlornly forlornness forlornnesses,adjective,2026-08-14
+gapfill,3,agent-plural,mw-absent,none,gapfillers,1,,,,,,,2026-08-14
+horrid,3,agent-plural,inflection-absent,none,horriders,1,,horriders,collegiate,valid,horrid horrider horridest horridly horridness horridnesses,adjective,2026-08-14
 impure,3,agent-plural,inflection-absent,none,impurers,1,,impurers,collegiate,valid,impure impurely impureness impurenesses,adjective,2026-08-14
+luny,3,agent-plural,mw-absent,none,luniers,1,,,,,,,2026-08-14
+measly,3,agent-plural,inflection-absent,none,measliers,1,,measliers,collegiate,valid,measlier measliest measly,adjective,2026-08-14
+microdigest,3,agent-plural,mw-absent,none,microdigesters,1,,,,,,,2026-08-14
+microgrind,3,agent-plural,mw-absent,none,microgrinders,1,,,,,,,2026-08-14
 peacocky,3,agent-plural,inflection-absent,none,peacockiers,1,,peacockiers,collegiate,valid,peacock peacockier peacockiest peacockish peacocks peacocky,noun,2026-08-14
+redact,3,agent-plural,inflection-absent,none,redacters,1,,redacters,collegiate,valid,redact redacted redacting redacts,verb,2026-08-14
+scurfy,3,agent-plural,inflection-absent,none,scurfiers,1,,scurfiers,collegiate,valid,scurf scurfier scurfiest scurfs scurfy,noun,2026-08-14
+silly,3,agent-plural,inflection-absent,none,silliers,1,,silliers,collegiate,valid,knock silly knocked silly knocking silly knocks silly sillier silliest sillily silliness sillinesses silly,adjective,2026-08-14
+snotty,3,agent-plural,inflection-absent,none,snottiers,1,,snottiers,collegiate,valid,snottier snottiest snottily snottiness snottinesses snotty,adjective,2026-08-14
 spiky,3,agent-plural,inflection-absent,none,spikiers,1,,spikiers,collegiate,valid,spikey spikier spikiest spikily spikiness spikinesses spiky,adjective,2026-08-14
+squirmy,3,agent-plural,inflection-absent,none,squirmiers,1,,squirmiers,collegiate,valid,squirm squirmed squirmier squirmiest squirming squirms squirmy,verb,2026-08-14
+stagy,3,agent-plural,inflection-absent,none,stagiers,1,,stagiers,collegiate,valid,stagey stagier stagiest stagily staginess staginesses stagy,adjective,2026-08-14
+tardy,3,agent-plural,inflection-absent,none,tardiers,1,,tardiers,collegiate,valid,tardier tardiest tardy,adjective,2026-08-14
+window,3,agent-plural,inflection-absent,none,windowers,1,,windowers,collegiate,valid,window windowless windows,noun,2026-08-14
 advert,3,gerund-plural,inflection-absent,none,advertings,1,,advertings,collegiate,valid,advert adverted adverting adverts,verb,2026-08-14
+affright,3,gerund-plural,inflection-absent,none,affrightings,1,,affrightings,collegiate,valid,affright affrighted affrighting affrights,verb,2026-08-14
+autosuggest,3,gerund-plural,inflection-absent,none,autosuggestings,1,,autosuggestings,collegiate,valid,auto-suggest auto-suggests autosuggest autosuggests,noun,2026-08-14
+backpulse,3,gerund-plural,mw-absent,none,backpulsings,1,,,,,,,2026-08-14
+backstamp,3,gerund-plural,mw-absent,none,backstampings,1,,,,,,,2026-08-14
 bedrug,3,gerund-plural,mw-absent,none,bedruggings,1,,,,,,,2026-08-14
+bepaint,3,gerund-plural,inflection-absent,none,bepaintings,1,,bepaintings,collegiate,valid,bepaint bepainted bepainting bepaints,verb,2026-08-14
+boulder,3,gerund-plural,inflection-absent,none,boulderings,1,,boulderings,collegiate,valid,boulder bouldered boulders bouldery bowlder bowlders,noun,2026-08-14
+cantillate,3,gerund-plural,inflection-absent,none,cantillatings,1,,cantillatings,collegiate,valid,cantillate cantillated cantillates cantillating cantillation cantillations,verb,2026-08-14
+caterwaul,3,gerund-plural,inflection-absent,none,caterwaulings,1,,caterwaulings,collegiate,valid,caterwaul caterwauled caterwauling caterwauls,verb,2026-08-14
 coattend,3,gerund-plural,mw-absent,none,coattendings,1,,,,,,,2026-08-14
-deskill,3,gerund-plural,mw-absent,none,deskillings,1,,,,,,,2026-08-14
+daypart,3,gerund-plural,mw-absent,none,daypartings,1,,,,,,,2026-08-14
+deconceal,3,gerund-plural,mw-absent,none,deconcealings,1,,,,,,,2026-08-14
+deinterleave,3,gerund-plural,mw-absent,none,deinterleavings,1,,,,,,,2026-08-14
+denaturalize,3,gerund-plural,inflection-absent,none,denaturalizings,1,,denaturalizings,collegiate,valid,denaturalization denaturalizations denaturalize denaturalized denaturalizes denaturalizing,verb,2026-08-14
+deskill,3,gerund-plural,no-stems-array,none,deskillings,1,,deskillings,free,valid,,verb,2026-08-14
+destone,3,gerund-plural,mw-absent,none,destonings,1,,,,,,,2026-08-14
+disroot,3,gerund-plural,mw-absent,none,disrootings,1,,,,,,,2026-08-14
+downcurve,3,gerund-plural,mw-absent,none,downcurvings,1,,,,,,,2026-08-14
+downshoot,3,gerund-plural,mw-absent,none,downshootings,1,,,,,,,2026-08-14
 downtitrate,3,gerund-plural,mw-absent,none,downtitratings,1,,,,,,,2026-08-14
+egest,3,gerund-plural,inflection-absent,none,egestings,1,,egestings,collegiate,valid,egest egested egesting egestion egestions egestive egests,noun,2026-08-14
+electrify,3,gerund-plural,inflection-absent,none,electrifyings,1,,electrifyings,collegiate,valid,electrified electrifies electrify electrifying,verb,2026-08-14
+ensile,3,gerund-plural,inflection-absent,none,ensilings,1,,ensilings,collegiate,valid,ensile ensiled ensiles ensiling,verb,2026-08-14
+exscind,3,gerund-plural,inflection-absent,none,exscindings,1,,exscindings,collegiate,valid,exscind exscinded exscinding exscinds,verb,2026-08-14
 finalis,3,gerund-plural,mw-absent,none,finalisings,1,,,,,,,2026-08-14
+fruit,3,gerund-plural,inflection-absent,none,fruitings,1,,fruitings,collegiate,valid,fruit fruited fruits,noun,2026-08-14
+gallery,3,gerund-plural,inflection-absent,none,galleryings,1,,galleryings,collegiate,valid,galleried galleries gallery galleryite galleryites,noun,2026-08-14
+gratulate,3,gerund-plural,inflection-absent,none,gratulatings,1,,gratulatings,collegiate,valid,gratulate gratulated gratulates gratulating gratulation gratulations gratulatory,verb,2026-08-14
+honey,3,gerund-plural,inflection-absent,none,honeyings,1,,honeyings,collegiate,valid,honey honeys honies,noun,2026-08-14
 illustrate,3,gerund-plural,inflection-absent,none,illustratings,1,,illustratings,collegiate,valid,illustrate illustrated illustrates illustrating illustrator illustrators,verb,2026-08-14
+impaste,3,gerund-plural,inflection-absent,none,impastings,1,,impastings,collegiate,valid,impaste impasted impastes impasting,verb,2026-08-14
+incurvate,3,gerund-plural,inflection-absent,none,incurvatings,1,,incurvatings,collegiate,valid,incurvate incurvated incurvates incurvating incurvation incurvations incurvature incurvatures,verb,2026-08-14
+indagate,3,gerund-plural,inflection-absent,none,indagatings,1,,indagatings,collegiate,valid,indagate indagated indagates indagating indagation indagations indagator indagators,verb,2026-08-14
+intertill,3,gerund-plural,inflection-absent,none,intertillings,1,,intertillings,collegiate,valid,intertill intertillage intertillages intertilled intertilling intertills,verb,2026-08-14
 keek,3,gerund-plural,inflection-absent,none,keekings,1,,keekings,collegiate,valid,keek keeked keeking keeks,verb,2026-08-14
+malverse,3,gerund-plural,mw-absent,none,malversings,1,,,,,,,2026-08-14
+marry,3,gerund-plural,inflection-absent,none,marryings,1,,marryings,collegiate,valid,married marries marry marrying,verb,2026-08-14
+maunder,3,gerund-plural,inflection-absent,none,maunderings,1,,maunderings,collegiate,valid,maunder maundered maunderer maunderers maundering maunders,verb,2026-08-14
+measure,3,gerund-plural,inflection-absent,none,measurings,1,,measurings,medical,valid,for good measure measure measures,noun,2026-08-14
 metallize,3,gerund-plural,inflection-absent,none,metallizings,1,,metallizings,collegiate,valid,metalize metalized metalizes metalizing metallization metallizations metallize metallized metallizes metallizing,verb,2026-08-14
+microstep,3,gerund-plural,mw-absent,none,microsteppings,1,,,,,,,2026-08-14
+missuit,3,gerund-plural,mw-absent,none,missuitings,1,,,,,,,2026-08-14
+mistotal,3,gerund-plural,mw-absent,none,mistotalings,1,,,,,,,2026-08-14
+mistranslate,3,gerund-plural,inflection-absent,none,mistranslatings,1,,mistranslatings,collegiate,valid,mistranslate mistranslated mistranslates mistranslating,verb,2026-08-14
 noncool,3,gerund-plural,mw-absent,none,noncoolings,1,,,,,,,2026-08-14
+nondiscount,3,gerund-plural,inflection-absent,none,nondiscountings,1,,nondiscountings,collegiate,valid,nondiscount,adjective,2026-08-14
+opaque,3,gerund-plural,inflection-absent,none,opaquings,1,,opaquings,collegiate,valid,opaque opaquely opaqueness opaquenesses opaquer opaques opaquest,adjective,2026-08-14
+outsit,3,gerund-plural,inflection-absent,none,outsittings,1,,outsittings,collegiate,valid,outsat outsit outsits outsitting,verb,2026-08-14
+overprocess,3,gerund-plural,inflection-absent,none,overprocessings,1,,overprocessings,collegiate,valid,overprocess overprocessed overprocesses overprocessing,verb,2026-08-14
 oversimplify,3,gerund-plural,inflection-absent,none,oversimplifyings,1,,oversimplifyings,collegiate,valid,oversimplification oversimplifications oversimplified oversimplifies oversimplify oversimplifying,verb,2026-08-14
+oversleep,3,gerund-plural,inflection-absent,none,oversleepings,1,,oversleepings,collegiate,valid,oversleep oversleeping oversleeps overslept,verb,2026-08-14
+overwhelm,3,gerund-plural,inflection-absent,none,overwhelmings,1,,overwhelmings,collegiate,valid,overwhelm overwhelmed overwhelming overwhelms,verb,2026-08-14
+peddle,3,gerund-plural,inflection-absent,none,peddlings,1,,peddlings,collegiate,valid,peddle peddled peddles peddling,verb,2026-08-14
+plasticize,3,gerund-plural,inflection-absent,none,plasticizings,1,,plasticizings,collegiate,valid,plasticization plasticizations plasticize plasticized plasticizes plasticizing,verb,2026-08-14
 platoon,3,gerund-plural,inflection-absent,none,platoonings,1,,platoonings,collegiate,valid,platoon platoons,noun,2026-08-14
+pogrom,3,gerund-plural,inflection-absent,none,pogromings,1,,pogromings,collegiate,valid,pogrom pogroms,noun,2026-08-14
+prededuct,3,gerund-plural,mw-absent,none,predeductings,1,,,,,,,2026-08-14
+reclassify,3,gerund-plural,inflection-absent,none,reclassifyings,1,,reclassifyings,collegiate,valid,reclassified reclassifies reclassify reclassifying,verb,2026-08-14
+recrown,3,gerund-plural,mw-absent,none,recrownings,1,,,,,,,2026-08-14
 retranspose,3,gerund-plural,mw-absent,none,retransposings,1,,,,,,,2026-08-14
+retrogress,3,gerund-plural,inflection-absent,none,retrogressings,1,,retrogressings,collegiate,valid,retrogress retrogressed retrogresses retrogressing,verb,2026-08-14
+revive,3,gerund-plural,inflection-absent,none,revivings,1,,revivings,collegiate,valid,revivable revive revived reviver revivers revives reviving,verb,2026-08-14
+salve,3,gerund-plural,inflection-absent,none,salvings,1,,salvings,collegiate,valid,salve salves,noun,2026-08-14
+shortchange,3,gerund-plural,inflection-absent,none,shortchangings,1,,shortchangings,collegiate,valid,shortchange shortchanged shortchanger shortchangers shortchanges shortchanging,verb,2026-08-14
 sleepwalk,3,gerund-plural,inflection-absent,none,sleepwalkings,1,,sleepwalkings,collegiate,valid,sleepwalk sleepwalked sleepwalker sleepwalkers sleepwalking sleepwalks,verb,2026-08-14
+spoil,3,gerund-plural,inflection-absent,none,spoilings,1,,spoilings,collegiate,valid,spoil spoilable spoiled spoiling spoils spoilt,verb,2026-08-14
+spread,3,gerund-plural,inflection-absent,none,spreadings,1,,spreadings,collegiate,valid,spread spreadabilities spreadability spreadable spreading spreads,verb,2026-08-14
+stevedore,3,gerund-plural,inflection-absent,none,stevedorings,1,,stevedorings,collegiate,valid,stevedore stevedores,noun,2026-08-14
+table,3,gerund-plural,inflection-absent,none,tablings,1,,tablings,collegiate,valid,table tables,noun,2026-08-14
 tamper,3,gerund-plural,inflection-absent,none,tamperings,1,,tamperings,collegiate,valid,tamper tampered tamperer tamperers tampering tamperproof tampers,verb,2026-08-14
+teargas,3,gerund-plural,inflection-absent,none,teargassings,1,,teargassings,collegiate,valid,tear gas tear gassed tear gasses tear gassing tear-gas tear-gassed tear-gasses tear-gassing teargas teargassed teargasses teargassing,verb,2026-08-14
+temper,3,gerund-plural,inflection-absent,none,temperings,1,,temperings,collegiate,valid,temper tempers,noun,2026-08-14
+tilt,3,gerund-plural,inflection-absent,none,tiltings,1,,tiltings,collegiate,valid,tilt tiltable tilted tilter tilters tilting tilts,verb,2026-08-14
+unconfuse,3,gerund-plural,inflection-absent,none,unconfusings,1,,unconfusings,collegiate,valid,unconfuse unconfused unconfuses unconfusing,verb,2026-08-14
 unsex,3,gerund-plural,inflection-absent,none,unsexings,1,,unsexings,collegiate,valid,unsex unsexed unsexes unsexing,verb,2026-08-14
+unteach,3,gerund-plural,inflection-absent,none,unteachings,1,,unteachings,collegiate,valid,untaught unteach unteaches unteaching,verb,2026-08-14
+uplift,3,gerund-plural,inflection-absent,none,upliftings,1,,upliftings,collegiate,valid,uplift uplifted uplifter uplifters uplifting uplifts,verb,2026-08-14
+upsweep,3,gerund-plural,inflection-absent,none,upsweepings,1,,upsweepings,collegiate,valid,upsweep upsweeping upsweeps upswept,verb,2026-08-14
+zonk,3,gerund-plural,inflection-absent,none,zonkings,1,,zonkings,collegiate,valid,zonk zonked zonking zonks,verb,2026-08-14
 amphitypic,3,plural,mw-absent,none,amphitypics,1,,,,,,,2026-08-14
+antifecundity,3,plural,mw-absent,none,antifecundities,1,,,,,,,2026-08-14
+antiintellectualism,3,plural,mw-absent,none,antiintellectualisms,1,,,,,,,2026-08-14
+antivaccine,3,plural,inflection-absent,none,antivaccines,1,,antivaccines,collegiate,valid,anti-vaccine antivaccine,adjective,2026-08-14
+areometry,3,plural,mw-absent,none,areometries,1,,,,,,,2026-08-14
 autoselecting,3,plural,mw-absent,none,autoselectings,1,,,,,,,2026-08-14
+axanthic,3,plural,mw-absent,none,axanthics,1,,,,,,,2026-08-14
+bioterrorism,3,plural,inflection-listed,none,bioterrorisms,1,bioterrorisms,,collegiate,valid,bioterrorism bioterrorisms bioterrorist bioterrorists,noun,2026-08-14
+borrelias,3,plural,inflection-absent,none,borreliases,1,,borreliases,medical,valid,borrelia borrelias,noun,2026-08-14
+butyrone,3,plural,mw-absent,none,butyrones,1,,,,,,,2026-08-14
 carbamoyloxyurea,3,plural,mw-absent,none,carbamoyloxyureas,1,,,,,,,2026-08-14
+celebdom,3,plural,mw-absent,none,celebdoms,1,,,,,,,2026-08-14
+cementoplasty,3,plural,mw-absent,none,cementoplasties,1,,,,,,,2026-08-14
+chemoanatomy,3,plural,mw-absent,none,chemoanatomies,1,,,,,,,2026-08-14
+chemoepitaxy,3,plural,mw-absent,none,chemoepitaxies,1,,,,,,,2026-08-14
 chilias,3,plural,mw-absent,none,chiliases,1,,,,,,,2026-08-14
+chlornaltrexamine,3,plural,mw-absent,none,chlornaltrexamines,1,,,,,,,2026-08-14
+clothoidal,3,plural,mw-absent,none,clothoidals,1,,,,,,,2026-08-14
+counterinsurgence,3,plural,mw-absent,none,counterinsurgences,1,,,,,,,2026-08-14
+cyclopentadienylcarbonyl,3,plural,mw-absent,none,cyclopentadienylcarbonyls,1,,,,,,,2026-08-14
 cyclopentadienyltricarbonyl,3,plural,mw-absent,none,cyclopentadienyltricarbonyls,1,,,,,,,2026-08-14
+defamiliarization,3,plural,inflection-listed,none,defamiliarizations,1,defamiliarizations,,collegiate,valid,defamiliarization defamiliarizations defamiliarize defamiliarized defamiliarizes defamiliarizing,verb,2026-08-14
+difluorosilylene,3,plural,mw-absent,none,difluorosilylenes,1,,,,,,,2026-08-14
+dimethyldiacetylene,3,plural,mw-absent,none,dimethyldiacetylenes,1,,,,,,,2026-08-14
+dimethylmercury,3,plural,mw-absent,none,dimethylmercuries,1,,,,,,,2026-08-14
 diphenylpyraline,3,plural,mw-absent,none,diphenylpyralines,1,,,,,,,2026-08-14
+diseasefulness,3,plural,mw-absent,none,diseasefulnesses,1,,,,,,,2026-08-14
+downweighing,3,plural,mw-absent,none,downweighings,1,,,,,,,2026-08-14
+ebullism,3,plural,inflection-listed,none,ebullisms,1,ebullisms,,medical,valid,ebullism ebullisms,noun,2026-08-14
+electropolymerize,3,plural,mw-absent,none,electropolymerizes,1,,,,,,,2026-08-14
 erythroscope,3,plural,mw-absent,none,erythroscopes,1,,,,,,,2026-08-14
+ethylpentane,3,plural,mw-absent,none,ethylpentanes,1,,,,,,,2026-08-14
+exponentialism,3,plural,mw-absent,none,exponentialisms,1,,,,,,,2026-08-14
+extralunar,3,plural,mw-absent,none,extralunars,1,,,,,,,2026-08-14
+ferroelectricity,3,plural,inflection-listed,none,ferroelectricities,1,ferroelectricities,,collegiate,valid,ferroelectric ferroelectricities ferroelectricity ferroelectrics,adjective,2026-08-14
 filamented,3,plural,mw-absent,none,filamenteds,1,,,,,,,2026-08-14
+fluorodesilylation,3,plural,mw-absent,none,fluorodesilylations,1,,,,,,,2026-08-14
+graphiology,3,plural,mw-absent,none,graphiologies,1,,,,,,,2026-08-14
+hemidiscoidal,3,plural,mw-absent,none,hemidiscoidals,1,,,,,,,2026-08-14
+hemopneumoperitoneum,3,plural,mw-absent,none,hemopneumoperitoneums,1,,,,,,,2026-08-14
 hotdoggery,3,plural,mw-absent,none,hotdoggeries,1,,,,,,,2026-08-14
+hydroxytetraphenylmethane,3,plural,mw-absent,none,hydroxytetraphenylmethanes,1,,,,,,,2026-08-14
+hyperglycolic,3,plural,mw-absent,none,hyperglycolics,1,,,,,,,2026-08-14
+hyperoxalaemia,3,plural,mw-absent,none,hyperoxalaemias,1,,,,,,,2026-08-14
+hypokinesic,3,plural,mw-absent,none,hypokinesics,1,,,,,,,2026-08-14
 hypopotassemic,3,plural,inflection-absent,none,hypopotassemics,1,,hypopotassemics,medical,valid,hypopotassaemia hypopotassaemic hypopotassemia hypopotassemias hypopotassemic,noun,2026-08-14
+hypozone,3,plural,mw-absent,none,hypozones,1,,,,,,,2026-08-14
+intertrace,3,plural,mw-absent,none,intertraces,1,,,,,,,2026-08-14
+iodododecane,3,plural,mw-absent,none,iodododecanes,1,,,,,,,2026-08-14
+laparohysterotomy,3,plural,mw-absent,none,laparohysterotomies,1,,,,,,,2026-08-14
 leaded,3,plural,inflection-absent,none,leadeds,1,,leadeds,collegiate,valid,lead leaded leading leads,verb,2026-08-14
+limoniastrum,3,plural,mw-absent,none,limoniastrums,1,,,,,,,2026-08-14
+liquamen,3,plural,mw-absent,none,liquamens,1,,,,,,,2026-08-14
+macrocommunication,3,plural,mw-absent,none,macrocommunications,1,,,,,,,2026-08-14
+macroenergy,3,plural,mw-absent,none,macroenergies,1,,,,,,,2026-08-14
 magnetothermoelectric,3,plural,mw-absent,none,magnetothermoelectrics,1,,,,,,,2026-08-14
+marchesa,3,plural,inflection-absent,none,marchesas,1,,marchesas,collegiate,valid,marchesa marchese,noun,2026-08-14
+melengestrol,3,plural,mw-absent,none,melengestrols,1,,,,,,,2026-08-14
+mesoneurium,3,plural,mw-absent,none,mesoneuriums,1,,,,,,,2026-08-14
+methylindolizine,3,plural,mw-absent,none,methylindolizines,1,,,,,,,2026-08-14
 methylsilyl,3,plural,mw-absent,none,methylsilyls,1,,,,,,,2026-08-14
+microhydrated,3,plural,mw-absent,none,microhydrateds,1,,,,,,,2026-08-14
+mucohyaline,3,plural,mw-absent,none,mucohyalines,1,,,,,,,2026-08-14
+multimediation,3,plural,mw-absent,none,multimediations,1,,,,,,,2026-08-14
+multisubsystem,3,plural,mw-absent,none,multisubsystems,1,,,,,,,2026-08-14
 nauplial,3,plural,mw-absent,none,nauplials,1,,,,,,,2026-08-14
+neoexpression,3,plural,mw-absent,none,neoexpressions,1,,,,,,,2026-08-14
+nonadienoate,3,plural,mw-absent,none,nonadienoates,1,,,,,,,2026-08-14
+nonconsensuality,3,plural,mw-absent,none,nonconsensualities,1,,,,,,,2026-08-14
+nondesignee,3,plural,mw-absent,none,nondesignees,1,,,,,,,2026-08-14
 nondisclosing,3,plural,mw-absent,none,nondisclosings,1,,,,,,,2026-08-14
+nonignorable,3,plural,mw-absent,none,nonignorables,1,,,,,,,2026-08-14
+nonindexed,3,plural,mw-absent,none,nonindexeds,1,,,,,,,2026-08-14
+noninternationalization,3,plural,mw-absent,none,noninternationalizations,1,,,,,,,2026-08-14
+onioniness,3,plural,mw-absent,none,onioninesses,1,,,,,,,2026-08-14
 organetto,3,plural,mw-absent,none,organettos,1,,,,,,,2026-08-14
+osteostimulation,3,plural,mw-absent,none,osteostimulations,1,,,,,,,2026-08-14
+overcautiousness,3,plural,mw-absent,none,overcautiousnesses,1,,,,,,,2026-08-14
+overtensioning,3,plural,mw-absent,none,overtensionings,1,,,,,,,2026-08-14
+paleoshore,3,plural,mw-absent,none,paleoshores,1,,,,,,,2026-08-14
 pathognomony,3,plural,mw-absent,none,pathognomonies,1,,,,,,,2026-08-14
+pelvectomy,3,plural,mw-absent,none,pelvectomies,1,,,,,,,2026-08-14
+phenoxypropanoic,3,plural,mw-absent,none,phenoxypropanoics,1,,,,,,,2026-08-14
+phosphoglyceroyl,3,plural,mw-absent,none,phosphoglyceroyls,1,,,,,,,2026-08-14
+photodisplacement,3,plural,mw-absent,none,photodisplacements,1,,,,,,,2026-08-14
 photoregenerate,3,plural,mw-absent,none,photoregenerates,1,,,,,,,2026-08-14
+phytopaleontologic,3,plural,mw-absent,none,phytopaleontologics,1,,,,,,,2026-08-14
+phytophenology,3,plural,mw-absent,none,phytophenologies,1,,,,,,,2026-08-14
+picopulse,3,plural,mw-absent,none,picopulses,1,,,,,,,2026-08-14
+pleurotergum,3,plural,mw-absent,none,pleurotergums,1,,,,,,,2026-08-14
 polyethylterephthalate,3,plural,mw-absent,none,polyethylterephthalates,1,,,,,,,2026-08-14
+postburn,3,plural,inflection-absent,none,postburns,1,,postburns,collegiate,valid,postburn,adjective,2026-08-14
+postproposal,3,plural,mw-absent,none,postproposals,1,,,,,,,2026-08-14
+predetonate,3,plural,mw-absent,none,predetonates,1,,,,,,,2026-08-14
+preovulatory,3,plural,inflection-absent,none,preovulatories,1,,preovulatories,collegiate,valid,preovulatory,adjective,2026-08-14
 pseudoapocalyptic,3,plural,mw-absent,none,pseudoapocalyptics,1,,,,,,,2026-08-14
+quasiperfect,3,plural,mw-absent,none,quasiperfects,1,,,,,,,2026-08-14
+radioimmunolocalisation,3,plural,mw-absent,none,radioimmunolocalisations,1,,,,,,,2026-08-14
+radioluminography,3,plural,mw-absent,none,radioluminographies,1,,,,,,,2026-08-14
+sanctificatory,3,plural,mw-absent,none,sanctificatories,1,,,,,,,2026-08-14
 semiplanned,3,plural,mw-absent,none,semiplanneds,1,,,,,,,2026-08-14
+semiwashed,3,plural,mw-absent,none,semiwasheds,1,,,,,,,2026-08-14
+spongifying,3,plural,mw-absent,none,spongifyings,1,,,,,,,2026-08-14
+squashberry,3,plural,no-stems-array,none,squashberries,1,,squashberries,free,valid,,noun,2026-08-14
+stemmatology,3,plural,mw-absent,none,stemmatologies,1,,,,,,,2026-08-14
 sulphydrase,3,plural,mw-absent,none,sulphydrases,1,,,,,,,2026-08-14
+superexploitation,3,plural,mw-absent,none,superexploitations,1,,,,,,,2026-08-14
+systemlessness,3,plural,mw-absent,none,systemlessnesses,1,,,,,,,2026-08-14
+tetrazol,3,plural,mw-absent,none,tetrazols,1,,,,,,,2026-08-14
+thermoelectrogenerator,3,plural,mw-absent,none,thermoelectrogenerators,1,,,,,,,2026-08-14
 titanoderma,3,plural,mw-absent,none,titanodermas,1,,,,,,,2026-08-14
+tochilinite,3,plural,mw-absent,none,tochilinites,1,,,,,,,2026-08-14
+toiletless,3,plural,mw-absent,none,toiletlesses,1,,,,,,,2026-08-14
+typhoprotein,3,plural,mw-absent,none,typhoproteins,1,,,,,,,2026-08-14
+unenfranchisement,3,plural,mw-absent,none,unenfranchisements,1,,,,,,,2026-08-14
 unfathoming,3,plural,mw-absent,none,unfathomings,1,,,,,,,2026-08-14
+unicolumnar,3,plural,mw-absent,none,unicolumnars,1,,,,,,,2026-08-14
+vaginography,3,plural,mw-absent,none,vaginographies,1,,,,,,,2026-08-14
+vibroprotection,3,plural,mw-absent,none,vibroprotections,1,,,,,,,2026-08-14
+vulvate,3,plural,mw-absent,none,vulvates,1,,,,,,,2026-08-14
 acaricide,3,verb-form,inflection-absent,none,acaricided acariciding,2,,acaricided acariciding,collegiate,valid,acaricidal acaricide acaricides,noun,2026-08-14
+alkynylborate,3,verb-form,mw-absent,none,alkynylborated alkynylborating,2,,,,,,,2026-08-14
+ambisense,3,verb-form,mw-absent,none,ambisensed ambisensing,2,,,,,,,2026-08-14
+autoassign,3,verb-form,mw-absent,none,autoassigned autoassigning,2,,,,,,,2026-08-14
+backgreen,3,verb-form,mw-absent,none,backgreened backgreening,2,,,,,,,2026-08-14
 bicaudate,3,verb-form,inflection-absent,none,bicaudated,1,,bicaudated,medical,valid,bicaudal bicaudate,adjective,2026-08-14
+bokken,3,verb-form,mw-absent,none,bokkened bokkening,2,,,,,,,2026-08-14
+brasileins,3,verb-form,mw-absent,none,brasileinsed brasileinsing,2,,,,,,,2026-08-14
+bromelin,3,verb-form,inflection-absent,none,bromelinned bromelinning,2,,bromelinned bromelinning,collegiate,valid,bromelain bromelains bromelin bromelins,noun,2026-08-14
+buydown,3,verb-form,inflection-absent,none,buydowned buydowning,2,,buydowned buydowning,collegiate,valid,buy-down buy-downs buydown buydowns,noun,2026-08-14
 carioca,3,verb-form,inflection-absent,none,cariocaed cariocaing,2,,cariocaed cariocaing,collegiate,valid,carioca cariocas,noun,2026-08-14
+carminophile,3,verb-form,mw-absent,none,carminophiled carminophiling,2,,,,,,,2026-08-14
+celled,3,verb-form,inflection-absent,none,celleding,1,,celleding,collegiate,valid,celled,adjective,2026-08-14
+chalkdust,3,verb-form,mw-absent,none,chalkdusted chalkdusting,2,,,,,,,2026-08-14
+chlorazanil,3,verb-form,mw-absent,none,chlorazaniled chlorazaniling,2,,,,,,,2026-08-14
 chokeberry,3,verb-form,inflection-absent,none,chokeberried,1,,chokeberried,collegiate,valid,chokeberries chokeberry,noun,2026-08-14
+clayband,3,verb-form,mw-absent,none,claybanded claybanding,2,,,,,,,2026-08-14
+coryneform,3,verb-form,inflection-absent,none,coryneformed coryneforming,2,,coryneformed coryneforming,collegiate,valid,coryneform,adjective,2026-08-14
+deosculate,3,verb-form,mw-absent,none,deosculated deosculating,2,,,,,,,2026-08-14
+dopehead,3,verb-form,inflection-absent,none,dopeheaded,1,,dopeheaded,collegiate,valid,dopehead dopeheads,noun,2026-08-14
 ecobricks,3,verb-form,mw-absent,none,ecobricksed,1,,,,,,,2026-08-14
+electrotachyscope,3,verb-form,mw-absent,none,electrotachyscoped electrotachyscoping,2,,,,,,,2026-08-14
+eschatocol,3,verb-form,mw-absent,none,eschatocoled eschatocoling,2,,,,,,,2026-08-14
+fishkill,3,verb-form,mw-absent,none,fishkilling,1,,,,,,,2026-08-14
+fluvalinate,3,verb-form,mw-absent,none,fluvalinated fluvalinating,2,,,,,,,2026-08-14
 folksay,3,verb-form,mw-absent,none,folksaying,1,,,,,,,2026-08-14
+francophone,3,verb-form,inflection-absent,none,francophoned francophoning,2,,francophoned francophoning,collegiate,valid,francophone francophones,adjective,2026-08-14
+frankfurts,3,verb-form,inflection-absent,none,frankfurtsed frankfurtsing,2,,frankfurtsed frankfurtsing,collegiate,valid,frankfurt frankfurter frankfurters frankfurts,noun,2026-08-14
+gyrophase,3,verb-form,mw-absent,none,gyrophasing,1,,,,,,,2026-08-14
+handfish,3,verb-form,mw-absent,none,handfished,1,,,,,,,2026-08-14
 hempen,3,verb-form,inflection-absent,none,hempened hempening,2,,hempened hempening,collegiate,valid,hempen,adjective,2026-08-14
+hexafluoromanganate,3,verb-form,mw-absent,none,hexafluoromanganated hexafluoromanganating,2,,,,,,,2026-08-14
+isocrotonate,3,verb-form,mw-absent,none,isocrotonated isocrotonating,2,,,,,,,2026-08-14
+leucocidin,3,verb-form,inflection-absent,none,leucocidined leucocidining,2,,leucocidined leucocidining,collegiate,valid,leucocidin leucocidins,noun,2026-08-14
+lutestring,3,verb-form,inflection-absent,none,lutestringed,1,,lutestringed,collegiate,valid,lutestring lutestrings,noun,2026-08-14
 micromorph,3,verb-form,mw-absent,none,micromorphed micromorphing,2,,,,,,,2026-08-14
+misbuilt,3,verb-form,mw-absent,none,misbuilting,1,,,,,,,2026-08-14
+monosulfide,3,verb-form,mw-absent,none,monosulfided monosulfiding,2,,,,,,,2026-08-14
+moondust,3,verb-form,inflection-absent,none,moondusted moondusting,2,,moondusted moondusting,collegiate,valid,moondust moondusts,noun,2026-08-14
+mouchoir,3,verb-form,mw-absent,none,mouchoired mouchoiring,2,,,,,,,2026-08-14
 nainsook,3,verb-form,inflection-absent,none,nainsooked nainsooking,2,,nainsooked nainsooking,collegiate,valid,nainsook nainsooks,noun,2026-08-14
+noncustom,3,verb-form,mw-absent,none,noncustomed noncustoming,2,,,,,,,2026-08-14
+oakum,3,verb-form,inflection-absent,none,oakumed oakuming,2,,oakumed oakuming,collegiate,valid,oakum oakums,noun,2026-08-14
+papain,3,verb-form,inflection-absent,none,papained papaining,2,,papained papaining,collegiate,valid,papain papains,noun,2026-08-14
+pectinicorn,3,verb-form,mw-absent,none,pectinicorned,1,,,,,,,2026-08-14
 permatemp,3,verb-form,mw-absent,none,permatemped,1,,,,,,,2026-08-14
+psoralen,3,verb-form,inflection-absent,none,psoralened psoralening,2,,psoralened psoralening,collegiate,valid,psoralen psoralens,noun,2026-08-14
+radiofax,3,verb-form,mw-absent,none,radiofaxed radiofaxing,2,,,,,,,2026-08-14
+ramshorn,3,verb-form,inflection-absent,none,ramshorned,1,,ramshorned,collegiate,valid,ramshorn ramshorns,noun,2026-08-14
+ratatouille,3,verb-form,inflection-absent,none,ratatouilled ratatouilling,2,,ratatouilled ratatouilling,collegiate,valid,ratatouille ratatouilles,noun,2026-08-14
 refertilize,3,verb-form,mw-absent,none,refertilized refertilizing,2,,,,,,,2026-08-14
+riboswitch,3,verb-form,mw-absent,none,riboswitched riboswitching,2,,,,,,,2026-08-14
+roadstead,3,verb-form,inflection-absent,none,roadsteaded roadsteading,2,,roadsteaded roadsteading,collegiate,valid,roadstead roadsteads,noun,2026-08-14
+sesterce,3,verb-form,inflection-absent,none,sesterced sestercing,2,,sesterced sestercing,collegiate,valid,sesterce sesterces,noun,2026-08-14
+sialoendoscopy,3,verb-form,mw-absent,none,sialoendoscopied sialoendoscopying,2,,,,,,,2026-08-14
 sidesaddle,3,verb-form,inflection-absent,none,sidesaddled sidesaddling,2,,sidesaddled sidesaddling,collegiate,valid,sidesaddle sidesaddle flower sidesaddles,noun,2026-08-14
+skeen,3,verb-form,mw-absent,none,skeened skeening,2,,,,,,,2026-08-14
+smartweed,3,verb-form,inflection-absent,none,smartweeded smartweeding,2,,smartweeded smartweeding,collegiate,valid,smartweed smartweeds,noun,2026-08-14
+spheroform,3,verb-form,mw-absent,none,spheroformed spheroforming,2,,,,,,,2026-08-14
+spongin,3,verb-form,inflection-absent,none,spongined spongining,2,,spongined spongining,collegiate,valid,spongin spongins,noun,2026-08-14
 stibocaptate,3,verb-form,mw-absent,none,stibocaptated stibocaptating,2,,,,,,,2026-08-14
+stours,3,verb-form,inflection-absent,none,stoursing,1,,stoursing,collegiate,valid,stour stours,noun,2026-08-14
+sulphonazide,3,verb-form,mw-absent,none,sulphonazided sulphonaziding,2,,,,,,,2026-08-14
+supermacro,3,verb-form,mw-absent,none,supermacroed supermacroing,2,,,,,,,2026-08-14
+tracheoinnominate,3,verb-form,mw-absent,none,tracheoinnominated tracheoinnominating,2,,,,,,,2026-08-14
 tribromomercurate,3,verb-form,mw-absent,none,tribromomercurated tribromomercurating,2,,,,,,,2026-08-14
+triode,3,verb-form,inflection-absent,none,trioded trioding,2,,trioded trioding,collegiate,valid,triode triodes,noun,2026-08-14
+unenroll,3,verb-form,mw-absent,none,unenrolling,1,,,,,,,2026-08-14
+zabumba,3,verb-form,mw-absent,none,zabumbaed zabumbaing,2,,,,,,,2026-08-14
+zymotize,3,verb-form,mw-absent,none,zymotized zymotizing,2,,,,,,,2026-08-14
