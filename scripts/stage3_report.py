@@ -27,19 +27,38 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-#: Stems and forms per stratum, from corrections/stage3_frame.csv.
-POPULATION = {"wn-adj": 1_717, "wn-other": 306, "not-in-wn": 6_786}
-FORMS = {"wn-adj": 3_166, "wn-other": 424, "not-in-wn": 12_888}
-STRATA = ("wn-adj", "wn-other", "not-in-wn")
-TOTAL_STEMS = sum(POPULATION.values())
-TOTAL_FORMS = sum(FORMS.values())
+#: Populations are read from the frame the sample was drawn from, so the report
+#: cannot drift from the thing it describes.
 Z = 1.959963984540054
 
 LABEL = {
     "wn-adj": "WordNet adjective",
     "wn-other": "WordNet noun/verb only",
     "not-in-wn": "not in WordNet",
+    "plural": "plural / 3rd person",
+    "gerund-plural": "plural of a gerund",
+    "verb-form": "past tense or gerund",
+    "agent-plural": "plural of an agent noun",
 }
+
+POPULATION: dict = {}
+FORMS: dict = {}
+STRATA: tuple = ()
+TOTAL_STEMS = 0
+TOTAL_FORMS = 0
+
+
+def load_frame(path: Path) -> None:
+    """Populate the stratum populations from the frame."""
+    global POPULATION, FORMS, STRATA, TOTAL_STEMS, TOTAL_FORMS
+    POPULATION, FORMS = defaultdict(int), defaultdict(int)
+    with open(path, "r", encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            POPULATION[row["stratum"]] += 1
+            FORMS[row["stratum"]] += int(row["n_forms"])
+    STRATA = tuple(sorted(POPULATION, key=lambda s: -POPULATION[s]))
+    TOTAL_STEMS = sum(POPULATION.values())
+    TOTAL_FORMS = sum(FORMS.values())
 
 
 def wilson(successes: int, n: int, z: float = Z) -> tuple[float, float]:
@@ -63,8 +82,12 @@ def tally(rows: list[dict]) -> dict[str, dict[str, int]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Report on the stage 3 sample")
     parser.add_argument("--ledger", type=Path, default=Path("corrections/ledger_stage3.csv"))
+    parser.add_argument("--frame", type=Path, default=Path("corrections/stage3_frame.csv"))
     parser.add_argument("--out", type=Path, default=Path("corrections/stage3_report.md"))
+    parser.add_argument("--title", default="Stage 3 — are the synthetic comparatives real?")
     args = parser.parse_args()
+
+    load_frame(args.frame)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
 
@@ -77,16 +100,15 @@ def main() -> int:
     counts = tally(rows)
     doc: list[str] = []
 
-    doc.append("# Stage 3 — are the synthetic comparatives real?")
+    doc.append(f"# {args.title}")
     doc.append("")
     doc.append(f"{len(rows)} stems sampled from the {TOTAL_STEMS:,} behind the "
-               f"{TOTAL_FORMS:,} synthetic `-er`/`-est` forms in the valid list — "
-               "words like `abacteremicer`, `abambulacralest` and `abatabler`.")
+               f"{TOTAL_FORMS:,} forms they cover.")
     doc.append("")
     doc.append("**No word was moved.** This stage measures.")
     doc.append("")
-    doc.append("The question is not whether Merriam-Webster carries the comparative as "
-               "a headword — it never would. It is whether MW lists the comparative "
+    doc.append("The question is not whether Merriam-Webster carries the inflected form "
+               "as a headword — it never would. It is whether MW lists that form "
                "among the inflections of its stem, in `meta.stems`. A \"no\" there is "
                "the dictionary enumerating a word's forms and leaving this one out.")
     doc.append("")
@@ -113,7 +135,7 @@ def main() -> int:
 
     doc.append("## The result")
     doc.append("")
-    doc.append("| Stratum | MW ruled | Comparative recognised | Not recognised | Rate (95% CI) |")
+    doc.append("| Stratum | MW ruled | Inflection recognised | Not recognised | Rate (95% CI) |")
     doc.append("|---|---:|---:|---:|---|")
     listed_total = 0
     for h in STRATA:
@@ -136,7 +158,7 @@ def main() -> int:
                f"({lo * 100:.1f}–{hi * 100:.1f}%)** |")
     doc.append("")
     doc.append(f"**Of {ruled_total} stems Merriam-Webster could rule on, it recognises "
-               f"the comparative for {listed_total}.**")
+               f"the inflection for {listed_total}.**")
     doc.append("")
 
     # Population-weighted, over rulable stems only, and said to be that.
@@ -151,11 +173,18 @@ def main() -> int:
                f"stems, and perhaps {round(estimate * TOTAL_FORMS)} of the "
                f"{TOTAL_FORMS:,} forms, that a dictionary would accept.")
     doc.append("")
+    coverages = {
+        h: (counts.get(h, {}).get("inflection-listed", 0)
+            + counts.get(h, {}).get("inflection-absent", 0)) / max(1, counts.get(h, {}).get("n", 0))
+        for h in STRATA
+    }
+    worst = min(coverages, key=coverages.get)
     doc.append("That extrapolation assumes the stems MW could not rule on behave like "
-               "those it could, within their stratum. It is least safe for *not in "
-               "WordNet*, where coverage is lowest — but those are also the most "
-               "obscure stems, so if the assumption fails it most likely flatters the "
-               "generator rather than the reverse.")
+               "those it could, within their stratum. It is least safe for "
+               f"*{LABEL[worst]}*, where coverage is {coverages[worst] * 100:.1f}% — "
+               f"and that stratum carries {POPULATION[worst] / TOTAL_STEMS * 100:.0f}% of "
+               "the population, so the weighted figure leans heavily on its few "
+               "rulable stems.")
     doc.append("")
 
     listed_rows = [r for r in rows if r["outcome"] == "inflection-listed"]
@@ -166,14 +195,14 @@ def main() -> int:
             doc.append(f"- **`{r['stem']}`** → `{r['forms_listed']}` — "
                        f"MW lists these among its inflections.")
         doc.append("")
-        doc.append("A real gradable adjective, produced by the same blind affixation "
-                   "that produced the rest. The generator was not right on purpose.")
+        doc.append("Produced by the same blind affixation that produced the rest. The "
+                   "generator was not right on purpose — but it was right.")
         doc.append("")
 
     doc.append("## What it got wrong")
     doc.append("")
     doc.append("MW enumerates each stem's real inflections and simply does not include "
-               "the comparative:")
+               "the one the generator produced:")
     doc.append("")
     doc.append("| Stem | Synthetic forms | What MW actually lists |")
     doc.append("|---|---|---|")

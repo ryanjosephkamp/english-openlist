@@ -352,14 +352,92 @@ obscure stems, so if the assumption fails it most likely flatters the generator.
 **Nothing has been moved.** Stage 3 measures; what to do about the cluster is a
 separate decision.
 
+### Applied: 16,476 demoted, 2026-08-14
+
+The first words ever to leave the valid list.
+
+| | Before | After |
+| --- | ---: | ---: |
+| valid | 378,891 | **362,415** |
+| invalid | 9,275,261 | **9,291,737** |
+| **grand total** | **9,654,152** | **9,654,152** |
+
+The total is the row that matters: nothing was deleted, words moved sides.
+16,478 forms were measured and **16,476** demoted — `blameworthier` and
+`blameworthiest` stayed, because Merriam-Webster confirmed them. Never demote
+what the evidence vindicated, even when it is one case out of 183.
+
+**A demotion here is not a ruling that the word is not English.** It says no
+dictionary we could reach recognised it on 2026-08-14. Three mechanisms would
+have quietly turned that into a permanent sentence, and all three were fixed
+first — see *Keeping demotions reversible* below.
+
+Applied by `scripts/demote_words.py`, which works only from a ledger, refuses
+any action it does not recognise, refuses to "demote" a word that is not on the
+valid list, and requires every row to be marked reversible.
+
+## Keeping demotions reversible
+
+A word demoted for want of evidence must be able to come back. Three separate
+things stood in the way, none of them obvious:
+
+1. **`validation_progress.json` was a permanent blocklist.** Every word the
+   nightly checked was appended to it and filtered out of every future run,
+   forever — it was already excluding 2,005 words. It is now a dated map with a
+   **180-day cooldown** (`RECHECK_AFTER_DAYS`), migrated from the old format by
+   stamping existing entries with the last run date, and pruned past the window
+   so it stops growing by 1,000 entries a day.
+2. **The prioritiser's `is_likely_english` pre-filter drops anything over 15
+   characters**, which covered **4,932 of the demoted words**.
+   `abdominocutaneousest` would never have been selected again. The recheck
+   queue bypasses the pre-filter.
+3. **9.29 million invalid words at 1,000 a day is a 25-year cycle.**
+   `corrections/recheck_queue.txt` takes a reserved **100 of each night**
+   (`RECHECK_DAILY_SLICE`), oldest-checked first, so demoted words rotate in
+   months.
+
+`tests/test_recheck.py` holds all three in place.
+
+## Stage 4 — the rest of the synthetic intake, August 2026
+
+The 48,359 remaining synthetic words: plurals, gerund plurals, past tenses and
+agent nouns. Same method, stratified by **which inflection is claimed**, since
+that is what predicts plausibility.
+
+| Stratum | Stems | Forms | Sampled | MW ruled | Coverage | Recognised |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| plural / 3rd person | 28,594 | 28,605 | 120 | 11 | 9.2% | **4 (36.4%)** |
+| plural of a gerund | 8,736 | 8,830 | 80 | 58 | 72.5% | 0 (0–6.2%) |
+| past tense or gerund | 4,616 | 7,944 | 70 | 28 | 40.0% | 0 (0–12.1%) |
+| plural of an agent noun | 344 | 344 | 30 | 23 | 76.7% | 0 (0–14.3%) |
+
+**Stage 4 is not stage 3, and the difference is the point.** Three strata are as
+clearly bogus as the comparatives were: **0 of 109** recognised, 95% CI 0–3.4%.
+MW lists `advert adverted adverting adverts` and simply has no `advertings`.
+
+But the **plural** stratum is different. Four of the eleven MW could rule on were
+real: `bioterrorisms`, `defamiliarizations`, `ebullisms`, `ferroelectricities`.
+Coverage there is only 9.2% and the interval runs 15–65%, and that stratum
+carries 68% of the population — so the weighted figure of 24.6% rests almost
+entirely on eleven stems.
+
+**Recommendation, split:**
+
+- **Demote** gerund plurals, verb forms and agent plurals — **17,118 forms**.
+  The evidence is as strong as stage 3's.
+- **Do not demote the plurals** — 28,605 forms. Acting on a 9.2%-coverage
+  stratum where a third of the rulable cases were genuine would throw away real
+  words like `bioterrorisms`. Either leave them, or measure them properly with a
+  source that actually covers technical nouns.
+
 ## Not yet decided
 
-- **The 16,478 `-er`/`-est` synthetic forms.** The evidence now says ~99.8% of
-  them are not English. Demoting them is the first genuine *valid → invalid*
-  move this project would make, and that is Ryan's call, not a measurement's.
-- **The other 48,359 synthetic words** — plurals, `-ed`/`-ing` forms and
-  prefixed constructions — are unmeasured. The same stem-and-`meta.stems`
-  method would work on them.
+- **The 17,118 non-plural synthetic forms** — recommended for demotion above,
+  awaiting Ryan.
+- **The 28,605 synthetic plurals** — recommended against demotion on this
+  evidence.
+- **2,636 synthetic forms have no stem in the list** and were never framed.
+  Mostly Greek-plural medical terms like `abarognoses`, which are probably fine.
 - **64,837 synthetic words carry no attestation of any kind** — no corpus source,
   no validation record — while marked `validated: true` and noted as "awaiting
   validation". 95.9% are derived forms of stems already in the list, and 16,478
