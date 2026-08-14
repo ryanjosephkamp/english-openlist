@@ -52,13 +52,19 @@ export function AsItIsPage({ manifest }: { manifest: Manifest | null }) {
           while carrying no evidence of any kind — their own records say “awaiting validation”.
         </p>
         <p>
-          <strong>16,476 of them left this list on 14 August 2026.</strong> They were comparatives
-          and superlatives — <code className="font-mono text-xs">abacteremicer</code>,{' '}
-          <code className="font-mono text-xs">abambulacralest</code> — and you cannot be{' '}
-          <em>more</em> abacteremic. Merriam-Webster was asked about 300 of their stems, not by
-          looking up the comparative, which it would never carry, but by reading the inflections it
-          records for each stem. It could rule on 183, and listed the comparative for exactly one:{' '}
-          <a href="/word/blameworthy">blameworthy</a>. That one stayed.
+          <strong>33,594 of them left this list on 14 August 2026</strong> — 16,476 comparatives
+          and superlatives (<code className="font-mono text-xs">abacteremicer</code>,{' '}
+          <code className="font-mono text-xs">abambulacralest</code>; you cannot be <em>more</em>
+          {' '}abacteremic), then 17,118 plural gerunds, past tenses and agent-noun plurals
+          (<code className="font-mono text-xs">advertings</code>,{' '}
+          <code className="font-mono text-xs">abacaviring</code>).
+        </p>
+        <p>
+          Merriam-Webster was asked about 600 of their stems — not by looking up the invented form,
+          which it would never carry as a headword, but by reading the inflections it records for
+          each stem. Of the 303 it could rule on it accepted <strong>five</strong>:{' '}
+          <a href="/word/blameworthy">blameworthy</a>’s comparatives, and four plurals. All five
+          stayed.
         </p>
         <p>
           They were moved to the invalid list, not deleted, and{' '}
@@ -72,12 +78,22 @@ export function AsItIsPage({ manifest }: { manifest: Manifest | null }) {
           .
         </p>
         <p>
-          The {n(synthetic)} that remain are plurals, past tenses and prefixed forms — unmeasured
-          so far, and a mixed bag: <code className="font-mono text-xs">abacavirs</code> is a
-          plausible plural of a real drug,{' '}
-          <code className="font-mono text-xs">abacaviring</code> is not. They cluster at length —{' '}
-          <a href="/shape">the shape page draws it</a>. If you want only words a human source
-          attested, that is <a href="/use">one filter or one prebuilt download</a>.
+          <strong>The {n(synthetic)} that remain were deliberately kept</strong>, and that is a
+          decision rather than an oversight. Most of them are plurals, and when Merriam-Webster was
+          asked about those it could only rule on 9% of their stems — but of the eleven it could,
+          it accepted four:{' '}
+          <code className="font-mono text-xs">bioterrorisms</code>,{' '}
+          <code className="font-mono text-xs">defamiliarizations</code>,{' '}
+          <code className="font-mono text-xs">ebullisms</code>,{' '}
+          <code className="font-mono text-xs">ferroelectricities</code>. Demoting a group on that
+          evidence would have thrown away real words to tidy up a generator’s mess, so they stay,
+          flagged as unattested. Settling them properly needs a source that covers technical nouns,
+          which Merriam-Webster does not.
+        </p>
+        <p>
+          They cluster at length — <a href="/shape">the shape page draws it</a>. If you want only
+          words a human source attested, that is{' '}
+          <a href="/use">one filter or one prebuilt download</a>.
         </p>
       </Item>
 

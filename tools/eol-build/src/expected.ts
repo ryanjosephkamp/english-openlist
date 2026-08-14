@@ -12,28 +12,39 @@
  */
 export const EXPECTED = {
   /**
-   * 362,415 on 2026-08-14. Grows by roughly one a day; shrinking is the alarm.
+   * 345,297 on 2026-08-14. Grows by roughly one a day; shrinking is the alarm.
    *
-   * It shrank once, deliberately: 16,476 synthetic comparatives were demoted to
-   * the invalid list on 2026-08-14 after Merriam-Webster, asked about 300 of
-   * their stems, listed the comparative for exactly one. 378,891 -> 362,415.
-   * That is the only sanctioned shrink; another one is a bug until someone
-   * writes down otherwise here.
+   * It has shrunk twice, both deliberately, both on the same day and the same
+   * method — ask Merriam-Webster which inflections it records for a stem, and
+   * demote the synthetic forms it does not list:
+   *
+   *   378,891 -> 362,415  16,476 comparatives and superlatives
+   *   362,415 -> 345,297  17,118 gerund plurals, verb forms, agent plurals
+   *
+   * Those are the only sanctioned shrinks. Another one is a bug until someone
+   * writes it down here.
+   *
+   * The 28,605 synthetic plurals were deliberately NOT demoted: Merriam-Webster
+   * could rule on only 9.2% of their stems and accepted four of the eleven it
+   * could, so demoting them would have discarded real words like
+   * `bioterrorisms`. See corrections/README.md.
    */
-  words: { min: 362_300, max: 400_000 },
+  words: { min: 345_200, max: 400_000 },
 
   /**
    * Intake shares, as a fraction of the list. The measured split on 2026-08-14,
-   * after the demotion, was 175,501 / 131,226 / 48,361 / 7,327.
+   * after both demotions, was 175,501 / 131,226 / 31,243 / 7,327.
    *
    * `twl` and `pipeline` rose without gaining a single word: the denominator
-   * fell by 16,476. Worth remembering before reading a share as growth.
+   * fell by 33,594 across the two demotions. Worth remembering before reading a
+   * share as growth.
    *
    * Only `pipeline` and `other` can move much on their own — promotion from the
    * invalid list adds to those two. **A rise in `synthetic` would mean generated
    * words were being added**, which has not happened since January 2026, and the
-   * upper bound is kept tight for that reason. The lower bound has room for the
-   * remaining 48,359 to be demoted too, should that follow.
+   * upper bound is kept tight for that reason. The lower bound leaves room for
+   * the remaining 31,243 to go too, though the plurals among them are not
+   * expected to.
    */
   intakeShare: {
     twl: { min: 0.46, max: 0.52 },
