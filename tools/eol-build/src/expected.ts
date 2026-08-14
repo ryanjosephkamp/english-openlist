@@ -11,22 +11,34 @@
  * failure before widening the bound.
  */
 export const EXPECTED = {
-  /** 378,891 on 2026-08-13. Grows by roughly one a day; shrinking is the alarm. */
-  words: { min: 378_800, max: 400_000 },
+  /**
+   * 362,415 on 2026-08-14. Grows by roughly one a day; shrinking is the alarm.
+   *
+   * It shrank once, deliberately: 16,476 synthetic comparatives were demoted to
+   * the invalid list on 2026-08-14 after Merriam-Webster, asked about 300 of
+   * their stems, listed the comparative for exactly one. 378,891 -> 362,415.
+   * That is the only sanctioned shrink; another one is a bug until someone
+   * writes down otherwise here.
+   */
+  words: { min: 362_300, max: 400_000 },
 
   /**
-   * Intake shares, as a fraction of the list. The dataset card documents
-   * ~46/35/17/2 and the measured split on 2026-08-13 was
-   * 175,501 / 131,226 / 64,837 / 7,327.
+   * Intake shares, as a fraction of the list. The measured split on 2026-08-14,
+   * after the demotion, was 175,501 / 131,226 / 48,361 / 7,327.
    *
-   * Only `pipeline` and `other` can move much: promotion from the invalid list
-   * adds to those two. A jump in `synthetic` would mean generated words were
-   * being added, which has not happened since January 2026.
+   * `twl` and `pipeline` rose without gaining a single word: the denominator
+   * fell by 16,476. Worth remembering before reading a share as growth.
+   *
+   * Only `pipeline` and `other` can move much on their own — promotion from the
+   * invalid list adds to those two. **A rise in `synthetic` would mean generated
+   * words were being added**, which has not happened since January 2026, and the
+   * upper bound is kept tight for that reason. The lower bound has room for the
+   * remaining 48,359 to be demoted too, should that follow.
    */
   intakeShare: {
-    twl: { min: 0.44, max: 0.48 },
-    pipeline: { min: 0.33, max: 0.37 },
-    synthetic: { min: 0.15, max: 0.19 },
+    twl: { min: 0.46, max: 0.52 },
+    pipeline: { min: 0.34, max: 0.39 },
+    synthetic: { min: 0.0, max: 0.15 },
     other: { min: 0.0, max: 0.05 },
   },
 

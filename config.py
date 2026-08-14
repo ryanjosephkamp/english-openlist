@@ -98,6 +98,24 @@ UPDATE_HOUR = 0  # Hour (UTC) for scheduled updates
 DAILY_VALIDATION_LIMIT = 1000  # Words to validate per day from invalid list
 VALIDATION_BATCH_SIZE = 50  # Words per batch for API calls
 
+# How long a word stays off the validation queue after being checked.
+#
+# This used to be forever: every word the nightly examined was appended to
+# validation_progress.json and filtered out of every future run. A word checked
+# once and not found was invalid permanently, which is wrong — Merriam-Webster
+# adds words, and "no entry today" is not "no entry ever". After this many days
+# a word becomes eligible again.
+RECHECK_AFTER_DAYS = 180
+
+# Words this project deliberately demoted from the valid list, kept in a queue so
+# they are re-examined on a known cadence rather than waiting for their turn
+# among 9.29 million others — which, at 1,000 a day, would take about 25 years.
+RECHECK_QUEUE_FILE = PROJECT_ROOT / "corrections" / "recheck_queue.txt"
+
+# How much of each night's budget is reserved for that queue. The rest is
+# selected as it always has been.
+RECHECK_DAILY_SLICE = 100
+
 # =============================================================================
 # OUTPUT CONFIGURATION
 # =============================================================================

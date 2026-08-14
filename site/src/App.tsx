@@ -96,7 +96,7 @@ function Explorer({
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-4">
         <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
-          {search.manifest ? n(search.manifest.wordCount) : '378,891'} English words, and where
+          {search.manifest ? n(search.manifest.wordCount) : '362,415'} English words, and where
           each one came from
         </h1>
         <p className="max-w-[62ch] text-ink-soft">
@@ -201,7 +201,7 @@ function titleFor(path: string, word: string | null): string {
   if (word) return `${word} — ${SITE}`;
   switch (path) {
     case '/':
-      return `${SITE} — 378,891 English words, and where each one came from`;
+      return `${SITE} — 362,415 English words, and where each one came from`;
     case '/shape':
       return `The shape of the list — ${SITE}`;
     case '/use':

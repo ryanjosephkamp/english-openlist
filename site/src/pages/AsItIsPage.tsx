@@ -47,16 +47,37 @@ export function AsItIsPage({ manifest }: { manifest: Manifest | null }) {
       <Item figure={n(synthetic)} title="words were constructed by an algorithm">
         <p>
           That is {((synthetic / total) * 100).toFixed(1)}% of the list, identifiable by{' '}
-          <code className="font-mono text-xs">source: "synthetic_generation"</code>. They are forms
-          like <code className="font-mono text-xs">abacteremicer</code> and{' '}
-          <code className="font-mono text-xs">nonlivabler</code>: constructed, then validated. They
-          are kept deliberately — removing them would narrow the list, which is not what it is for.
+          <code className="font-mono text-xs">source: "synthetic_generation"</code>. They were
+          built by affixation and marked <code className="font-mono text-xs">validated: true</code>{' '}
+          while carrying no evidence of any kind — their own records say “awaiting validation”.
         </p>
         <p>
-          They cluster at length. Among 24-letter words nearly half are synthetic, against almost
-          none among short ones — <a href="/shape">the shape page draws it</a>. If you want only
-          words a human source attested, that is{' '}
-          <a href="/use">one filter or one prebuilt download</a>.
+          <strong>16,476 of them left this list on 14 August 2026.</strong> They were comparatives
+          and superlatives — <code className="font-mono text-xs">abacteremicer</code>,{' '}
+          <code className="font-mono text-xs">abambulacralest</code> — and you cannot be{' '}
+          <em>more</em> abacteremic. Merriam-Webster was asked about 300 of their stems, not by
+          looking up the comparative, which it would never carry, but by reading the inflections it
+          records for each stem. It could rule on 183, and listed the comparative for exactly one:{' '}
+          <a href="/word/blameworthy">blameworthy</a>. That one stayed.
+        </p>
+        <p>
+          They were moved to the invalid list, not deleted, and{' '}
+          <strong>every one is queued to be asked about again</strong>. The nightly run reserves
+          part of each night for them and skips the filter that would otherwise hide the longer
+          ones. A demotion here means no dictionary we could reach knew the word that day — not
+          that it is not a word.{' '}
+          <a href="https://github.com/ryanjosephkamp/english-openlist/tree/main/corrections">
+            Every one names its reason
+          </a>
+          .
+        </p>
+        <p>
+          The {n(synthetic)} that remain are plurals, past tenses and prefixed forms — unmeasured
+          so far, and a mixed bag: <code className="font-mono text-xs">abacavirs</code> is a
+          plausible plural of a real drug,{' '}
+          <code className="font-mono text-xs">abacaviring</code> is not. They cluster at length —{' '}
+          <a href="/shape">the shape page draws it</a>. If you want only words a human source
+          attested, that is <a href="/use">one filter or one prebuilt download</a>.
         </p>
       </Item>
 

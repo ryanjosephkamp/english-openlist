@@ -4,7 +4,7 @@ import type { Query } from '@eol/wordlist/query';
  * A single result row, in the shape the list renders.
  *
  * The worker keeps the current result set to itself and hands over only the
- * rows on screen. Transferring all 378,891 matching indices on every keystroke
+ * rows on screen. Transferring all 362,415 matching indices on every keystroke
  * would be 1.5 MB per press for a list that shows forty of them; a page is
  * roughly 3 KB.
  */
