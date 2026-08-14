@@ -115,16 +115,107 @@ The state immediately before this change is preserved in two places: the
 verified to decompress byte-identical before anything was written. Hugging Face
 keeps no history to fall back on.
 
+## Stage 2 — measuring the LLM verdict, August 2026
+
+20,052 words in the valid list carry `"status": "invalid"`. Every one of those
+verdicts came from a single pass by **Google Gemini 3 Flash Preview** in
+December 2025 — a pass that also marked 117,653 other words *valid*. The
+pipeline's own deterministic checks passed 97.8% of them, and `abacavir`, an HIV
+antiretroviral attested in COCA, Google Ngrams, Wikipedia and Wiktionary, is
+among the supposedly invalid.
+
+**No word moves in this stage.** It measures how often that pass was wrong, so
+the decision about the other 19,652 rests on evidence rather than on the field's
+say-so. Every ledger row carries `action: none`.
+
+### What is being measured, and what cannot be
+
+The result is a **lower bound**. A dictionary having the word proves the LLM
+wrong; a dictionary *not* having it proves nothing, because much of this
+vocabulary is technical and absence from Merriam-Webster is not absence from
+English. Four outcomes, and only the first two enter the rate:
+
+| Outcome | Meaning |
+| --- | --- |
+| `refuted` | a source returns `valid` — the LLM was wrong |
+| `corroborated` | a source returns `abbreviation` or `proper_noun`, both of which this dataset excludes — the LLM's call was defensible |
+| `unadjudicated` | no source has an entry — nothing follows |
+| `error` | every source failed — excluded from the rate, counted separately |
+
+An error is never read as a verdict. That distinction matters because
+`validate_invalid_list.py` does not make it: its `else` branch sweeps `ERROR` in
+with the rejections, so a rate-limited lookup already reads as "not a word" in
+the nightly pipeline.
+
+### The sample
+
+400 words, stratified by how many corpora attested them — a word with four
+independent corpora behind it is a different case from one with none, and
+pooling them would hide exactly the pattern worth finding.
+
+| Stratum | Population | Sampled | Rate |
+| --- | ---: | ---: | ---: |
+| 0 corpus sources | 448 | 40 | 8.9% |
+| 1 source | 10,056 | 160 | 1.6% |
+| 2 sources | 4,906 | 80 | 1.6% |
+| 3 sources | 2,254 | 60 | 2.7% |
+| 4+ sources | 2,388 | 60 | 2.5% |
+| **Total** | **20,052** | **400** | **2.0%** |
+
+Stratum 0 is oversampled deliberately: it holds only 448 words but is the most
+likely place for the LLM to have been right, and a proportional draw would say
+nothing about it. It also mixes two different claims — 307 words whose sources
+*all* said "unlikely", and 141 with no sources at all — so `all_unlikely` is
+recorded per row and the split can be analysed without drawing again.
+
+`stage2_frame.csv` and `stage2_sample.csv` are **committed before any lookup
+runs**. A sample chosen after seeing results is not a sample, and a reader would
+have no way to tell afterwards. The workflow redraws the sample from the
+recorded seed and fails if the committed file differs. Selection ranks each word
+by `sha256(seed:stratum:word)` rather than `random.sample`, whose internals are
+free to change between Python releases — anyone can recompute it in any
+language.
+
+### How the rate is computed
+
+- **Per stratum**: `refuted / (refuted + corroborated)` with a **Wilson score**
+  95% interval, used rather than the normal approximation because the
+  denominators are small and the proportions may sit near 0 or 1, where the
+  textbook interval reports impossible bounds.
+- **Overall**: population-weighted, `Σ (N_h/N)·r_h`. Pooling the raw counts
+  would let stratum 0 — sampled at 8.9% against 1.6% — dominate a figure meant
+  to describe all 20,052 words. The variance carries the finite population
+  correction, since 40 of 448 is not a draw from an infinite population.
+- **Twice over**: Free Dictionary performs no abbreviation or proper-noun
+  screening, so every figure is also given counting only Merriam-Webster
+  rulings.
+
+### Running it
+
+`.github/workflows/stage2_sample.yml`, triggered by hand. It runs in Actions
+rather than on a laptop because a ruling with a public log and a timestamp is
+defensible to a stranger, and because that is where the API keys live.
+
+Sources are consulted **Medical, then Collegiate, then Free Dictionary**.
+Medical leads because its quota is unspent while the nightly consumes
+Collegiate's entirely, and because this vocabulary is heavily medical and
+chemical.
+
+Responses are cached under `.cache/dictionary/` so a re-run costs nothing —
+verified: a warm cache makes **0** outbound calls. The cache is off unless
+`EOL_DICT_CACHE` is set, so the nightly's behaviour is unchanged; a stale cached
+"not found" would otherwise freeze a word out of promotion indefinitely. Errors
+are never cached, since a 429 is a statement about our quota rather than about
+the word.
+
+**`DAILY_VALIDATION_LIMIT` is temporarily 600 rather than 1000**, lending stage
+2 about 400 Collegiate calls for one night. It must go back to 1000 once the
+workflow has run.
+
 ## Not yet decided
 
-Two further defects have been measured but **nothing has been moved for either**:
-
-- **20,052 entries carry `"status": "invalid"` while sitting in the valid list.**
-  All of them were marked invalid by a single LLM pass (Google Gemini 3 Flash
-  Preview, December 2025) which also passed 117,653 other words. The pipeline's
-  own deterministic checks passed 97.8% of them, and `abacavir` — attested in
-  COCA, Google Ngrams, Wikipedia and Wiktionary — is among them. It is a second
-  opinion of unmeasured quality. Measuring it is the next stage.
+- **Set B (20,052)** — awaiting the stage 2 result above. If the error rate is
+  low, the answer is to relabel the field and move nothing at all.
 - **64,837 synthetic words carry no attestation of any kind** — no corpus source,
   no validation record — while marked `validated: true` and noted as "awaiting
   validation". 95.9% are derived forms of stems already in the list, and 16,478
