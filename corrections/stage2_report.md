@@ -14,11 +14,11 @@ A dictionary having the word means the LLM was wrong. A dictionary *not* having 
 | 1 | 10,056 | 160 | 1 | 0 | 159 | 0 | 100.0% (21–100%) |
 | 2 | 4,906 | 80 | 1 | 1 | 78 | 0 | 50.0% (9–91%) |
 | 3 | 2,254 | 60 | 4 | 0 | 56 | 0 | 100.0% (51–100%) |
-| 4+ | 2,388 | 60 | 3 | 4 | 53 | 0 | 42.9% (16–75%) |
+| 4+ | 2,388 | 60 | 4 | 4 | 52 | 0 | 50.0% (22–78%) |
 
-**Weighted error rate across all 20,052 words: 81.0% (95% CI 63.5% – 98.5%).**
+**Weighted error rate across all 20,052 words: 81.8% (95% CI 64.4% – 99.3%).**
 
-Adjudicable: **17 of 400** sampled words (4.2%). The rest had no entry in any source consulted, which says nothing about whether they are words.
+Adjudicable: **18 of 400** sampled words (4.5%). The rest had no entry in any source consulted, which says nothing about whether they are words.
 
 ## Counting only Merriam-Webster rulings
 
@@ -40,9 +40,10 @@ Adjudicable: **17 of 400** sampled words (4.2%). The rest had no entry in any so
 
 | Source | Words ruled |
 |---|---:|
-| (none) | 383 |
+| (none) | 382 |
 | collegiate | 10 |
 | medical | 7 |
+| free | 1 |
 
-**Lookups where at least one source errored rather than answering: 338.** An error is a statement about our quota or the network, never about the word, and is never recorded as "not found".
+**Lookups where at least one source errored rather than answering: 298.** An error is a statement about our quota or the network, never about the word, and is never recorded as "not found".
 
