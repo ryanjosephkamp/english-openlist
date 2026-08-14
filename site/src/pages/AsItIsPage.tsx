@@ -69,21 +69,43 @@ export function AsItIsPage({ manifest }: { manifest: Manifest | null }) {
         </p>
       </Item>
 
-      <Item figure={n(manifest.alsoInvalid)} title="words are on both lists at once">
-        <p>
-          They appear in <code className="font-mono text-xs">merged_valid_words.txt</code> and in
-          the 9,275,411-entry invalid list simultaneously. All of them are recent promotions that
-          were added to one side without being removed from the other.
-        </p>
-        <p className="text-sm text-ink-faint">
-          Few enough to name:{' '}
-          <span className="font-mono text-[12px]">
-            {manifest.alsoInvalidWords.slice(0, 24).join(', ')}
-            {manifest.alsoInvalidWords.length > 24 &&
-              ` … and ${manifest.alsoInvalidWords.length - 24} more`}
-          </span>
-        </p>
-      </Item>
+      {manifest.alsoInvalid === 0 ? (
+        <Item figure="150" title="words were on both lists at once, until they weren’t">
+          <p>
+            Until 13 August 2026, 150 words appeared in{' '}
+            <code className="font-mono text-xs">merged_valid_words.txt</code> and in the{' '}
+            {n(manifest.invalidCount)}-entry invalid list simultaneously — words the nightly run had
+            promoted onto one side without removing them from the other.
+          </p>
+          <p>
+            Every one of them already carried a Merriam-Webster, MW Medical or Free Dictionary
+            ruling inside its own record, so all 150 were cleared against that stored evidence and
+            none was demoted. The verdicts and the evidence behind each one are in{' '}
+            <code className="font-mono text-xs">corrections/ledger_stage1.csv</code>.
+          </p>
+          <p className="text-sm text-ink-faint">
+            The build now asserts this figure is exactly zero rather than merely small. If it ever
+            rises again, the promotion path has regressed.
+          </p>
+        </Item>
+      ) : (
+        <Item figure={n(manifest.alsoInvalid)} title="words are on both lists at once">
+          <p>
+            They appear in <code className="font-mono text-xs">merged_valid_words.txt</code> and in
+            the {n(manifest.invalidCount)}-entry invalid list simultaneously. This was corrected to
+            zero on 13 August 2026, so any word here is a fresh regression in the promotion path
+            rather than old residue.
+          </p>
+          <p className="text-sm text-ink-faint">
+            Few enough to name:{' '}
+            <span className="font-mono text-[12px]">
+              {manifest.alsoInvalidWords.slice(0, 24).join(', ')}
+              {manifest.alsoInvalidWords.length > 24 &&
+                ` … and ${manifest.alsoInvalidWords.length - 24} more`}
+            </span>
+          </p>
+        </Item>
+      )}
 
       <Item figure="8 of 11" title="sources can all say “unlikely” at once">
         <p>

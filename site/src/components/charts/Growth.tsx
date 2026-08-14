@@ -26,7 +26,7 @@ export function Growth({ stats }: { stats: Stats }) {
         <p className="max-w-[62ch] text-sm text-ink-soft">
           Almost not at all, and that is the point. This is not a list being grown — it is a list
           being <em>checked</em>. Every night the pipeline validates about a thousand entries from
-          the 9,275,411 on the invalid list, and most nights nothing survives.
+          the 9.28 million on the invalid list, and most nights nothing survives.
         </p>
       </div>
 

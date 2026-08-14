@@ -30,11 +30,33 @@ export const EXPECTED = {
     other: { min: 0.0, max: 0.05 },
   },
 
-  /** 20,052 entries carry `status: "invalid"` while listed as valid. */
+  /**
+   * 20,052 entries carry `status: "invalid"` while listed as valid.
+   *
+   * This is not a data-integrity fault. Every one of them was marked invalid by
+   * a single LLM pass (Google Gemini 3 Flash Preview, December 2025) that also
+   * passed 117,653 other words. The pipeline's own deterministic checks passed
+   * 97.8% of them, and at least one — `abacavir`, attested in four corpora — is
+   * plainly a word. It is a second opinion of unmeasured quality, recorded and
+   * never acted on. Nothing has been moved on the strength of it.
+   */
   statusInvalid: { min: 19_000, max: 22_000 },
 
-  /** 150 words appear in both the valid and the invalid list. */
-  alsoInvalid: { min: 100, max: 400 },
+  /**
+   * No word may be in both the valid and the invalid list. It is the one check
+   * here with a single correct answer rather than a range.
+   *
+   * There were 150 until 2026-08-13, all of them words the nightly run had
+   * promoted out of the invalid list without removing them from it. Every one
+   * already carried a Merriam-Webster, MW Medical or Free Dictionary ruling in
+   * its own entry, so all 150 were cleared against that stored evidence and
+   * none was demoted. See corrections/ledger_stage1.csv.
+   *
+   * If this ever goes above zero again, the promotion path in
+   * scripts/validate_invalid_list.py has regressed. Widening the bound is the
+   * wrong fix.
+   */
+  alsoInvalid: { min: 0, max: 0 },
 
   /** 190 words contain something outside `a-z` — 188 hyphenated, 2 accented. */
   nonAlpha: { min: 150, max: 250 },

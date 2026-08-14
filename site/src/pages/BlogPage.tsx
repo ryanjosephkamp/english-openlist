@@ -95,7 +95,7 @@ export function BlogIndex({ posts }: { posts: readonly Post[] }) {
         </div>
         <p className="max-w-[64ch] text-ink-soft">
           Every night at midnight UTC the pipeline validates about a thousand entries from the
-          9,275,411-word invalid list and writes up what it found. {posts.length} posts, newest
+          9.28 million-word invalid list and writes up what it found. {posts.length} posts, newest
           first. Most nights nothing is promoted, and the post says so.
         </p>
       </section>

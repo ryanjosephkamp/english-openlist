@@ -40,6 +40,18 @@ class WordStatus(Enum):
     ABBREVIATION = "abbreviation"
     ERROR = "error"
 
+    def __str__(self) -> str:
+        """
+        Render as the value, not as "WordStatus.VALID".
+
+        201 entries in merged_valid_dict.json carried `"status": "WordStatus.VALID"`
+        — a member of this enum stringified by a writer that has since been
+        replaced. They were repaired on 2026-08-13. No current code path
+        stringifies a member, but this makes the accident harmless if one ever
+        does again: the value is what belongs in the data either way.
+        """
+        return self.value
+
 
 @dataclass
 class WordLookupResult:
