@@ -35,6 +35,8 @@ type Record_ = {
   source?: unknown;
   validation_source?: unknown;
   unverified_llm_verdict?: unknown;
+  /** Pre-August-2026 name for the field above. */
+  status?: unknown;
   added_date?: unknown;
   created_date?: unknown;
   validation_date?: unknown;
@@ -91,7 +93,11 @@ export async function loadFacts(
     facts.set(entry.key, {
       intake: intakeOf(record),
       added: addedOf(record),
-      llmSaysInvalid: record.unverified_llm_verdict === 'invalid',
+      // Accepts the old `status` name as well, so the data and this code can
+      // land in either order without a window where the build reads a field
+      // that does not exist yet and silently counts zero.
+      llmSaysInvalid:
+        (record.unverified_llm_verdict ?? record.status) === 'invalid',
     });
     if (++seen % 50_000 === 0) onProgress?.(seen);
   }
