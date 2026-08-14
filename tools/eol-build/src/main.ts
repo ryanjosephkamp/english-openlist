@@ -244,6 +244,7 @@ const manifest = {
   dateTable,
   intakeCounts,
   statusInvalid: statusInvalidCount,
+  invalidCount: invalid.size,
   alsoInvalid: alsoInvalid.length,
   alsoInvalidWords: alsoInvalid,
   nonAlpha: nonAlphaCount,

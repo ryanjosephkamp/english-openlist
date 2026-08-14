@@ -40,7 +40,7 @@ export function WordPage({ word, search }: { word: string; search: ReturnType<ty
         <h1 className="font-display text-4xl tracking-tight">{word}</h1>
         <p className="mt-3 max-w-[62ch] text-ink-soft">
           Not in the valid list. That is not a claim it is not a word — it means no source in this
-          dataset has attested it. It may well be among the 9,275,411 entries on the invalid list,
+          dataset has attested it. It may well be among the 9.28 million entries on the invalid list,
           which is where the daily pipeline goes looking.
         </p>
         <a
