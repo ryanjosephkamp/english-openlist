@@ -208,14 +208,64 @@ verified: a warm cache makes **0** outbound calls. The cache is off unless
 are never cached, since a 429 is a statement about our quota rather than about
 the word.
 
-**`DAILY_VALIDATION_LIMIT` is temporarily 600 rather than 1000**, lending stage
-2 about 400 Collegiate calls for one night. It must go back to 1000 once the
-workflow has run.
+### The result: the method cannot answer the question
+
+Run on 2026-08-14. **The stop rule fired.**
+
+| | |
+| --- | ---: |
+| Words sampled | 400 |
+| Answered by MW Collegiate or MW Medical | **400 of 400** |
+| **Absent from both MW dictionaries** | **383 (95.8%)** |
+| Adjudicable at all | **18 (4.5%)** |
+| Of those: LLM refuted | 13 |
+| Of those: LLM corroborated | 5 |
+
+The measurement it produces — a weighted error rate of ~81% with a 95% interval
+of 63% to 99% — **rests on 18 words and is not fit to decide anything about
+20,052.** Reporting it as the answer would be the kind of number that looks like
+evidence and is not.
+
+**What the run does establish, firmly, is something more useful:**
+
+> Merriam-Webster has no entry for 95.8% of set B. Collegiate and Medical
+> between them answered every single word, and for 383 of 400 the answer was
+> "no such headword".
+
+That kills the option of adjudicating set B exhaustively. Spending ~20 days of
+API budget on all 20,052 words would return "no entry" for roughly 19,200 of
+them. The vocabulary is simply outside what these dictionaries cover, and no
+amount of budget changes that.
+
+Where MW *could* rule, the LLM was wrong on **13 of 18**. The five it got right
+were all proper nouns — `christmastides`, `elzevir`, `mishnaic`, `taiwanese`,
+`talmudist` — which is a category it handled, not general competence. Among the
+words it wrongly rejected: `clorazepate` (a benzodiazepine), `antinociceptive`,
+`hemoconcentrations`, `esophagogastroplasty`, `rotifera`, `palliasse`.
+
+Two caveats recorded honestly:
+
+- **Free Dictionary was effectively down**, erroring on 338 of 383 lookups and
+  still on 298 after a retry. It contributed one ruling. Since it performs no
+  proper-noun screening, and stratum 0 is full of taxonomic names like
+  `acidobacteriota` and `carcinonemertidae`, its rulings would have been weak
+  evidence for exactly the words in question.
+- **The quota premise behind this stage was wrong.** `DAILY_VALIDATION_LIMIT`
+  was lowered to 600 to free Collegiate budget, on the assumption that a full
+  nightly run exhausts the 1000/day limit. Hours after a full run, Collegiate
+  answered 393 of 393 and Medical 400 of 400, none rate-limited. The limit is
+  back at 1000 and no borrowing was needed.
+
+The re-run cost **zero** Merriam-Webster calls — 393 Collegiate and 400 Medical
+cache hits, no misses — which is the cache working as intended.
 
 ## Not yet decided
 
-- **Set B (20,052)** — awaiting the stage 2 result above. If the error rate is
-  low, the answer is to relabel the field and move nothing at all.
+- **Set B (20,052)** — the recommendation is now **B1: relabel the field and
+  move nothing.** Not because the LLM was reliable — where it could be checked
+  it was wrong more often than not — but because no source available to this
+  project can adjudicate 95.8% of the set, so a defensible demotion is not
+  achievable at any budget. Ryan's call.
 - **64,837 synthetic words carry no attestation of any kind** — no corpus source,
   no validation record — while marked `validated: true` and noted as "awaiting
   validation". 95.9% are derived forms of stems already in the list, and 16,478
