@@ -1,6 +1,6 @@
 # Stage 2 — how often was the LLM wrong?
 
-6 words sampled from the 20,052 carrying `"status": "invalid"`, stratified by how many corpora attested them. Every one of those verdicts came from a single pass by Google Gemini 3 Flash Preview in December 2025.
+400 words sampled from the 20,052 carrying `"status": "invalid"`, stratified by how many corpora attested them. Every one of those verdicts came from a single pass by Google Gemini 3 Flash Preview in December 2025.
 
 **No word was moved.** This stage measures.
 
@@ -10,15 +10,15 @@ A dictionary having the word means the LLM was wrong. A dictionary *not* having 
 
 | Stratum | Population | Sampled | Refuted | Corroborated | Unadjudicated | Error | Error rate (95% CI) |
 |---|---:|---:|---:|---:|---:|---:|---|
-| 0 | 448 | 6 | 0 | 0 | 6 | 0 | nothing adjudicable |
-| 1 | 10,056 | 0 | 0 | 0 | 0 | 0 | nothing adjudicable |
-| 2 | 4,906 | 0 | 0 | 0 | 0 | 0 | nothing adjudicable |
-| 3 | 2,254 | 0 | 0 | 0 | 0 | 0 | nothing adjudicable |
-| 4+ | 2,388 | 0 | 0 | 0 | 0 | 0 | nothing adjudicable |
+| 0 | 448 | 40 | 3 | 0 | 37 | 0 | 100.0% (44–100%) |
+| 1 | 10,056 | 160 | 1 | 0 | 159 | 0 | 100.0% (21–100%) |
+| 2 | 4,906 | 80 | 1 | 1 | 78 | 0 | 50.0% (9–91%) |
+| 3 | 2,254 | 60 | 4 | 0 | 56 | 0 | 100.0% (51–100%) |
+| 4+ | 2,388 | 60 | 3 | 4 | 53 | 0 | 42.9% (16–75%) |
 
-**Weighted error rate across all 20,052 words: n/a (95% CI n/a – n/a).**
+**Weighted error rate across all 20,052 words: 81.0% (95% CI 63.5% – 98.5%).**
 
-Adjudicable: **0 of 6** sampled words (0.0%). The rest had no entry in any source consulted, which says nothing about whether they are words.
+Adjudicable: **17 of 400** sampled words (4.2%). The rest had no entry in any source consulted, which says nothing about whether they are words.
 
 ## Counting only Merriam-Webster rulings
 
@@ -26,21 +26,23 @@ Free Dictionary performs no abbreviation or proper-noun screening, so it returns
 
 | Stratum | Population | Sampled | Refuted | Corroborated | Unadjudicated | Error | Error rate (95% CI) |
 |---|---:|---:|---:|---:|---:|---:|---|
-| 0 | 448 | 6 | 0 | 0 | 6 | 0 | nothing adjudicable |
-| 1 | 10,056 | 0 | 0 | 0 | 0 | 0 | nothing adjudicable |
-| 2 | 4,906 | 0 | 0 | 0 | 0 | 0 | nothing adjudicable |
-| 3 | 2,254 | 0 | 0 | 0 | 0 | 0 | nothing adjudicable |
-| 4+ | 2,388 | 0 | 0 | 0 | 0 | 0 | nothing adjudicable |
+| 0 | 448 | 40 | 3 | 0 | 37 | 0 | 100.0% (44–100%) |
+| 1 | 10,056 | 160 | 1 | 0 | 159 | 0 | 100.0% (21–100%) |
+| 2 | 4,906 | 80 | 1 | 1 | 78 | 0 | 50.0% (9–91%) |
+| 3 | 2,254 | 60 | 4 | 0 | 56 | 0 | 100.0% (51–100%) |
+| 4+ | 2,388 | 60 | 3 | 4 | 53 | 0 | 42.9% (16–75%) |
 
-**Weighted error rate across all 20,052 words: n/a (95% CI n/a – n/a).**
+**Weighted error rate across all 20,052 words: 81.0% (95% CI 63.5% – 98.5%).**
 
-Adjudicable: **0 of 6** sampled words (0.0%). The rest had no entry in any source consulted, which says nothing about whether they are words.
+Adjudicable: **17 of 400** sampled words (4.2%). The rest had no entry in any source consulted, which says nothing about whether they are words.
 
 ## Which source ruled
 
 | Source | Words ruled |
 |---|---:|
-| (none) | 6 |
+| (none) | 383 |
+| collegiate | 10 |
+| medical | 7 |
 
-**Lookups where at least one source errored rather than answering: 4.** An error is a statement about our quota or the network, never about the word, and is never recorded as "not found".
+**Lookups where at least one source errored rather than answering: 338.** An error is a statement about our quota or the network, never about the word, and is never recorded as "not found".
 
