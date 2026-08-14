@@ -88,7 +88,18 @@ UPDATE_SCHEDULE = "daily"  # "daily" or "weekly"
 UPDATE_HOUR = 0  # Hour (UTC) for scheduled updates
 
 # Invalid list validation settings
-DAILY_VALIDATION_LIMIT = 1000  # Words to validate per day from invalid list
+#
+# TEMPORARY, 2026-08-14: lowered from 1000 to 600 for one night so the stage 2
+# sample has Collegiate quota to spend.
+#
+# MW_RATE_LIMIT is 1000 requests a day and this limit is the only thing keeping
+# the nightly inside it -- lookup_word() calls Collegiate first for every word,
+# so a full run leaves nothing for anything else that day. The nightly promotes
+# roughly 0-1 words a night, so 400 fewer candidates costs almost nothing and
+# they are simply examined tomorrow instead.
+#
+# REVERT TO 1000 once the stage 2 workflow has run. See corrections/README.md.
+DAILY_VALIDATION_LIMIT = 600  # Words to validate per day from invalid list
 VALIDATION_BATCH_SIZE = 50  # Words per batch for API calls
 
 # =============================================================================
