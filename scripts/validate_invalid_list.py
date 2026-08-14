@@ -18,7 +18,7 @@ import logging
 import re
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 import random
@@ -27,7 +27,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import (
     INVALID_WORDS_FILE, VALID_WORDS_FILE, VALID_DICT_FILE,
     DAILY_VALIDATION_LIMIT, VALIDATION_BATCH_SIZE,
-    OUTPUT_DIR, PHASE3_ROOT, get_release_date
+    OUTPUT_DIR, PHASE3_ROOT, get_release_date,
+    RECHECK_AFTER_DAYS, RECHECK_DAILY_SLICE, RECHECK_QUEUE_FILE
 )
 from scripts.dictionary_api import DictionaryAPIClient, WordStatus
 from scripts.word_validator import WordValidator
@@ -271,16 +272,35 @@ class InvalidListValidator:
         self.promoted_words: list = []
         
     def load_progress(self) -> dict:
-        """Load validation progress from disk."""
-        if self.progress_file.exists():
-            with open(self.progress_file, 'r') as f:
-                return json.load(f)
-        return {
-            "validated_count": 0,
-            "promoted_count": 0,
-            "last_run": None,
-            "validated_words": []
-        }
+        """
+        Load validation progress, migrating the old format on the way.
+
+        `validated_words` used to be a flat list, and every word in it was
+        filtered out of every future run — so a word checked once and not found
+        was invalid for good. It is now `checked`, a map of word to the date it
+        was last examined, which expires. Old files are migrated by stamping
+        their words with the last run date, so nothing already checked is
+        suddenly re-queued all at once.
+        """
+        if not self.progress_file.exists():
+            return {
+                "validated_count": 0,
+                "promoted_count": 0,
+                "last_run": None,
+                "checked": {},
+            }
+
+        with open(self.progress_file, 'r') as f:
+            progress = json.load(f)
+
+        if "checked" not in progress:
+            stamp = (progress.get("last_run") or datetime.now().isoformat())[:10]
+            legacy = progress.pop("validated_words", [])
+            progress["checked"] = {w: stamp for w in legacy}
+            logger.info("Migrated %d words from the old permanent-exclusion list "
+                        "to dated entries", len(legacy))
+
+        return progress
     
     def save_progress(self, progress: dict):
         """Save validation progress to disk."""
@@ -288,27 +308,63 @@ class InvalidListValidator:
             json.dump(progress, f, indent=2)
     
     def load_invalid_words(self) -> list[str]:
-        """Load invalid words that haven't been validated yet."""
+        """
+        Invalid words eligible for validation today.
+
+        A word is skipped only if it was checked within RECHECK_AFTER_DAYS. It
+        is never skipped permanently: dictionaries gain entries, and "not found
+        today" must not harden into "not a word, ever".
+        """
         progress = self.load_progress()
-        already_validated = set(progress.get("validated_words", []))
-        
+        checked = progress.get("checked", {})
+
         if not INVALID_WORDS_FILE.exists():
             logger.error(f"Invalid words file not found: {INVALID_WORDS_FILE}")
             return []
-        
+
         logger.info(f"Loading invalid words from {INVALID_WORDS_FILE}")
-        
+
         with open(INVALID_WORDS_FILE, 'r', encoding='utf-8') as f:
             all_words = [line.strip() for line in f if line.strip()]
-        
-        # Filter out already validated
-        remaining = [w for w in all_words if w not in already_validated]
-        
+
+        cutoff = (datetime.now() - timedelta(days=RECHECK_AFTER_DAYS)).date().isoformat()
+        cooling = {w for w, when in checked.items() if when > cutoff}
+        remaining = [w for w in all_words if w not in cooling]
+
         logger.info(f"Total invalid words: {len(all_words)}")
-        logger.info(f"Already validated: {len(already_validated)}")
-        logger.info(f"Remaining to validate: {len(remaining)}")
-        
+        logger.info(f"Checked within {RECHECK_AFTER_DAYS} days (skipped): {len(cooling)}")
+        logger.info(f"Eligible today: {len(remaining)}")
+
         return remaining
+
+    def load_recheck_queue(self, eligible: set[str], checked: dict) -> list[str]:
+        """
+        Words this project demoted, due for another look.
+
+        They get a reserved slice of each night rather than taking their chances
+        among 9.29 million others, and they bypass the prioritiser's
+        `is_likely_english` pre-filter. That filter drops anything over 15
+        characters, which would have hidden 4,932 of the 16,478 demoted
+        comparatives for good — and the whole point of demoting a word with a
+        recorded reason is that the reason can be revisited.
+
+        Oldest-checked first, so the queue rotates rather than re-asking the
+        same words.
+        """
+        if not RECHECK_QUEUE_FILE.exists():
+            return []
+
+        with open(RECHECK_QUEUE_FILE, 'r', encoding='utf-8') as f:
+            queued = [line.strip() for line in f
+                      if line.strip() and not line.startswith('#')]
+
+        due = [w for w in queued if w in eligible]
+        due.sort(key=lambda w: checked.get(w, ""))
+
+        if due:
+            logger.info(f"Recheck queue: {len(due)} of {len(queued)} due, "
+                        f"taking up to {RECHECK_DAILY_SLICE}")
+        return due[:RECHECK_DAILY_SLICE]
     
     def load_valid_words(self) -> set[str]:
         """Load current valid words."""
@@ -393,23 +449,35 @@ class InvalidListValidator:
                 "message": "No invalid words file found or all words already validated"
             }
         
+        # Words we demoted get a reserved slice, taken before anything else, so
+        # they are re-examined on a known cadence instead of waiting their turn
+        # among millions.
+        recheck = self.load_recheck_queue(set(invalid_words), progress.get("checked", {}))
+        remaining_budget = max(0, limit - len(recheck))
+        pool = [w for w in invalid_words if w not in set(recheck)]
+
         # Select candidates
         if sample_mode:
             # Random sampling
             candidates = random.sample(
-                invalid_words, 
-                min(limit, len(invalid_words))
+                pool,
+                min(remaining_budget, len(pool))
             )
             logger.info(f"Randomly sampled {len(candidates)} words")
         else:
             # Prioritized selection
-            prioritized = self.prioritizer.prioritize_words(invalid_words, limit)
+            prioritized = self.prioritizer.prioritize_words(pool, remaining_budget)
             candidates = [c.word for c in prioritized]
             logger.info(f"Selected top {len(candidates)} priority candidates")
             
             # Log top 10 scores
             for c in prioritized[:10]:
                 logger.debug(f"  {c.word}: {c.score:.1f} ({', '.join(c.reasons[:2])})")
+
+        candidates = recheck + candidates
+        if recheck:
+            logger.info(f"  plus {len(recheck)} from the recheck queue "
+                        f"(bypassing the pre-filter)")
         
         # Validate in batches
         all_valid = []
@@ -423,8 +491,15 @@ class InvalidListValidator:
             all_valid.extend(valid)
             all_still_invalid.extend(still_invalid)
         
-        # Update progress
-        progress["validated_words"].extend(candidates)
+        # Update progress. Dates, not a blocklist — and anything past the
+        # cooldown is dropped so the file stays bounded instead of growing by
+        # 1,000 entries a day forever.
+        today = datetime.now().date().isoformat()
+        checked = progress.setdefault("checked", {})
+        for word in candidates:
+            checked[word] = today
+        cutoff = (datetime.now() - timedelta(days=RECHECK_AFTER_DAYS)).date().isoformat()
+        progress["checked"] = {w: when for w, when in checked.items() if when > cutoff}
         progress["validated_count"] += len(candidates)
         progress["promoted_count"] += len(all_valid)
         progress["last_run"] = datetime.now().isoformat()

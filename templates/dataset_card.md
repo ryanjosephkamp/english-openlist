@@ -203,7 +203,7 @@ at the other).
 
 | Metric | Value |
 |--------|-------|
-| Total Valid Words | ~379,000 (grows daily) |
+| Total Valid Words | ~362,000 (grows daily) |
 | Total Invalid Entries | 9,275,000+ |
 | Update Frequency | Daily (00:00 UTC) |
 | Primary Source for New Words | Merriam-Webster Collegiate Dictionary |
@@ -392,16 +392,37 @@ would return "no entry" for roughly 19,200 of them at any budget. So the verdict
 is kept with its provenance and clearly labelled, rather than acted on or
 quietly deleted.
 
-Two known issues therefore remain, **deliberately not acted on**:
+**14 August 2026 — 16,476 synthetic comparatives were demoted.**
+
+The word count fell from 378,891 to **362,415**. This is the first time words
+have ever left the valid list, and it was done on measured evidence.
+
+They were comparatives and superlatives built by affixation —
+`abacteremicer`, `abambulacralest`, `abatabler`. Merriam-Webster was asked about
+300 of their stems, by reading the inflections MW records for each stem rather
+than looking up the comparative as a headword, which MW would never carry. It
+could rule on 183 stems and listed the comparative for exactly **one**:
+`blameworthy` → `blameworthier`, `blameworthiest`. That one was kept.
+
+**These words were moved, not deleted, and none of them is marked permanently
+invalid.** A demotion here means no dictionary we could reach recognised the
+word on that date — not that it is not a word. Every demoted word is in a
+recheck queue that the daily pipeline draws from on a reserved part of each
+night, bypassing the length filter that would otherwise hide the longer ones
+indefinitely. Each one names its reason in
+[`corrections/ledger_demotions.csv`](https://github.com/ryanjosephkamp/english-openlist/tree/main/corrections).
+
+Two known issues remain, **deliberately not acted on**:
 
 - **20,052 entries carry `unverified_llm_verdict: "invalid"` while listed as
   valid.** Treat it as one machine's opinion from December 2025, not a
   validation result. Where it could be checked it was wrong more often than
   right.
-- **64,837 entries from the synthetic intake carry no attestation at all** — no
-  corpus source and no validation record — while marked `validated: true`. If
-  you need only words a human source attested, filter on
-  `source != "synthetic_generation"`.
+- **48,359 entries from the synthetic intake carry no attestation at all** — no
+  corpus source and no validation record — while marked `validated: true`. These
+  are the plurals, past tenses and prefixed forms left after the comparatives
+  were demoted, and they are unmeasured. If you need only words a human source
+  attested, filter on `source != "synthetic_generation"`.
 
 ## Citation
 
