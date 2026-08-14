@@ -335,6 +335,35 @@ Daily automated pipeline:
 4. Update full word lists and dictionaries on Hugging Face
 5. Generate changelog and statistics
 
+### Phase 4: Correcting the list itself (August 2026 - Ongoing)
+
+Until August 2026 this dataset was only ever added to. Words are now also
+corrected, with every decision recorded in
+[`corrections/`](https://github.com/ryanjosephkamp/english-openlist/tree/main/corrections)
+in the source repository before any list is rewritten.
+
+**13 August 2026.** 150 words were in `merged_valid_words.txt` and in
+`merged_invalid_words.txt` at the same time — words the daily pipeline had
+promoted onto one side without removing them from the other. Every one already
+carried a dictionary API ruling in its own record (Merriam-Webster for 63, Free
+Dictionary for 86, MW Medical for 1), so all 150 were cleared as valid and
+removed from the invalid list. **None was demoted, and the valid word list did
+not change.** 201 entries whose `status` field read `"WordStatus.VALID"` — a
+stringified Python enum — were normalised to `"valid"` in the same change.
+
+Two known issues have been measured but **deliberately not acted on**, because
+the evidence does not yet support moving a word:
+
+- **20,052 entries carry `"status": "invalid"` while listed as valid.** All of
+  them were marked invalid by a single LLM pass in December 2025, which also
+  passed 117,653 other words. The pipeline's own deterministic checks passed
+  97.8% of them. Treat this field as an unverified second opinion, not as a
+  verdict — `abacavir`, attested in four corpora, is among them.
+- **64,837 entries from the synthetic intake carry no attestation at all** — no
+  corpus source and no validation record — while marked `validated: true`. If
+  you need only words a human source attested, filter on
+  `source != "synthetic_generation"`.
+
 ## Citation
 
 ```bibtex
