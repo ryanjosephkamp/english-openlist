@@ -73,7 +73,17 @@ def main() -> int:
     parser.add_argument("--frame", type=Path, default=Path("corrections/stage3_frame.csv"))
     parser.add_argument("--out", type=Path, default=Path("corrections/stage3_sample.csv"))
     parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--sizes", default=None,
+                        help="stratum=n,stratum=n — defaults to the stage 3 sizes. "
+                             "The frame's own strata decide what is valid here.")
     args = parser.parse_args()
+
+    sizes = SAMPLE_SIZES
+    if args.sizes:
+        sizes = {}
+        for part in args.sizes.split(","):
+            name, _, count = part.partition("=")
+            sizes[name.strip()] = int(count)
 
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s - %(levelname)s - %(message)s")
@@ -82,7 +92,7 @@ def main() -> int:
         frame = list(csv.DictReader(f))
     logger.info("Frame: %d stems", len(frame))
 
-    sample = draw(frame, args.seed, SAMPLE_SIZES)
+    sample = draw(frame, args.seed, sizes)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w", encoding="utf-8", newline="") as f:
@@ -100,8 +110,8 @@ def main() -> int:
         forms[row["stratum"]] += int(row["n_forms"])
 
     logger.info("Sample written to %s (seed %d)", args.out, args.seed)
-    for stratum in ("wn-adj", "wn-other", "not-in-wn"):
-        logger.info("  %-10s %3d of %5d stems  (%.1f%%), covering %4d forms",
+    for stratum in sorted(sizes):
+        logger.info("  %-14s %3d of %5d stems  (%.1f%%), covering %4d forms",
                     stratum, drawn[stratum], population[stratum],
                     drawn[stratum] / population[stratum] * 100, forms[stratum])
     logger.info("  %-10s %3d of %5d stems, covering %4d forms",

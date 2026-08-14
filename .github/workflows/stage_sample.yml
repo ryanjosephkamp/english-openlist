@@ -15,7 +15,7 @@
 # entry for 95.8% of that set — and if the same happens here, the run stops
 # rather than producing an interval nobody can act on.
 
-name: Stage 3 Sample
+name: Stage Sample
 
 permissions:
   contents: write
@@ -23,10 +23,21 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
+      stage:
+        description: 'Which stage to run — 3 (comparatives) or 4 (plurals, verb forms)'
+        required: true
+        default: '4'
+        type: choice
+        options: ['3', '4']
       seed:
         description: 'Sampling seed (must match the committed sample)'
         required: false
         default: '20260814'
+        type: string
+      sizes:
+        description: 'Stratum sizes, only needed when redrawing. Blank uses the committed sample.'
+        required: false
+        default: ''
         type: string
       limit:
         description: 'Look up only the first N words — leave empty for all 400'
@@ -91,15 +102,20 @@ jobs:
       # is not, the sample was edited after the fact and no result from it means
       # anything.
       - name: Verify the committed sample is reproducible
+        env:
+          STAGE: ${{ inputs.stage }}
         run: |
+          extra=""
+          if [ -n "${{ inputs.sizes }}" ]; then extra="--sizes ${{ inputs.sizes }}"; fi
           python scripts/sample_stage3.py --seed "${{ inputs.seed }}" \
-            --out /tmp/stage3_sample_check.csv
-          if ! diff -q corrections/stage3_sample.csv /tmp/stage3_sample_check.csv; then
-            echo "::error::The committed sample does not match seed ${{ inputs.seed }}."
-            diff corrections/stage3_sample.csv /tmp/stage3_sample_check.csv | head -20
+            --frame "corrections/stage${STAGE}_frame.csv" \
+            --out "/tmp/stage${STAGE}_sample_check.csv" $extra
+          if ! diff -q "corrections/stage${STAGE}_sample.csv" "/tmp/stage${STAGE}_sample_check.csv"; then
+            echo "::error::The committed stage ${STAGE} sample does not match seed ${{ inputs.seed }}."
+            diff "corrections/stage${STAGE}_sample.csv" "/tmp/stage${STAGE}_sample_check.csv" | head -20
             exit 1
           fi
-          echo "Committed sample reproduces exactly from seed ${{ inputs.seed }}"
+          echo "Committed stage ${STAGE} sample reproduces exactly from seed ${{ inputs.seed }}"
 
       - name: Look up the sample
         env:
@@ -108,6 +124,8 @@ jobs:
           EOL_DICT_CACHE: '1'
         run: |
           python scripts/run_stage3_lookups.py \
+            --sample "corrections/stage${{ inputs.stage }}_sample.csv" \
+            --out "corrections/ledger_stage${{ inputs.stage }}.csv" \
             --sources "${{ inputs.sources }}" \
             ${{ inputs.dry_run && '--dry-run' || '' }} \
             ${{ inputs.limit != '' && format('--limit {0}', inputs.limit) || '' }}
@@ -147,19 +165,19 @@ jobs:
         with:
           name: stage3-results
           path: |
-            corrections/ledger_stage3.csv
+            corrections/ledger_stage${{ inputs.stage }}.csv
 
       - name: Commit the ledger and report
         if: ${{ !inputs.dry_run }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add corrections/ledger_stage3.csv
+          git add "corrections/ledger_stage${{ inputs.stage }}.csv"
           if git diff --cached --quiet; then
             echo "Nothing changed; not committing"
             exit 0
           fi
-          git commit -m "Stage 3: look up ${{ inputs.limit || '400' }} sampled words
+          git commit -m "Stage ${{ inputs.stage }}: look up ${{ inputs.limit || '300' }} sampled stems
 
           Run ${{ github.run_id }}, seed ${{ inputs.seed }}. Measurement only —
           no word moved and the published dataset is unchanged."
@@ -169,7 +187,7 @@ jobs:
         if: ${{ !inputs.dry_run }}
         run: |
           {
-            echo "## Stage 3 coverage"
+            echo "## Stage ${{ inputs.stage }} coverage"
             echo
             echo "Read the coverage line first. If Merriam-Webster has no entry"
             echo "for most of these stems, the method cannot answer the question"
@@ -178,7 +196,7 @@ jobs:
             echo '```'
             python - <<'PY'
           import csv, collections
-          rows = list(csv.DictReader(open("corrections/ledger_stage3.csv")))
+          rows = list(csv.DictReader(open("corrections/ledger_stage${{ inputs.stage }}.csv")))
           tally = collections.Counter(r["outcome"] for r in rows)
           for outcome in ("inflection-listed", "inflection-absent",
                           "no-stems-array", "mw-absent", "error"):
