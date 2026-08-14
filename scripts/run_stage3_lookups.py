@@ -177,7 +177,12 @@ def main() -> int:
     with open(args.sample, "r", encoding="utf-8", newline="") as f:
         sample = list(csv.DictReader(f))
     if args.limit:
-        sample = sample[:args.limit]
+        # Take a stride through the file rather than the first N. The sample is
+        # sorted by stratum, so a head slice would probe one stratum and report
+        # its coverage as though it were the whole sample's — which is exactly
+        # what the first probe of this stage did.
+        step = max(1, len(sample) // args.limit)
+        sample = sample[::step][:args.limit]
 
     logger.info("Sample: %d stems covering %d forms",
                 len(sample), sum(int(r["n_forms"]) for r in sample))
