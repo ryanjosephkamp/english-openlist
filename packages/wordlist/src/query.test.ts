@@ -17,7 +17,7 @@ const intake = new Uint8Array(table.count);
 const flags = new Uint8Array(table.count);
 names.forEach((word, i) => {
   intake[i] = word.startsWith('d') ? INTAKE.synthetic : INTAKE.twl;
-  if (word === 'zzz') flags[i] = WordFlag.StatusInvalid;
+  if (word === 'zzz') flags[i] = WordFlag.LlmSaysInvalid;
 });
 const meta = decodeMeta(encodeMeta(table.count, intake, new Uint16Array(table.count), flags));
 

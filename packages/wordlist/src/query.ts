@@ -47,7 +47,7 @@ export const DEFAULT_QUERY: Query = {
   includeContested: true,
 };
 
-/** `status: "invalid"` — see WordFlag.StatusInvalid. */
+/** `status: "invalid"` — see WordFlag.LlmSaysInvalid. */
 const FLAG_STATUS_INVALID = 1 << 0;
 
 export type QueryResult = {

@@ -15,7 +15,7 @@ const INTAKE_DOT: Record<string, string> = {
 
 function Marks({ flags }: { flags: number }) {
   const marks: string[] = [];
-  if ((flags & WordFlag.StatusInvalid) !== 0) marks.push('record says invalid');
+  if ((flags & WordFlag.LlmSaysInvalid) !== 0) marks.push('an LLM called it invalid');
   if ((flags & WordFlag.AlsoInvalid) !== 0) marks.push('also in the invalid list');
   if (marks.length === 0) return null;
 

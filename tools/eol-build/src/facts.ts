@@ -22,14 +22,19 @@ export type Facts = {
   readonly intake: IntakeName;
   /** `YYYY-MM-DD`, or null when the record carries no usable date. */
   readonly added: string | null;
-  /** The record says `status: "invalid"` while the word is listed as valid. */
-  readonly statusInvalid: boolean;
+  /**
+   * One LLM pass (Gemini 3 Flash, December 2025) called this word invalid while
+   * it stayed in the valid list. Not a validation result — see
+   * corrections/README.md. Kept because the site shows it, not because it decides
+   * anything.
+   */
+  readonly llmSaysInvalid: boolean;
 };
 
 type Record_ = {
   source?: unknown;
   validation_source?: unknown;
-  status?: unknown;
+  unverified_llm_verdict?: unknown;
   added_date?: unknown;
   created_date?: unknown;
   validation_date?: unknown;
@@ -86,7 +91,7 @@ export async function loadFacts(
     facts.set(entry.key, {
       intake: intakeOf(record),
       added: addedOf(record),
-      statusInvalid: record.status === 'invalid',
+      llmSaysInvalid: record.unverified_llm_verdict === 'invalid',
     });
     if (++seen % 50_000 === 0) onProgress?.(seen);
   }

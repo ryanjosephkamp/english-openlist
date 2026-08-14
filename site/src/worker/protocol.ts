@@ -22,7 +22,7 @@ export type Manifest = {
   readonly wordCount: number;
   readonly dateTable: readonly string[];
   readonly intakeCounts: Readonly<Record<string, number>>;
-  readonly statusInvalid: number;
+  readonly llmSaysInvalid: number;
   /** Size of the invalid list. It shrinks whenever the nightly run promotes a word. */
   readonly invalidCount: number;
   readonly alsoInvalid: number;

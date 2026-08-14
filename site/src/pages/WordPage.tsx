@@ -54,7 +54,7 @@ export function WordPage({ word, search }: { word: string; search: ReturnType<ty
   }
 
   const name = intakeName(row.intake);
-  const contested = (row.flags & WordFlag.StatusInvalid) !== 0;
+  const contested = (row.flags & WordFlag.LlmSaysInvalid) !== 0;
   const alsoInvalid = (row.flags & WordFlag.AlsoInvalid) !== 0;
 
   return (
@@ -98,8 +98,11 @@ export function WordPage({ word, search }: { word: string; search: ReturnType<ty
           <ul className="mt-2 flex flex-col gap-1 text-sm text-ink-soft">
             {contested && (
               <li>
-                This entry’s own record carries <code className="font-mono text-xs">status: "invalid"</code>{' '}
-                while the word is listed as valid. 20,052 entries are like this.
+                One LLM pass, in December 2025, called this word invalid — recorded as{' '}
+                <code className="font-mono text-xs">unverified_llm_verdict</code>. It is an
+                opinion, not a ruling, and 20,052 entries carry one. Where a real dictionary
+                could check that pass, it was <a href="/as-it-is">wrong more often than right</a>,
+                so no word was moved because of it.
               </li>
             )}
             {alsoInvalid && (
