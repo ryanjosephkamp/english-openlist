@@ -49,7 +49,7 @@ env:
 
 jobs:
   sample:
-    name: Look up the stage 2 sample
+    name: Look up the stage 3 sample
     runs-on: ubuntu-latest
 
     steps:

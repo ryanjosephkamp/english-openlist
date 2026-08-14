@@ -66,7 +66,8 @@ def inflections_of(raw: dict | None) -> set[str]:
     return {str(s).lower() for s in (meta.get("stems") or [])}
 
 
-async def look_up(sample: list[dict], decided: str) -> list[dict]:
+async def look_up(sample: list[dict], decided: str,
+                  order: tuple = LOOKUP_ORDER) -> list[dict]:
     client = DictionaryAPIClient()
     rows = []
 
@@ -74,7 +75,7 @@ async def look_up(sample: list[dict], decided: str) -> list[dict]:
         stem = entry["stem"]
         forms = entry["forms"].split()
 
-        found = await client.lookup_all(stem, order=LOOKUP_ORDER)
+        found = await client.lookup_all(stem, order=order)
         result = found["result"]
         statuses = found["statuses"]
 
@@ -158,12 +159,20 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=Path("corrections/ledger_stage3.csv"))
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--sources", default=",".join(LOOKUP_ORDER),
+                        help="Comma-separated sources to consult, in order.")
     parser.add_argument("--decided-date",
                         default=datetime.now(timezone.utc).date().isoformat())
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s - %(levelname)s - %(message)s")
+
+    order = tuple(s.strip() for s in args.sources.split(",") if s.strip())
+    unknown = set(order) - set(LOOKUP_ORDER)
+    if unknown:
+        parser.error(f"unknown source(s): {sorted(unknown)}; "
+                     f"choose from {list(LOOKUP_ORDER)}")
 
     with open(args.sample, "r", encoding="utf-8", newline="") as f:
         sample = list(csv.DictReader(f))
@@ -172,14 +181,14 @@ def main() -> int:
 
     logger.info("Sample: %d stems covering %d forms",
                 len(sample), sum(int(r["n_forms"]) for r in sample))
-    logger.info("Order : %s", " -> ".join(LOOKUP_ORDER))
+    logger.info("Order : %s", " -> ".join(order))
     logger.info("Cache : %s", "enabled" if cache_enabled() else "disabled")
 
     if args.dry_run:
         logger.info("Dry run: nothing called, nothing written")
         return 0
 
-    rows = asyncio.run(look_up(sample, args.decided_date))
+    rows = asyncio.run(look_up(sample, args.decided_date, order))
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w", encoding="utf-8", newline="") as f:
