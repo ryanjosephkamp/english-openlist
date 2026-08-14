@@ -8,9 +8,12 @@ nothing moves without a recorded reason and a source you can go and check.
 Until August 2026 the rule on this dataset was that no word is ever added,
 removed or altered — documentation and infrastructure only. That was reversed
 deliberately by the dataset's owner, not drifted away from. Promotion from the
-invalid list to the valid list was always the nightly pipeline's job; what is
-new is the ability to move a word the other way. Nothing has yet been moved that
-way, and nothing will be without evidence recorded here.
+invalid list to the valid list was always the nightly pipeline's job; what was
+new is moving a word the other way.
+
+**33,594 words have now been demoted**, on 2026-08-14, in two batches. None of
+them was deleted, none is permanently invalid, and every one names its reason
+below.
 
 ## Ledger format
 
@@ -18,19 +21,30 @@ way, and nothing will be without evidence recorded here.
 | --- | --- |
 | `word` | the word |
 | `stage` | which stage of the correction decided it |
-| `verdict` | `valid` or `invalid` |
-| `action` | what was done — currently only `remove_from_invalid_list` |
+| `action` | `remove_from_invalid_list` or `demote_to_invalid` |
+| `reason` | why, in a sentence, naming the stem where there is one |
 | `method` | how it was decided (see below) |
 | `source` | the authority that ruled |
+| `evidence` | what that source actually left behind, or the sample it came from |
 | `confidence` | `high`, `medium`, `low` |
-| `evidence` | what that source actually left behind in the record |
-| `part_of_speech` | as recorded by the source |
+| `reversible` | always `yes` on a demotion, and it means it |
+| `recheck_queued` | whether the word is queued to be asked about again |
 | `decided_date` | when |
 
-`method` is the important column. `stored_api_ruling` means a dictionary API had
-already ruled on the word and the ruling was sitting in the dataset. Any verdict
-that ever comes from model judgement rather than a source will say so, so it can
-be filtered or revisited later.
+`method` is the important column:
+
+| Value | Meaning |
+| --- | --- |
+| `stored_api_ruling` | a dictionary API had already ruled and the ruling was in the dataset |
+| `mw_meta_stems_sample` | Merriam-Webster's recorded inflections for the stem, generalised from a stratified sample |
+
+Any verdict that ever comes from model judgement rather than a source will say
+so, so it can be filtered or revisited later. None does today.
+
+**`reversible: yes` is not decoration.** A demotion says no dictionary we could
+reach recognised the word on that date, which is a statement about our sources
+and not about English. See *Keeping demotions reversible* below for the three
+mechanisms that had to be fixed before that could be true.
 
 ## Stage 1 — 150 dual-listed words, 13 August 2026
 
@@ -430,14 +444,57 @@ entirely on eleven stems.
   words like `bioterrorisms`. Either leave them, or measure them properly with a
   source that actually covers technical nouns.
 
+### Applied: 17,118 more demoted, 2026-08-14
+
+Ryan took the split recommendation as offered.
+
+| | Before | After |
+| --- | ---: | ---: |
+| valid | 362,415 | **345,297** |
+| invalid | 9,291,737 | **9,308,855** |
+| **grand total** | **9,654,152** | **9,654,152** |
+
+Gerund plurals (8,830), verb forms (7,944) and agent-noun plurals (344). Same
+machinery, same ledger shape, same reversibility — `ledger_demotions_stage4.csv`.
+Nothing MW accepted was demoted; nothing was deleted.
+
+**The 28,605 plurals were deliberately left**, and the site and dataset card now
+say so rather than leaving it to be inferred from a number.
+
+`RECHECK_DAILY_SLICE` was raised from 100 to 200 in the same change: the queue
+reached 33,594 words, and at 100 a night a full rotation took 336 days — longer
+than the 180-day cooldown, so the cooldown would never have bound. At 200 the
+rotation is about 168 days and the two line up.
+
+## Where the synthetic intake stands
+
+| | Words |
+| --- | ---: |
+| Original synthetic intake | 64,837 |
+| Demoted — comparatives and superlatives | −16,476 |
+| Demoted — gerund plurals, verb forms, agent plurals | −17,118 |
+| **Remaining in the valid list** | **31,243** |
+
+Of the 31,243 remaining:
+
+| | Words | Status |
+| --- | ---: | --- |
+| Plurals | 28,605 | **Measured, deliberately kept.** MW ruled on 9.2% of stems and accepted 4 of 11. |
+| No stem in the list | 2,636 | **Never measured.** Mostly Greek-plural medical terms like `abarognoses`; the method could not reach them. |
+| MW-confirmed forms | 2 | `blameworthier`, `blameworthiest`. Settled. |
+
 ## Not yet decided
 
-- **The 17,118 non-plural synthetic forms** — recommended for demotion above,
-  awaiting Ryan.
-- **The 28,605 synthetic plurals** — recommended against demotion on this
-  evidence.
-- **2,636 synthetic forms have no stem in the list** and were never framed.
-  Mostly Greek-plural medical terms like `abarognoses`, which are probably fine.
+- **The 28,605 plurals.** Not demotable on Merriam-Webster evidence — it covers
+  too little of this vocabulary. Resolving them needs a source that carries
+  technical nouns; Wiktionary's full dump is the obvious candidate and is a
+  separate piece of work.
+- **The 2,636 unreachable forms.** Their stems are not in the valid list, so the
+  stem-and-`meta.stems` method has nothing to ask about. They would need either a
+  different stemmer or direct headword lookups.
+- **The 20,052 `unverified_llm_verdict: "invalid"` words.** Correctly labelled,
+  unresolved, and unresolvable at any budget with the sources available — see
+  stage 2.
 - **64,837 synthetic words carry no attestation of any kind** — no corpus source,
   no validation record — while marked `validated: true` and noted as "awaiting
   validation". 95.9% are derived forms of stems already in the list, and 16,478

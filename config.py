@@ -114,7 +114,13 @@ RECHECK_QUEUE_FILE = PROJECT_ROOT / "corrections" / "recheck_queue.txt"
 
 # How much of each night's budget is reserved for that queue. The rest is
 # selected as it always has been.
-RECHECK_DAILY_SLICE = 100
+#
+# Raised from 100 to 200 on 2026-08-14 when the queue reached 33,594 words: at
+# 100 a night a full rotation took 336 days, which is longer than the cooldown
+# above, so the cooldown would never have been the binding constraint. At 200 a
+# rotation takes about 168 days and the two line up. If the queue grows again,
+# this should move with it.
+RECHECK_DAILY_SLICE = 200
 
 # =============================================================================
 # OUTPUT CONFIGURATION

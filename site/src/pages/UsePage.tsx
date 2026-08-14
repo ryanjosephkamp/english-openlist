@@ -34,7 +34,7 @@ export function UsePage() {
         <h2 className="label">The only URL you need</h2>
         <Snippet id="url" code={WORDS_URL} />
         <p className="max-w-[62ch] text-sm text-ink-soft">
-          Sorted by byte order, one word per line, no header, no BOM. 362,415 lines. Two of them
+          Sorted by byte order, one word per line, no header, no BOM. 345,297 lines. Two of them
           are not ASCII (<code className="font-mono text-xs">norteño</code> and{' '}
           <code className="font-mono text-xs">peléan</code>) and 188 contain a hyphen, so read it as
           UTF-8 and do not assume <code className="font-mono text-xs">[a-z]</code>.
@@ -97,7 +97,7 @@ function GameArtifacts() {
         </h2>
         <p className="max-w-[64ch] text-sm text-ink-soft">
           The pipeline generates curated answer sets every night for every length from 2 to 35, so
-          you do not have to pick answers out of 362,415 words yourself. Each file holds a
+          you do not have to pick answers out of 345,297 words yourself. Each file holds a
           deterministic stratified sample as <code className="font-mono text-xs">answers</code> and
           the complete list for that length as <code className="font-mono text-xs">validGuesses</code>
           . Length 5 gives you 2,175 answers against 9,777 accepted guesses.
@@ -149,7 +149,7 @@ ds = load_dataset("ryanjosephkamp/english-openlist", split="train")
 
 print(ds.num_rows, ds.column_names)
 print([r["text"] for r in ds.select(range(5))])`}
-        output={`362415 ['text']
+        output={`345297 ['text']
 ['a', 'aa', 'aah', 'aahed', 'aahing']`}
       />
 
@@ -168,7 +168,7 @@ words = set(open(path, encoding="utf-8").read().split())
 
 print(len(words))
 print("hello" in words, "asdf" in words)`}
-        output={`362415
+        output={`345297
 True False`}
       />
 
@@ -184,7 +184,7 @@ words = pd.read_csv(URL, header=None, names=["word"],
 
 print(words.shape)
 print(words.word.str.len().mean())`}
-        output={`(362415, 1)
+        output={`(345297, 1)
 10.71414206196505`}
       />
     </>
@@ -202,7 +202,7 @@ function Cli() {
   "${WORDS_URL}"
 
 wc -l english-openlist.txt`}
-        output={`362415 english-openlist.txt`}
+        output={`345297 english-openlist.txt`}
       />
 
       <Snippet
@@ -244,13 +244,13 @@ const res = await fetch(URL);
 const words = new Set((await res.text()).split("\\n").filter(Boolean));
 
 console.log(words.size, words.has("hello"), words.has("asdf"));`}
-        output={`362415 true false`}
+        output={`345297 true false`}
       />
 
       <Snippet
         id="js-note"
         title="A note on shipping this to browsers"
-        note="4.4 MB of text is a lot to send a visitor. This site ships the same 362,415 words in 508 KB by front-coding them and serving brotli — the encoder is MIT licensed and in the repo at packages/wordlist."
+        note="4.4 MB of text is a lot to send a visitor. This site ships the same 345,297 words in 508 KB by front-coding them and serving brotli — the encoder is MIT licensed and in the repo at packages/wordlist."
         code={`// Cheapest useful version: let the server compress it.
 // gzip takes the raw list to 1.02 MB, brotli to 856 KB.
 // Front-coding first (each word stores only what it does not
@@ -278,7 +278,7 @@ SELECT count(*) FROM words;
 SELECT count(*) FROM words WHERE length(word) = 5;
 SELECT count(*) FROM words WHERE word LIKE 'q%' AND word NOT LIKE 'qu%';
 SELECT word FROM words ORDER BY length(word) DESC LIMIT 1;`}
-        output={`362415
+        output={`345297
 9785
 135
 phosphoribosylaminoimidazolesuccinocarboxamides`}
@@ -293,7 +293,7 @@ SELECT text AS word
 FROM 'hf://datasets/ryanjosephkamp/english-openlist@~parquet/default/train/*.parquet';
 
 SELECT count(*) FROM words;`}
-        output={`362415`}
+        output={`345297`}
       />
     </>
   );
@@ -318,7 +318,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("asdf:  {}", words.contains("asdf"));
     Ok(())
 }`}
-      output={`362415 words
+      output={`345297 words
 hello: true
 asdf:  false`}
     />
@@ -338,7 +338,7 @@ function Recipes() {
       <Snippet
         id="recipe-spell"
         title="A spell-checker that suggests"
-        note="Set membership for the check, edit distance one for the suggestion. At this size no index is needed — the intersection against 362,415 words is instant."
+        note="Set membership for the check, edit distance one for the suggestion. At this size no index is needed — the intersection against 345,297 words is instant."
         code={`words = set(open("english-openlist.txt", encoding="utf-8").read().split())
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 

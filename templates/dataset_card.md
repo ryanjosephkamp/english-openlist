@@ -203,7 +203,7 @@ at the other).
 
 | Metric | Value |
 |--------|-------|
-| Total Valid Words | ~362,000 (grows daily) |
+| Total Valid Words | ~345,000 (grows daily) |
 | Total Invalid Entries | 9,275,000+ |
 | Update Frequency | Daily (00:00 UTC) |
 | Primary Source for New Words | Merriam-Webster Collegiate Dictionary |
@@ -392,17 +392,25 @@ would return "no entry" for roughly 19,200 of them at any budget. So the verdict
 is kept with its provenance and clearly labelled, rather than acted on or
 quietly deleted.
 
-**14 August 2026 — 16,476 synthetic comparatives were demoted.**
+**14 August 2026 — 33,594 synthetic forms were demoted.**
 
-The word count fell from 378,891 to **362,415**. This is the first time words
+The word count fell from 378,891 to **345,297**. This is the first time words
 have ever left the valid list, and it was done on measured evidence.
 
-They were comparatives and superlatives built by affixation —
-`abacteremicer`, `abambulacralest`, `abatabler`. Merriam-Webster was asked about
-300 of their stems, by reading the inflections MW records for each stem rather
-than looking up the comparative as a headword, which MW would never carry. It
-could rule on 183 stems and listed the comparative for exactly **one**:
-`blameworthy` → `blameworthier`, `blameworthiest`. That one was kept.
+They were forms built by blind affixation, in two groups:
+
+| Group | Forms | MW ruled on | MW accepted |
+| --- | ---: | ---: | ---: |
+| comparatives and superlatives | 16,476 | 183 stems | 1 |
+| plural gerunds, verb forms, agent plurals | 17,118 | 109 stems | 0 |
+
+Merriam-Webster was asked by reading the inflections it records for each stem
+(`meta.stems`) rather than looking the invented form up as a headword, which MW
+would never carry. It lists `advert adverted adverting adverts` and has no
+`advertings`.
+
+Everything MW accepted was kept: `blameworthier`, `blameworthiest`, and four
+plurals.
 
 **These words were moved, not deleted, and none of them is marked permanently
 invalid.** A demotion here means no dictionary we could reach recognised the
@@ -418,11 +426,18 @@ Two known issues remain, **deliberately not acted on**:
   valid.** Treat it as one machine's opinion from December 2025, not a
   validation result. Where it could be checked it was wrong more often than
   right.
-- **48,359 entries from the synthetic intake carry no attestation at all** — no
-  corpus source and no validation record — while marked `validated: true`. These
-  are the plurals, past tenses and prefixed forms left after the comparatives
-  were demoted, and they are unmeasured. If you need only words a human source
-  attested, filter on `source != "synthetic_generation"`.
+- **31,243 entries from the synthetic intake carry no attestation at all** — no
+  corpus source and no validation record — while marked `validated: true`.
+
+  **These were deliberately kept, not overlooked.** Most are plurals, and when
+  Merriam-Webster was asked about those it could rule on only 9.2% of their
+  stems — but accepted four of the eleven it could: `bioterrorisms`,
+  `defamiliarizations`, `ebullisms`, `ferroelectricities`. Demoting a group on
+  that evidence would have discarded real words. Settling them needs a source
+  that covers technical nouns, which Merriam-Webster does not.
+
+  If you need only words a human source attested, filter on
+  `source != "synthetic_generation"`.
 
 ## Citation
 
