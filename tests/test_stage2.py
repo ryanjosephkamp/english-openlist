@@ -345,3 +345,60 @@ def test_report_warns_loudly_when_a_source_was_never_consulted(tmp_path):
     assert "Collegiate" in text
     # The warning has to sit above the numbers, not in a footnote.
     assert text.index("partial run") < text.index("| Stratum |")
+
+
+# ------------------------------------------------------------------- stage 3
+
+def test_stage3_stem_recovery_handles_english_spelling_changes():
+    from scripts.build_stage3_frame import candidate_stems
+    assert "red" in candidate_stems("redder")        # doubled consonant
+    assert "happy" in candidate_stems("happiest")    # y -> i
+    assert "abatable" in candidate_stems("abatabler")
+    assert "large" in candidate_stems("larger")      # silent e restored
+
+
+def test_stage3_strata_split_on_whether_a_comparative_is_even_conceivable():
+    from scripts.build_stage3_frame import classify
+    assert classify({"a"}) == "wn-adj"
+    assert classify({"s"}) == "wn-adj"        # satellite adjective
+    assert classify({"n"}) == "wn-other"      # a comparative on a noun is bogus
+    assert classify({"v"}) == "wn-other"
+    assert classify(set()) == "not-in-wn"
+    assert classify({"n", "a"}) == "wn-adj"   # gradable in at least one sense
+
+
+def test_stage3_reads_inflections_out_of_mw_rather_than_guessing():
+    from scripts.run_stage3_lookups import inflections_of
+    raw = {"meta": {"id": "happy", "stems": ["happy", "happier", "happiest"]}}
+    assert inflections_of(raw) == {"happy", "happier", "happiest"}
+    assert inflections_of({"meta": {}}) == set()
+    assert inflections_of(None) == set()
+
+
+def test_stage3_sample_is_reproducible_from_the_shipped_frame():
+    from scripts.sample_stage3 import SAMPLE_SIZES as S3_SIZES, draw as draw3
+
+    frame_path = ROOT / "corrections" / "stage3_frame.csv"
+    sample_path = ROOT / "corrections" / "stage3_sample.csv"
+    if not (frame_path.exists() and sample_path.exists()):
+        pytest.skip("stage 3 frame or sample not built")
+
+    with open(sample_path, encoding="utf-8", newline="") as f:
+        shipped = list(csv.DictReader(f))
+    with open(frame_path, encoding="utf-8", newline="") as f:
+        frame = list(csv.DictReader(f))
+
+    redrawn = draw3(frame, seed=int(shipped[0]["seed"]), sizes=S3_SIZES)
+    assert len(shipped) == 300
+    assert [r["stem"] for r in shipped] == [r["stem"] for r in redrawn]
+
+
+def test_shipped_stage3_frame_covers_every_er_est_form():
+    path = ROOT / "corrections" / "stage3_frame.csv"
+    if not path.exists():
+        pytest.skip("stage 3 frame not built")
+    with open(path, encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    assert len(rows) == 8_809
+    assert sum(int(r["n_forms"]) for r in rows) == 16_478
+    assert len({r["stem"] for r in rows}) == len(rows)

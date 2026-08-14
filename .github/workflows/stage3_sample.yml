@@ -1,0 +1,192 @@
+# GitHub Actions Workflow: Stage 3 — are these comparatives real inflections?
+#
+# 16,478 words in the list are synthetic comparatives and superlatives —
+# `abacteremicer`, `abambulacralest`, `abatabler`. They carry no attestation of
+# any kind while being marked `validated: true`.
+#
+# This asks Merriam-Webster whether each one is a recognised inflection of its
+# stem, by reading the `meta.stems` array rather than looking the form up as a
+# headword — which would only ever return "not found".
+#
+# Triggered by hand. THIS WORKFLOW MOVES NO WORDS: it writes only to
+# corrections/, and fails if the published dataset moves underneath it.
+#
+# Read the coverage number first. Stage 2 hit a wall — Merriam-Webster had no
+# entry for 95.8% of that set — and if the same happens here, the run stops
+# rather than producing an interval nobody can act on.
+
+name: Stage 3 Sample
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: 'Sampling seed (must match the committed sample)'
+        required: false
+        default: '20260814'
+        type: string
+      limit:
+        description: 'Look up only the first N words — leave empty for all 400'
+        required: false
+        default: ''
+        type: string
+      sources:
+        description: 'Sources to consult, in order. Omitting one records it as not_consulted, never as a "no".'
+        required: false
+        default: 'medical,collegiate,free'
+        type: string
+      dry_run:
+        description: 'Report what would be looked up, call nothing'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  sample:
+    name: Look up the stage 2 sample
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Same shape as the .cache/hf cache in deploy-site.yml. The rolling key
+      # restores the newest previous cache and saves an updated one, so a
+      # re-run of this workflow costs no dictionary quota at all.
+      - name: Restore dictionary response cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/dictionary
+          key: stage3-dict-${{ github.run_id }}
+          restore-keys: stage3-dict-
+
+      # The guard. This stage must not change the published dataset, so record
+      # what it is before doing anything and compare afterwards. Checking the
+      # Hugging Face revision is a stronger check than hashing local files the
+      # job never downloads: it watches the artifact people actually consume.
+      - name: Record the published dataset revision
+        id: before
+        run: |
+          sha=$(curl -sSf https://huggingface.co/api/datasets/ryanjosephkamp/english-openlist \
+                | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Dataset at $sha before this run"
+
+      # Proves the committed sample is the one the recorded seed produces. If it
+      # is not, the sample was edited after the fact and no result from it means
+      # anything.
+      - name: Verify the committed sample is reproducible
+        run: |
+          python scripts/sample_stage3.py --seed "${{ inputs.seed }}" \
+            --out /tmp/stage3_sample_check.csv
+          if ! diff -q corrections/stage3_sample.csv /tmp/stage3_sample_check.csv; then
+            echo "::error::The committed sample does not match seed ${{ inputs.seed }}."
+            diff corrections/stage3_sample.csv /tmp/stage3_sample_check.csv | head -20
+            exit 1
+          fi
+          echo "Committed sample reproduces exactly from seed ${{ inputs.seed }}"
+
+      - name: Look up the sample
+        env:
+          MW_API_KEY: ${{ secrets.MW_API_KEY }}
+          MW_MEDICAL_API_KEY: ${{ secrets.MW_MEDICAL_API_KEY }}
+          EOL_DICT_CACHE: '1'
+        run: |
+          python scripts/run_stage3_lookups.py \
+            --sources "${{ inputs.sources }}" \
+            ${{ inputs.dry_run && '--dry-run' || '' }} \
+            ${{ inputs.limit != '' && format('--limit {0}', inputs.limit) || '' }}
+
+      # Two ways this stage could have overstepped, both fatal.
+      - name: Verify nothing outside corrections/ changed
+        if: ${{ !inputs.dry_run }}
+        run: |
+          # Compare paths, not whole porcelain lines: the status prefix varies
+          # (`?? `, ` M `, `A  `) and matching on the line would let a path like
+          # other/corrections/x slip through.
+          stray=$(git status --porcelain | awk '{print $2}' | grep -v '^corrections/' || true)
+          if [ -n "$stray" ]; then
+            echo "::error::This stage may only write to corrections/. Changed:"
+            echo "$stray"
+            exit 1
+          fi
+          echo "Only corrections/ was written"
+
+      - name: Verify the published dataset did not move
+        if: ${{ !inputs.dry_run }}
+        run: |
+          after=$(curl -sSf https://huggingface.co/api/datasets/ryanjosephkamp/english-openlist \
+                  | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')
+          if [ "$after" != "${{ steps.before.outputs.sha }}" ]; then
+            echo "::error::Dataset revision changed during this run:"
+            echo "  before ${{ steps.before.outputs.sha }}"
+            echo "  after  $after"
+            echo "This stage must not write to Hugging Face. Investigate before trusting the result."
+            exit 1
+          fi
+          echo "Dataset unchanged at $after"
+
+      - name: Upload results
+        if: ${{ !inputs.dry_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage3-results
+          path: |
+            corrections/ledger_stage3.csv
+
+      - name: Commit the ledger and report
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add corrections/ledger_stage3.csv
+          if git diff --cached --quiet; then
+            echo "Nothing changed; not committing"
+            exit 0
+          fi
+          git commit -m "Stage 3: look up ${{ inputs.limit || '400' }} sampled words
+
+          Run ${{ github.run_id }}, seed ${{ inputs.seed }}. Measurement only —
+          no word moved and the published dataset is unchanged."
+          git push origin HEAD:${{ github.ref_name }}
+
+      - name: Summary
+        if: ${{ !inputs.dry_run }}
+        run: |
+          {
+            echo "## Stage 3 coverage"
+            echo
+            echo "Read the coverage line first. If Merriam-Webster has no entry"
+            echo "for most of these stems, the method cannot answer the question"
+            echo "and the run should stop rather than produce a rate."
+            echo
+            echo '```'
+            python - <<'PY'
+          import csv, collections
+          rows = list(csv.DictReader(open("corrections/ledger_stage3.csv")))
+          tally = collections.Counter(r["outcome"] for r in rows)
+          for outcome in ("inflection-listed", "inflection-absent",
+                          "no-stems-array", "mw-absent", "error"):
+              print(f"{outcome:<20}{tally[outcome]:>5}")
+          answered = tally["inflection-listed"] + tally["inflection-absent"]
+          print()
+          print(f"MW ruled on {answered} of {len(rows)} stems "
+                f"({answered / len(rows) * 100:.1f}%)")
+          PY
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
