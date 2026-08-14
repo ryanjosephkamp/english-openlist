@@ -147,7 +147,7 @@ eight sources that all say *unlikely*:
 ```json
 {
   "word": "a",
-  "status": "valid",
+  "unverified_llm_verdict": "valid",
   "validation_source": "verification_pipeline",
   "candidate_source": ["google_ngrams_valid", "wordnet_valid", "nltk_valid"],
   "advanced_validation": { "passed": true, "confidence": 1.0 },
@@ -156,6 +156,18 @@ eight sources that all say *unlikely*:
   "added_date": "2025-12-17"
 }
 ```
+
+> **`unverified_llm_verdict` was called `status` until 14 August 2026.** It was
+> renamed because the old name made it read like this dataset's own ruling, and
+> it is not one. It records what a single LLM pass (Google Gemini 3 Flash
+> Preview, December 2025) thought of the word, on 137,705 entries. **Do not
+> filter on it expecting a validation result.** Its accuracy was measured — see
+> *Known limitations* below — and it was wrong more often than right wherever a
+> real dictionary could check.
+>
+> A separate `dictionary_verdict` field appears on 201 entries. That one *is* a
+> dictionary ruling, from Merriam-Webster or Free Dictionary via the promotion
+> path, and its `source` field names which.
 
 **Synthetic intake** — algorithmically constructed candidates, identifiable by
 `source: "synthetic_generation"`:
@@ -348,17 +360,44 @@ promoted onto one side without removing them from the other. Every one already
 carried a dictionary API ruling in its own record (Merriam-Webster for 63, Free
 Dictionary for 86, MW Medical for 1), so all 150 were cleared as valid and
 removed from the invalid list. **None was demoted, and the valid word list did
-not change.** 201 entries whose `status` field read `"WordStatus.VALID"` — a
+not change.** 201 entries whose `status` field (now `dictionary_verdict`) read `"WordStatus.VALID"` — a
 stringified Python enum — were normalised to `"valid"` in the same change.
 
-Two known issues have been measured but **deliberately not acted on**, because
-the evidence does not yet support moving a word:
+**14 August 2026 — the `status` field was renamed, and measured.**
 
-- **20,052 entries carry `"status": "invalid"` while listed as valid.** All of
-  them were marked invalid by a single LLM pass in December 2025, which also
-  passed 117,653 other words. The pipeline's own deterministic checks passed
-  97.8% of them. Treat this field as an unverified second opinion, not as a
-  verdict — `abacavir`, attested in four corpora, is among them.
+`status` read like this dataset's verdict on a word. It was not: on 137,705
+entries it recorded what one LLM pass (Google Gemini 3 Flash Preview, December
+2025) thought. It is now `unverified_llm_verdict`, so nobody has to read the
+documentation to find that out.
+
+Before deciding what to do about the 20,052 words it calls invalid, its accuracy
+was measured. 400 were sampled, stratified by how many corpora attested them,
+and looked up in Merriam-Webster Collegiate and Medical:
+
+| | |
+|---|---:|
+| Sampled | 400 |
+| **Absent from Merriam-Webster entirely** | **383 (95.8%)** |
+| Could be checked at all | 18 |
+| Of those, the LLM was wrong | 13 |
+| Of those, the LLM was right | 5 (all proper nouns) |
+
+Words it wrongly rejected include `clorazepate`, `antinociceptive`,
+`hemoconcentrations`, `esophagogastroplasty`, `rotifera` and `palliasse`.
+
+**No word was moved, and none can be.** Merriam-Webster answered every word we
+asked and had no entry for 95.8% of them — this vocabulary is chemical, medical
+and taxonomic, outside what these dictionaries cover. Adjudicating all 20,052
+would return "no entry" for roughly 19,200 of them at any budget. So the verdict
+is kept with its provenance and clearly labelled, rather than acted on or
+quietly deleted.
+
+Two known issues therefore remain, **deliberately not acted on**:
+
+- **20,052 entries carry `unverified_llm_verdict: "invalid"` while listed as
+  valid.** Treat it as one machine's opinion from December 2025, not a
+  validation result. Where it could be checked it was wrong more often than
+  right.
 - **64,837 entries from the synthetic intake carry no attestation at all** — no
   corpus source and no validation record — while marked `validated: true`. If
   you need only words a human source attested, filter on

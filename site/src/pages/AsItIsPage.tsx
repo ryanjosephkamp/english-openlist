@@ -60,12 +60,30 @@ export function AsItIsPage({ manifest }: { manifest: Manifest | null }) {
         </p>
       </Item>
 
-      <Item figure={n(manifest.statusInvalid)} title="entries say they are invalid">
+      <Item figure={n(manifest.llmSaysInvalid)} title="entries an LLM called invalid">
         <p>
-          These carry <code className="font-mono text-xs">"status": "invalid"</code> in their own
-          record while appearing in the valid word list. The two disagree, and this site does not
-          quietly pick a side: the explorer flags them, and{' '}
-          <a href="/?c=0">you can exclude them from any search</a>.
+          They carry <code className="font-mono text-xs">unverified_llm_verdict: "invalid"</code>{' '}
+          while appearing in the valid word list. Until August 2026 that field was called{' '}
+          <code className="font-mono text-xs">status</code>, which made a single machine opinion
+          read like the dataset’s own ruling. It never was one.
+        </p>
+        <p>
+          All 20,052 come from one pass by Google Gemini 3 Flash Preview in December 2025 — the
+          same pass that marked 117,653 other words valid. So it was measured before anyone acted
+          on it: 400 were sampled and looked up in Merriam-Webster. Only{' '}
+          <strong>18 could be checked at all</strong>, and of those the LLM was{' '}
+          <strong>wrong on 13</strong> — among them <a href="/word/clorazepate">clorazepate</a>, a
+          benzodiazepine, and <a href="/word/antinociceptive">antinociceptive</a>. The five it got
+          right were all proper nouns.
+        </p>
+        <p>
+          The other 382 could not be checked by anybody:{' '}
+          <strong>Merriam-Webster has no entry for 95.8% of this vocabulary</strong>, which is
+          mostly chemical, medical and taxonomic. That is the real finding, and it cuts both ways
+          — the field is not trustworthy, and no amount of dictionary budget could make these
+          words adjudicable. So <strong>nothing was moved</strong>, the verdict is kept with its
+          provenance, and{' '}
+          <a href="/?c=0">you can exclude them from any search</a> if you want to.
         </p>
       </Item>
 

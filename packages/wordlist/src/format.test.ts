@@ -122,9 +122,9 @@ describe('columnar metadata', () => {
     const added = new Uint16Array([0, 1, 2, 65535, 7]);
     const flags = new Uint8Array([
       0,
-      WordFlag.StatusInvalid,
+      WordFlag.LlmSaysInvalid,
       WordFlag.AlsoInvalid,
-      WordFlag.StatusInvalid | WordFlag.NonAlpha,
+      WordFlag.LlmSaysInvalid | WordFlag.NonAlpha,
       WordFlag.NonAlpha,
     ]);
 

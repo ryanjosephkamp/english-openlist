@@ -56,8 +56,8 @@ export type IntakeName = keyof typeof INTAKE;
 export const INTAKE_NAMES = ['twl', 'pipeline', 'synthetic', 'other'] as const satisfies readonly IntakeName[];
 
 export const WordFlag = {
-  /** The entry carries `status: "invalid"` while still being listed as valid. */
-  StatusInvalid: 1 << 0,
+  /** One LLM pass called the word invalid; the dataset kept it. An opinion, not a verdict. */
+  LlmSaysInvalid: 1 << 0,
   /** The word also appears in `merged_invalid_words.txt`. */
   AlsoInvalid: 1 << 1,
   /** Contains something outside `a-z` — a hyphen, or an accented letter. */

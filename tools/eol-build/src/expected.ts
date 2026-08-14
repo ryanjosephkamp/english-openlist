@@ -31,16 +31,24 @@ export const EXPECTED = {
   },
 
   /**
-   * 20,052 entries carry `status: "invalid"` while listed as valid.
+   * 20,052 entries carry `unverified_llm_verdict: "invalid"` while listed as valid.
    *
-   * This is not a data-integrity fault. Every one of them was marked invalid by
-   * a single LLM pass (Google Gemini 3 Flash Preview, December 2025) that also
-   * passed 117,653 other words. The pipeline's own deterministic checks passed
-   * 97.8% of them, and at least one — `abacavir`, attested in four corpora — is
-   * plainly a word. It is a second opinion of unmeasured quality, recorded and
-   * never acted on. Nothing has been moved on the strength of it.
+   * This is not a data-integrity fault, and the field was renamed from `status`
+   * in August 2026 so it stops reading like one. Every one of these was marked
+   * invalid by a single LLM pass (Google Gemini 3 Flash Preview, December 2025)
+   * that also passed 117,653 other words.
+   *
+   * It was measured rather than argued about. Of 400 sampled words,
+   * Merriam-Webster could rule on only 18 — it has no entry for 95.8% of this
+   * vocabulary — and of those 18 the LLM was wrong on 13, including
+   * `clorazepate` and `antinociceptive`. The five it got right were all proper
+   * nouns.
+   *
+   * So nothing has been moved on the strength of it, and nothing can be: no
+   * source available to this project can adjudicate the other 95.8% at any
+   * budget. See corrections/README.md.
    */
-  statusInvalid: { min: 19_000, max: 22_000 },
+  llmSaysInvalid: { min: 19_000, max: 22_000 },
 
   /**
    * No word may be in both the valid and the invalid list. It is the one check

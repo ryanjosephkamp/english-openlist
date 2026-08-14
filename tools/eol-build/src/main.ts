@@ -66,7 +66,7 @@ const flags = new Uint8Array(words.length);
 const nonAlpha: boolean[] = new Array(words.length).fill(false);
 
 const intakeCounts: Record<string, number> = { twl: 0, pipeline: 0, synthetic: 0, other: 0 };
-let statusInvalidCount = 0;
+let llmSaysInvalidCount = 0;
 let nonAlphaCount = 0;
 let missingDate = 0;
 let missingFacts = 0;
@@ -90,9 +90,9 @@ for (let i = 0; i < words.length; i++) {
       added[i] = dateIndex.get(fact.added)!;
       dateCounts.set(fact.added, (dateCounts.get(fact.added) ?? 0) + 1);
     } else missingDate++;
-    if (fact.statusInvalid) {
-      bits |= WordFlag.StatusInvalid;
-      statusInvalidCount++;
+    if (fact.llmSaysInvalid) {
+      bits |= WordFlag.LlmSaysInvalid;
+      llmSaysInvalidCount++;
     }
   }
 
@@ -116,13 +116,13 @@ for (const name of INTAKE_NAMES) {
   console.log(`      ${name.padEnd(10)} ${count.toLocaleString().padStart(9)}  ${(share * 100).toFixed(2)}%`);
   check(`${name} share`, share, EXPECTED.intakeShare[name], `${count.toLocaleString()} words`);
 }
-console.log(`      status:invalid ${statusInvalidCount.toLocaleString()}`);
+console.log(`      llm says invalid ${llmSaysInvalidCount.toLocaleString()}`);
 console.log(`      non-alphabetic ${nonAlphaCount.toLocaleString()}`);
 console.log(`      no date        ${missingDate.toLocaleString()}`);
 console.log(`      no dict entry  ${missingFacts.toLocaleString()}`);
 console.log(`      distinct dates ${(dateTable.length - 1).toLocaleString()}`);
 
-check('status:invalid entries', statusInvalidCount, EXPECTED.statusInvalid);
+check('entries an LLM called invalid', llmSaysInvalidCount, EXPECTED.llmSaysInvalid);
 check('non-alphabetic words', nonAlphaCount, EXPECTED.nonAlpha);
 check('words with no date', missingDate, EXPECTED.missingDate);
 check('distinct dates', dateTable.length - 1, EXPECTED.distinctDates);
@@ -243,7 +243,7 @@ const manifest = {
   wordCount: words.length,
   dateTable,
   intakeCounts,
-  statusInvalid: statusInvalidCount,
+  llmSaysInvalid: llmSaysInvalidCount,
   invalidCount: invalid.size,
   alsoInvalid: alsoInvalid.length,
   alsoInvalidWords: alsoInvalid,

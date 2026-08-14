@@ -259,13 +259,47 @@ Two caveats recorded honestly:
 The re-run cost **zero** Merriam-Webster calls — 393 Collegiate and 400 Medical
 cache hits, no misses — which is the cache working as intended.
 
+### The decision: relabel, move nothing
+
+Taken 2026-08-14. **No word in set B was moved, and none will be on this
+evidence.** Not because the LLM was reliable — where a dictionary could check
+it, it was wrong more often than right — but because 95.8% of the set cannot be
+adjudicated by any source this project has. A demotion nobody can defend is
+worse than an honest label.
+
+So the field was renamed to carry its own warning:
+
+| Old | New | Entries | What it actually is |
+| --- | --- | ---: | --- |
+| `status` | `unverified_llm_verdict` | 137,705 | one LLM pass, Gemini 3 Flash Preview, Dec 2025 |
+| `status` | `dictionary_verdict` | 201 | a real Merriam-Webster or Free Dictionary ruling, via the promotion path |
+
+**The split is the point.** `status` looked like one field and was two. Those 201
+entries came through the promotion path and their verdict is a dictionary's, not
+a machine's — labelling them "unverified LLM" would have been a fresh error in
+the opposite direction. They are separable without guessing: an LLM-sourced
+verdict always carries a `manual_validation` block, and those 201 carry none.
+
+The raw verdict and its full provenance are untouched. Nothing was deleted;
+`manual_validation` still records the model, the date and the revalidation
+thread. Only the name changed, so that reading the data no longer requires
+reading this file first.
+
+Applied by `scripts/relabel_llm_verdict.py`, which renames the key **in place**
+rather than removing and re-adding it. That detail is not cosmetic: popping the
+key appends the new one at the end of the entry, which is invisible in the
+parsed data and turns a one-key rename into a 6.9-million-line diff on a 291 MB
+published file. Renaming in place kept it to the 137,906 lines that genuinely
+changed, verified by a line-by-line comparison against the pre-change backup —
+three distinct diff shapes, all of them the rename.
+
 ## Not yet decided
 
-- **Set B (20,052)** — the recommendation is now **B1: relabel the field and
-  move nothing.** Not because the LLM was reliable — where it could be checked
-  it was wrong more often than not — but because no source available to this
-  project can adjudicate 95.8% of the set, so a defensible demotion is not
-  achievable at any budget. Ryan's call.
+- **64,837 synthetic words carry no attestation of any kind** — no corpus
+  source, no validation record — while marked `validated: true` and noted as
+  "awaiting validation". 95.9% are derived forms of stems already in the list,
+  and 16,478 are comparatives and superlatives on adjectives that cannot take
+  them. Stage 3 samples that cluster.
 - **64,837 synthetic words carry no attestation of any kind** — no corpus source,
   no validation record — while marked `validated: true` and noted as "awaiting
   validation". 95.9% are derived forms of stems already in the list, and 16,478
