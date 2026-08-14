@@ -181,6 +181,24 @@ def main() -> int:
     doc.append("")
     doc.append("**No word was moved.** This stage measures.")
     doc.append("")
+
+    # A partial run must announce itself above the numbers, not below them.
+    # "Unadjudicated" means every source consulted had no entry; if a source was
+    # never asked, that word may still be adjudicable and the rate is provisional.
+    unconsulted = {
+        "Merriam-Webster Medical": sum(1 for r in rows if r["medical_status"] == "not_consulted"),
+        "Merriam-Webster Collegiate": sum(1 for r in rows if r["collegiate_status"] == "not_consulted"),
+        "Free Dictionary": sum(1 for r in rows if r["free_status"] == "not_consulted"),
+    }
+    never_asked = {k: v for k, v in unconsulted.items() if v == len(rows)}
+    if never_asked:
+        doc.append("> [!WARNING]")
+        doc.append("> **This is a partial run.** "
+                   + ", ".join(sorted(never_asked))
+                   + " was not consulted for any word. Every figure below is "
+                     "provisional: words counted as unadjudicated may still be "
+                     "found once it is asked, which would raise the error rate.")
+        doc.append("")
     doc.append("A dictionary having the word means the LLM was wrong. A dictionary *not* "
                "having it means nothing either way — much of this vocabulary is technical, "
                "and absence from Merriam-Webster is not evidence of absence from English. "

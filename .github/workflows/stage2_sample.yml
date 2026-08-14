@@ -31,6 +31,11 @@ on:
         required: false
         default: ''
         type: string
+      sources:
+        description: 'Sources to consult, in order. Omitting one records it as not_consulted, never as a "no".'
+        required: false
+        default: 'medical,collegiate,free'
+        type: string
       dry_run:
         description: 'Report what would be looked up, call nothing'
         required: false
@@ -101,6 +106,7 @@ jobs:
           EOL_DICT_CACHE: '1'
         run: |
           python scripts/run_stage2_lookups.py \
+            --sources "${{ inputs.sources }}" \
             ${{ inputs.dry_run && '--dry-run' || '' }} \
             ${{ inputs.limit != '' && format('--limit {0}', inputs.limit) || '' }}
 

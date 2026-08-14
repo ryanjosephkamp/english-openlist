@@ -300,3 +300,48 @@ def test_runner_dry_run_calls_nothing_and_writes_nothing(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     assert not out.exists()
+
+
+# ------------------------------------------- partial runs must announce themselves
+
+def test_a_source_never_asked_is_not_a_no():
+    """
+    `not_consulted` must not be readable as an answer. If it were, omitting a
+    source would silently inflate the unadjudicated count and deflate the
+    measured error rate.
+    """
+    from scripts.run_stage2_lookups import NOT_CONSULTED
+
+    statuses = {"medical": "not_found", "free": "not_found"}
+    assert classify(statuses, None) == "unadjudicated"
+
+    # Every source that was actually asked errored; a skipped one changes nothing.
+    statuses = {"medical": "error", "free": "error", "collegiate": NOT_CONSULTED}
+    assert classify(statuses, None) == "error"
+
+
+def test_report_warns_loudly_when_a_source_was_never_consulted(tmp_path):
+    from scripts.stage2_report import main as report_main
+
+    ledger = tmp_path / "ledger.csv"
+    rows = [{
+        "word": f"w{i}", "stage": "2", "stratum": "1", "gemini_verdict": "invalid",
+        "outcome": "unadjudicated", "action": "none", "deciding_source": "",
+        "deciding_status": "", "medical_status": "not_found",
+        "collegiate_status": "not_consulted", "free_status": "not_found",
+        "part_of_speech": "", "definition": "", "decided_date": "2026-08-14",
+    } for i in range(5)]
+    with open(ledger, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+
+    out = tmp_path / "report.md"
+    sys.argv = ["stage2_report.py", "--ledger", str(ledger), "--out", str(out)]
+    assert report_main() == 0
+
+    text = out.read_text()
+    assert "partial run" in text.lower()
+    assert "Collegiate" in text
+    # The warning has to sit above the numbers, not in a footnote.
+    assert text.index("partial run") < text.index("| Stratum |")

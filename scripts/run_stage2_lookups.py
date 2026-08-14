@@ -46,6 +46,11 @@ logger = logging.getLogger(__name__)
 #: Medical first. See the module docstring.
 LOOKUP_ORDER = ("medical", "collegiate", "free")
 
+#: What a column says when that source was never asked. Deliberately not the
+#: same as "not_found": one is silence, the other is an answer, and a partial
+#: run must not be readable as a complete one.
+NOT_CONSULTED = "not_consulted"
+
 LEDGER_FIELDS = [
     "word",
     "stage",
@@ -74,7 +79,8 @@ def classify(statuses: dict, deciding_status: str | None) -> str:
     if deciding_status in CORROBORATES:
         return "corroborated"
 
-    consulted = [s for s in statuses.values() if s not in ("unconfigured",)]
+    consulted = [s for s in statuses.values()
+                 if s not in ("unconfigured", NOT_CONSULTED)]
     if consulted and all(s == WordStatus.ERROR.value for s in consulted):
         return "error"
     if any(s == WordStatus.NOT_FOUND.value for s in consulted):
@@ -84,13 +90,14 @@ def classify(statuses: dict, deciding_status: str | None) -> str:
     return "error"
 
 
-async def look_up_all(sample: list[dict], decided: str) -> list[dict]:
+async def look_up_all(sample: list[dict], decided: str,
+                      order: tuple = LOOKUP_ORDER) -> list[dict]:
     client = DictionaryAPIClient()
     rows = []
 
     for i, entry in enumerate(sample, 1):
         word = entry["word"]
-        found = await client.lookup_all(word, order=LOOKUP_ORDER)
+        found = await client.lookup_all(word, order=order)
 
         statuses = found["statuses"]
         result = found["result"]
@@ -108,9 +115,9 @@ async def look_up_all(sample: list[dict], decided: str) -> list[dict]:
             "action": "none",
             "deciding_source": found["deciding_source"] or "",
             "deciding_status": deciding_status or "",
-            "medical_status": statuses.get("medical", ""),
-            "collegiate_status": statuses.get("collegiate", ""),
-            "free_status": statuses.get("free", ""),
+            "medical_status": statuses.get("medical", NOT_CONSULTED),
+            "collegiate_status": statuses.get("collegiate", NOT_CONSULTED),
+            "free_status": statuses.get("free", NOT_CONSULTED),
             "part_of_speech": (result.part_of_speech if result else "") or "",
             "definition": ((result.definition if result else "") or "").replace("\n", " ")[:300],
             "decided_date": decided,
@@ -135,9 +142,20 @@ def main() -> int:
                         help="Look up only the first N words (for smoke tests)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Report what would be looked up, call nothing")
+    parser.add_argument("--sources", default=",".join(LOOKUP_ORDER),
+                        help="Comma-separated sources to consult, in order. "
+                             "Omitting one records it as not_consulted rather "
+                             "than as a 'no', so a partial run cannot be read "
+                             "as a complete one.")
     parser.add_argument("--decided-date",
                         default=datetime.now(timezone.utc).date().isoformat())
     args = parser.parse_args()
+
+    order = tuple(s.strip() for s in args.sources.split(",") if s.strip())
+    unknown = set(order) - set(LOOKUP_ORDER)
+    if unknown:
+        parser.error(f"unknown source(s): {sorted(unknown)}; "
+                     f"choose from {list(LOOKUP_ORDER)}")
 
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s - %(levelname)s - %(message)s")
@@ -148,16 +166,22 @@ def main() -> int:
         sample = sample[:args.limit]
 
     logger.info("Sample: %d words", len(sample))
-    logger.info("Order : %s", " -> ".join(LOOKUP_ORDER))
+    logger.info("Order : %s", " -> ".join(order))
     logger.info("Cache : %s", "enabled" if cache_enabled() else "disabled")
+
+    skipped = [s for s in LOOKUP_ORDER if s not in order]
+    if skipped:
+        logger.warning("PARTIAL RUN: %s not consulted. Words recorded as "
+                       "unadjudicated may yet be found by %s.",
+                       ", ".join(skipped), " or ".join(skipped))
 
     if args.dry_run:
         logger.info("Dry run: would make up to %d lookups across %d sources; "
                     "nothing called, nothing written",
-                    len(sample) * len(LOOKUP_ORDER), len(LOOKUP_ORDER))
+                    len(sample) * len(order), len(order))
         return 0
 
-    rows = asyncio.run(look_up_all(sample, args.decided_date))
+    rows = asyncio.run(look_up_all(sample, args.decided_date, order))
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w", encoding="utf-8", newline="") as f:
