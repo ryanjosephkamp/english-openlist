@@ -293,13 +293,73 @@ published file. Renaming in place kept it to the 137,906 lines that genuinely
 changed, verified by a line-by-line comparison against the pre-change backup —
 three distinct diff shapes, all of them the rename.
 
+## Stage 3 — the synthetic comparatives, August 2026
+
+16,478 of the 64,837 synthetic words are comparatives and superlatives:
+`abacteremicer`, `abambulacralest`, `abatabler`. Like the rest of that intake
+they carry no attestation of any kind while being marked `validated: true`.
+
+**Asked the right way round.** Merriam-Webster will never carry `abacteremicer`
+as a headword, so looking up the form would return "not found" 8,809 times and
+prove nothing. Instead the *stem* is looked up and its `meta.stems` array read —
+the list of inflections MW recognises for that headword, and the same array
+`_entry_matches_word` already uses to resolve plurals. A "no" there is the
+dictionary enumerating a word's forms and leaving this one out, which is far
+stronger than a failed headword lookup. It also gives leverage: 16,478 forms
+reduce to 8,809 stems.
+
+### Coverage — unlike stage 2, this question can be answered
+
+| Stratum | Stems | Sampled | MW ruled | Coverage |
+| --- | ---: | ---: | ---: | ---: |
+| WordNet adjective | 1,717 | 100 | 94 | 94.0% |
+| WordNet noun/verb only | 306 | 50 | 46 | 92.0% |
+| Not in WordNet | 6,786 | 150 | 43 | 28.7% |
+| **Total** | **8,809** | **300** | **183** | **61.0%** |
+
+Stage 2 could rule on 4.5% of its sample and was stopped on that basis. This one
+reaches 61%, so the result below is worth something.
+
+### The result
+
+**Of 183 stems Merriam-Webster could rule on, it recognises the comparative for
+exactly one** — 0.5%, 95% CI 0.1–3.0%.
+
+| Stratum | MW ruled | Recognised | Not recognised |
+| --- | ---: | ---: | ---: |
+| WordNet adjective | 94 | 1 | 93 |
+| WordNet noun/verb only | 46 | 0 | 46 |
+| Not in WordNet | 43 | 0 | 43 |
+
+Weighted by each stratum's share of the 8,809 stems: **0.21%**, on the order of
+18 stems and perhaps 34 of the 16,478 forms that a dictionary would accept.
+
+The one it got right is `blameworthy` → `blameworthier`, `blameworthiest`. A
+real gradable adjective, produced by the same blind affixation that produced
+`abominabler`, `affabler` and `ahistoricaler`. The generator was not right on
+purpose.
+
+The evidence is direct rather than inferred. MW lists `kiss kissable kissed
+kisses kissing` for `kissable` and `breathabilities breathability breathable`
+for `breathable` — full inflection sets, with `kissabler` and `breathabler`
+simply not among them.
+
+**Caveat, stated rather than buried:** the extrapolation to the full 8,809
+assumes unrulable stems behave like rulable ones within their stratum. That is
+least safe for *not in WordNet*, at 28.7% coverage — but those are also the most
+obscure stems, so if the assumption fails it most likely flatters the generator.
+
+**Nothing has been moved.** Stage 3 measures; what to do about the cluster is a
+separate decision.
+
 ## Not yet decided
 
-- **64,837 synthetic words carry no attestation of any kind** — no corpus
-  source, no validation record — while marked `validated: true` and noted as
-  "awaiting validation". 95.9% are derived forms of stems already in the list,
-  and 16,478 are comparatives and superlatives on adjectives that cannot take
-  them. Stage 3 samples that cluster.
+- **The 16,478 `-er`/`-est` synthetic forms.** The evidence now says ~99.8% of
+  them are not English. Demoting them is the first genuine *valid → invalid*
+  move this project would make, and that is Ryan's call, not a measurement's.
+- **The other 48,359 synthetic words** — plurals, `-ed`/`-ing` forms and
+  prefixed constructions — are unmeasured. The same stem-and-`meta.stems`
+  method would work on them.
 - **64,837 synthetic words carry no attestation of any kind** — no corpus source,
   no validation record — while marked `validated: true` and noted as "awaiting
   validation". 95.9% are derived forms of stems already in the list, and 16,478
