@@ -3,13 +3,28 @@ name: Deploy site
 on:
   push:
     branches: [main]
-    # The daily pipeline commits _posts/, updates/ and overall_stats.json every
-    # morning, which is what rebuilds the site with the day's data. Nothing here
-    # touches the pipeline; it just runs behind it.
     paths-ignore:
       - 'docs/**'
       - '**.md'
       - '!templates/dataset_card.md'
+
+  # The daily pipeline's own commit cannot trigger this.
+  #
+  # It checks out with `token: secrets.GITHUB_TOKEN` and pushes as that token,
+  # and GitHub deliberately does not start workflow runs from pushes made with
+  # GITHUB_TOKEN -- it is the guard against a workflow endlessly re-triggering
+  # itself. So the `push` trigger above has never once fired for a daily update,
+  # and the site only ever rebuilt when a person pushed. Nobody noticed because
+  # the list moves about one word a day; it became obvious the morning after
+  # 33,594 words were demoted and the site still showed the old count.
+  #
+  # Chaining off the run itself is the fix that does not require handing the
+  # pipeline a personal access token.
+  workflow_run:
+    workflows: ["Daily Dictionary Update"]
+    types: [completed]
+    branches: [main]
+
   workflow_dispatch:
 
 concurrency:
@@ -22,7 +37,14 @@ jobs:
     # Without Cloudflare credentials there is nothing to deploy to, and a run
     # that fails on a missing secret every morning trains people to ignore red
     # builds. Skip cleanly instead.
-    if: ${{ vars.CLOUDFLARE_PROJECT_NAME != '' }}
+    #
+    # And when chained off the daily pipeline, only deploy if that pipeline
+    # actually succeeded -- `workflow_run` fires on failure too, and publishing
+    # from a half-finished update is worse than publishing nothing.
+    if: >-
+      ${{ vars.CLOUDFLARE_PROJECT_NAME != '' &&
+          (github.event_name != 'workflow_run' ||
+           github.event.workflow_run.conclusion == 'success') }}
     permissions:
       contents: read
       deployments: write
