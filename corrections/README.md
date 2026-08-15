@@ -483,6 +483,64 @@ Of the 31,243 remaining:
 | No stem in the list | 2,636 | **Never measured.** Mostly Greek-plural medical terms like `abarognoses`; the method could not reach them. |
 | MW-confirmed forms | 2 | `blameworthier`, `blameworthiest`. Settled. |
 
+## Stage 5 — Wiktionary as a second source, 15 August 2026
+
+Merriam-Webster could not adjudicate this dataset. That was a coverage limit,
+not a budget one: it has no entry for 95.8% of the LLM-flagged words and does
+not give inflected forms their own headwords. Wiktionary does both.
+
+**Two files, and the cheap one did the work.** The full English extract is 3 GB.
+The list of every page title is **27 MB and downloads in five seconds**, and
+because Wiktionary pages inflected forms separately, a title's existence already
+answers "is this a form Wiktionary recognises". That was the screen.
+
+**Every hit then had to be confirmed English.** Wiktionary puts all languages on
+one page, so `agiler` has a page because it is *German*. Of 2,094 demoted words
+with a page, **72 were German or another language only** — `affluenter`,
+`angularer`, `assertiver`, `bilabialer`, `atonaler`. Without that second step
+this stage would have "rescued" German adjectives into an English word list.
+
+### Coverage, against what Merriam-Webster managed
+
+| Group | Words | Has a page | Confirmed English | Coverage | MW managed |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| LLM-flagged, still valid | 20,052 | 9,317 | **8,443** | **42.1%** | 4.5% |
+| Synthetic plurals, kept | 28,605 | 1,173 | 927 | 3.2% | 9.2% of stems |
+| Synthetic, no stem in list | 2,636 | 53 | 45 | 1.7% | never reached |
+| **Already demoted** | 33,594 | 2,094 | **2,022** | **6.0%** | — |
+
+### What it settles
+
+**Set B is no longer unanswerable.** Wiktionary confirms **8,443 of the 20,052**
+words the LLM called invalid are English. Stage 2 could check 4.5% of that set
+and had to stop; this reaches 42.1%. Those words are already valid, so nothing
+needs moving — but the field that calls them invalid is now contradicted on
+8,443 counts rather than 13.
+
+**2,022 demoted words have English Wiktionary entries.** That is 6.0% of
+everything demoted, and they are exactly the shapes the stage 3 and 4 samples
+predicted would be marginal: plurals of gerunds (`abidings`, `achings`,
+`abettings`) and comparatives of gradable adjectives (`agiler`, `agilest`).
+Merriam-Webster lists neither; Wiktionary lists both. **This is the reversibility
+mattering.**
+
+### What it does not settle
+
+**The plurals stay unresolved.** Only 3.2% are confirmed — *worse* than
+Merriam-Webster. Neither source carries this vocabulary, which retrospectively
+strengthens the decision to keep them: two independent dictionaries have now
+failed to adjudicate them, so demoting them was never going to be defensible.
+
+The 2,636 with no stem in the list remain effectively unreachable at 1.7%.
+
+### How much to trust it
+
+Wiktionary is community-edited, so a hit is weaker evidence than a
+Merriam-Webster ruling and an absence is much weaker still. This stage was run
+to find words that should not have been demoted, never to demote more, and
+nothing here demotes anything. `ledger_stage5.csv` records all 11,437 confirmed
+words with `action: none`.
+
 ## Not yet decided
 
 - **The 28,605 plurals.** Not demotable on Merriam-Webster evidence — it covers
