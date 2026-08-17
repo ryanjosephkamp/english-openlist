@@ -1,14 +1,20 @@
-# Words this project moved off the valid list.
+# Words the nightly run must look at again, and would otherwise miss.
 #
-# They are here because no dictionary we could reach recognised
-# them on the day they were demoted -- which is not the same as
-# their not being words. The nightly run reserves part of each
-# night for this queue and ignores the pre-filter that would
-# otherwise hide the longer ones, so every one of them gets
-# looked at again. See corrections/README.md.
+# Three kinds live here:
 #
-# 
-# 33639 words
+#   * words this project moved off the valid list. No dictionary we
+#     could reach recognised them on the day they were demoted, which
+#     is not the same as their not being words.
+#   * candidates added by a correction, which have never been looked up.
+#   * single letters, which the pre-filter cannot pass at any value:
+#     is_likely_english drops anything under 3 characters, and its
+#     vowel-ratio band cannot be satisfied by a 1-character string.
+#
+# The nightly reserves part of each night for this queue and ignores the
+# pre-filter that would otherwise hide the shortest and longest entries,
+# so every one of them gets looked at. See corrections/README.md.
+#
+# 33647 words
 abacavired
 abacaviring
 abacteremicer
@@ -9074,6 +9080,7 @@ eyemasked
 eyemasking
 eyestrained
 eyewitnessings
+f
 fablings
 fabricabler
 fabricablest
@@ -10376,6 +10383,7 @@ futzings
 fuzzifyings
 fuzzings
 fuzztoning
+g
 gabardining
 gabblings
 gabbroed
@@ -11155,6 +11163,7 @@ gyroscopings
 gyttjaed
 gyttjaing
 gyvings
+h
 haared
 habaneroed
 habaneroing
@@ -13912,6 +13921,7 @@ iterabler
 iterablest
 iteratings
 itineratings
+j
 jabberings
 jackfisher
 jackhammerings
@@ -14046,6 +14056,7 @@ juteliker
 jutelikest
 juvieer
 juvieest
+k
 kaganated
 kaganating
 kakabeaked
@@ -23526,6 +23537,7 @@ pyroxeniticer
 pyroxeniticest
 pyrrhicer
 pyrrhicest
+q
 qaided
 qaiding
 quadchromaticer
@@ -23850,6 +23862,7 @@ qurultaied
 qurultaiing
 qwertied
 qwertying
+r
 rababbed
 rababbing
 rabbinated
@@ -29107,6 +29120,7 @@ syrupped
 syrupping
 systematisings
 systemizings
+t
 tabbyings
 taberings
 tabernaclings
