@@ -7,8 +7,8 @@
 # otherwise hide the longer ones, so every one of them gets
 # looked at again. See corrections/README.md.
 #
-# Demoted 2026-08-14 by stage 4: gerund plurals, verb forms and agent-noun plurals. The 28,605 synthetic plurals were deliberately left alone.
-# 33594 words
+# 
+# 33602 words
 abacavired
 abacaviring
 abacteremicer
@@ -1607,6 +1607,7 @@ azonalest
 azoticer
 azoticest
 azurer
+b
 baahings
 baaings
 babbiest
@@ -3163,6 +3164,7 @@ buzzlesser
 buzzlessest
 bylinings
 byplayers
+c
 caballings
 cabbagings
 cabbings
@@ -5611,6 +5613,7 @@ cytolysessed
 cytonemesed
 czardased
 czardasing
+d
 dackerings
 dactylated
 dactylating
@@ -7619,6 +7622,7 @@ dysgonicer
 dysgonicest
 dysphemizings
 dysregulatings
+e
 eaglings
 earlybirder
 earmuffing
@@ -16964,6 +16968,7 @@ mythicer
 mythicest
 mythicizings
 mythopoeticest
+n
 nabbings
 naffings
 naganased
@@ -20202,6 +20207,7 @@ ozonosonded
 ozonosonding
 ozonousest
 ozotyper
+p
 pabularer
 pabularest
 pachucoed
@@ -25704,6 +25710,7 @@ ruthfuller
 ruthfullest
 ruttings
 rykings
+s
 sabayoned
 sabayoning
 sabbings
@@ -32596,6 +32603,7 @@ uvularizinger
 uvularizingest
 uxoriouser
 uxoriousest
+v
 vacanter
 vagabondings
 vagariouser
