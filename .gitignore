@@ -114,3 +114,9 @@ Thumbs.db
 
 # pytest
 .pytest_cache/
+
+# Phase 1 evidence layer — derived data is reproducible from the manifest;
+# adjudication logs are personal working data bound for the private archive
+research/data/
+research/adjudicate/logs/
+research/adjudicate/decks/
