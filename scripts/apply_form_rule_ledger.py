@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 
 KNOWN_ACTIONS = {"delete_malformed", "add_candidate", "none"}
 FORM_RULE = re.compile(r"^[a-z]+$")
+RECHECK_QUEUE_FILE = Path("corrections/recheck_queue.txt")
 
 
 def load_word_list(path: Path) -> list[str]:
@@ -56,6 +57,41 @@ def write_word_list(words, path: Path) -> None:
 def read_ledger(path: Path) -> list[dict]:
     with open(path, "r", encoding="utf-8", newline="") as f:
         return list(csv.DictReader(f))
+
+
+def write_recheck_queue(words: list[str], path: Path, note: str) -> int:
+    """
+    Add words to the queue the nightly draws from, matching the format
+    `demote_words.py` writes.
+
+    Every `add_candidate` row carries `recheck_queued: yes`, and that has to be
+    true rather than aspirational. It matters most for the shortest additions:
+    the nightly's `is_likely_english` pre-filter drops anything under 3
+    characters, and its vowel-ratio band cannot be satisfied by a 1-character
+    string at all, so a single letter would otherwise sit in the candidate pool
+    permanently unexamined. The recheck queue is the one path that bypasses that
+    filter.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    existing = []
+    if path.exists():
+        existing = [l.strip() for l in open(path, encoding="utf-8")
+                    if l.strip() and not l.startswith("#")]
+
+    combined = sorted(set(existing) | set(words))
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("# Words this project moved off the valid list, or added as new\n")
+        f.write("# candidates that the nightly pre-filter would otherwise skip.\n")
+        f.write("#\n")
+        f.write("# The nightly run reserves part of each night for this queue and\n")
+        f.write("# ignores the pre-filter that would otherwise hide the shortest\n")
+        f.write("# and longest entries, so every one of them gets looked at.\n")
+        f.write("# See corrections/README.md.\n")
+        f.write(f"#\n# {note}\n")
+        f.write(f"# {len(combined)} words\n")
+        for word in combined:
+            f.write(f"{word}\n")
+    return len(combined)
 
 
 def check_ledger(rows: list[dict], valid: set[str], invalid: set[str]) -> None:
@@ -166,6 +202,12 @@ def main() -> int:
     with open(dict_path, "w", encoding="utf-8") as f:
         json.dump(valid_dict, f, indent=2, ensure_ascii=False)
     logger.info("Wrote %s, %s and %s", valid_path, invalid_path, dict_path)
+
+    if added:
+        total = write_recheck_queue(
+            added, RECHECK_QUEUE_FILE,
+            f"{len(added)} added by the form-rule correction, {args.ledger.name}")
+        logger.info("Recheck queue now holds %d words (%s)", total, RECHECK_QUEUE_FILE)
     return 0
 
 

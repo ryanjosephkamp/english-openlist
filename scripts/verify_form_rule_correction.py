@@ -102,10 +102,16 @@ def main():
     check(after_n == 9653999, "universe after  = 9,653,999", f"got {after_n:,}")
     check(before_n - len(led_del) + len(led_add) == after_n,
           f"{before_n:,} - {len(led_del)} + {len(led_add)} = {after_n:,}")
-    check(len(av) == 345099, "valid list = 345,099", f"got {len(av):,}")
+    # The valid-list total is NOT hardcoded. The nightly promotes ~1,000 words a
+    # night, so any fixed expectation here goes stale within a day and fails on
+    # correct work. What must hold is the arithmetic against whatever the list
+    # was when this run started.
     check(len(bv) - len(led_del & bv) - len(led_demote) == len(av),
           f"valid list: {len(bv):,} - {len(led_del & bv)} deleted - "
           f"{len(led_demote)} demoted = {len(av):,}")
+    # The universe total IS fixed: deletions and additions are fixed counts, and
+    # the nightly only moves words between the two lists rather than in or out.
+    check(len(av | ai) == 9653999, "universe is exactly 9,653,999 as specified")
 
     print("\n=== 5. the 19 attested concatenations ===")
     NINETEEN = ["photorealistic", "hardshell", "highhanded", "hardnosed", "kneejerk",
