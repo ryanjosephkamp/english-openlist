@@ -266,10 +266,13 @@ def ingest_wiktionary_titles() -> dict:
     The 27.8 MB all-titles index — a SCREEN, not a verdict (manifest notes).
 
     Case-sensitive source: only titles that are already lowercase count, since
-    `London` and `london` are different pages and different lemmas. `agiler`
-    is the standing reminder that a title hit means *some* language uses the
-    spelling; English is confirmed by the article-dump ingest, which produces
-    the separate `wiktionary_english` source that actually enters the model.
+    `London` and `london` are different pages and different lemmas. A title hit
+    means *some* language uses the spelling; English membership comes only from
+    the article-dump ingest, which produces the separate `wiktionary_english`
+    source that actually enters the model. (`agiler`, this project's canonical
+    German example, turns out to carry a community-added English section today —
+    which is precisely why Wiktionary is a noisy detector whose specificity the
+    model estimates, not a verdict.)
     """
     import unicodedata
     path = common.REPO / ".cache" / "wiktionary" / "all-titles.gz"

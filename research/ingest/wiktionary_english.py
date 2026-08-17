@@ -2,9 +2,13 @@
 Wiktionary with the `== English ==` confirmation — the source that enters the
 model.
 
-The title index says *some* language uses a spelling (`agiler` is German). This
-streams the full article dump and keeps only pages that both have a lowercase
-form-valid title AND carry an English language section. Wiktionary titles are
+The title index says *some* language uses a spelling. This streams the full
+article dump and keeps only pages that both have a lowercase form-valid title
+AND carry an English language section. That confirmation is necessary, not
+sufficient: `agiler` — long this project's canonical German-only example — now
+carries a community-added `English: comparative of agile` section, and the
+ingest reports it faithfully. Wiktionary is a noisy detector; weighing it is
+the model's job, not the parser's. Wiktionary titles are
 case-sensitive lemmas — `polish` and `Polish` are different pages — so the
 lowercase-title convention here is the source's own semantics, declared in the
 manifest, not a loosening of the pinned normalization.
