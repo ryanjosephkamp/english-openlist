@@ -27,6 +27,35 @@ CANONICAL_NORMALIZATION = "NFC; casefold; accept iff ^[a-z]+$"
 failures: list[str] = []
 
 
+def _verify_corpus_aggregate(src: dict) -> None:
+    """
+    A corpus source ships a parquet aggregate and per-shard pins, not a derived
+    .txt — its reproducibility story is: the shard hashes are recorded, and the
+    aggregate's row count matches the declaration.
+    """
+    import json
+
+    import pyarrow.parquet as pq
+
+    sid = src["id"]
+    meta_path = DERIVED_DIR / "google_books.meta.json"
+    if not meta_path.exists():
+        check(False, f"{sid}: aggregate declared but never ingested")
+        return
+    meta = json.load(open(meta_path, encoding="utf-8"))
+    check(meta["record_count"] == src["record_count"],
+          f"{sid}: meta count {meta['record_count']:,} == manifest "
+          f"{src['record_count']:,}")
+    agg = DERIVED_DIR / src["aggregate"].removeprefix("derived/")
+    n = pq.read_metadata(agg).num_rows
+    check(n == src["record_count"],
+          f"{sid}: aggregate parquet rows {n:,} == manifest {src['record_count']:,}")
+    pinned = {s["shard"]: s["sha256"] for s in src.get("shard", [])}
+    recorded = {s["shard"]: s["sha256"] for s in meta["shards"]}
+    check(pinned == recorded and len(pinned) == src.get("shard_count", 0),
+          f"{sid}: all {len(pinned)} shard sha256 pins match the ingest record")
+
+
 def check(cond: bool, label: str) -> None:
     print(f"  {'ok  ' if cond else 'FAIL'}  {label}")
     if not cond:
@@ -47,6 +76,9 @@ def main() -> int:
         declared = src.get("record_count", 0)
         if not declared:
             print(f"  --    {sid}: no declared record_count yet, skipping")
+            continue
+        if src.get("aggregate"):
+            _verify_corpus_aggregate(src)
             continue
         try:
             meta = read_meta(sid)

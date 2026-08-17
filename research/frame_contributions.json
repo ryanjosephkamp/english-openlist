@@ -1,0 +1,94 @@
+{
+  "frame_size": 9787841,
+  "universe_size": 9653999,
+  "contributed_by_sources": 133842,
+  "gb_types_total": 14808627,
+  "gb_types_in_frame": 8749435,
+  "gb_types_declined_by_frame": 6059192,
+  "contributions": {
+    "wordnet": {
+      "keys": 77503,
+      "absent_from_universe": 4564,
+      "new_to_frame_in_order": 4564
+    },
+    "wiktionary_english": {
+      "keys": 775869,
+      "absent_from_universe": 104848,
+      "new_to_frame_in_order": 100948
+    },
+    "web2": {
+      "keys": 234454,
+      "absent_from_universe": 34267,
+      "new_to_frame_in_order": 4837
+    },
+    "hunspell_en_US": {
+      "keys": 87976,
+      "absent_from_universe": 1872,
+      "new_to_frame_in_order": 194
+    },
+    "hunspell_en_GB": {
+      "keys": 175933,
+      "absent_from_universe": 15275,
+      "new_to_frame_in_order": 1831
+    },
+    "hunspell_en_CA": {
+      "keys": 87836,
+      "absent_from_universe": 1994,
+      "new_to_frame_in_order": 0
+    },
+    "hunspell_en_AU": {
+      "keys": 88197,
+      "absent_from_universe": 2810,
+      "new_to_frame_in_order": 11
+    },
+    "enable1": {
+      "keys": 172823,
+      "absent_from_universe": 413,
+      "new_to_frame_in_order": 56
+    },
+    "sowpods_legacy": {
+      "keys": 267751,
+      "absent_from_universe": 84334,
+      "new_to_frame_in_order": 14430
+    },
+    "nwl2023": {
+      "keys": 196601,
+      "absent_from_universe": 8846,
+      "new_to_frame_in_order": 753
+    },
+    "csw21": {
+      "keys": 279077,
+      "absent_from_universe": 86064,
+      "new_to_frame_in_order": 1284
+    },
+    "scowl": {
+      "keys": 435936,
+      "absent_from_universe": 90322,
+      "new_to_frame_in_order": 4934
+    }
+  },
+  "columns": [
+    "word",
+    "in_universe",
+    "wordnet",
+    "wiktionary_english",
+    "web2",
+    "hunspell_en_US",
+    "hunspell_en_GB",
+    "hunspell_en_CA",
+    "hunspell_en_AU",
+    "enable1",
+    "sowpods_legacy",
+    "nwl2023",
+    "csw21",
+    "scowl_tier",
+    "wikt_title_screen",
+    "wordfreq_zipf",
+    "gb_total_match",
+    "gb_total_volume",
+    "gb_first_year",
+    "gb_last_year",
+    "gb_year_count"
+  ],
+  "wiktionary_english_count": 775869
+}

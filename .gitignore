@@ -120,3 +120,6 @@ Thumbs.db
 research/data/
 research/adjudicate/logs/
 research/adjudicate/decks/
+# The per-source frame-contribution summary is a RESULT the SR2 report cites,
+# a few hundred bytes — it survives the blanket *.json like the others above.
+!research/frame_contributions.json
