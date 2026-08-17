@@ -17,7 +17,7 @@ layout: home
 
 <div class="blog-stat-grid">
   <div class="blog-stat"><strong>Daily</strong><span>automated update reports</span></div>
-  <div class="blog-stat"><strong>Open</strong><span>Scrabble-compatible word-list data</span></div>
+  <div class="blog-stat"><strong>Open</strong><span>openly licensed word-list data</span></div>
   <div class="blog-stat"><strong>Transparent</strong><span>recorded metrics only; missing values are labeled</span></div>
 </div>
 

@@ -40,7 +40,7 @@ configs:
 
 English OpenList is a comprehensive, continuously updated dictionary of valid English words. It provides:
 
-- **~379,000 validated English words** following Scrabble-compatible rules
+- **~345,000 validated English words**, plus a candidate pool of ~9.3 million awaiting evidence
 - **Validation provenance** for every word: which sources attested it, and when
 - **Daily updates** from authoritative dictionary sources
 - **Version history** with changelogs for every update
@@ -55,7 +55,7 @@ English OpenList is a comprehensive, continuously updated dictionary of valid En
 | Use Case | Benefit |
 |----------|---------|
 | **Spell Checking** | High-precision word validation |
-| **Word Games** | Scrabble/Wordle compatible list |
+| **Word Games** | Wordle-style out of the box; a `scrabble-legal.txt` subset is published for tournament rules |
 | **NLP Training** | Clean, validated vocabulary |
 | **Research** | Transparent methodology, full provenance |
 
@@ -67,7 +67,7 @@ English OpenList is a comprehensive, continuously updated dictionary of valid En
 
 ```
 data/
-├── merged_valid_words.txt      # FULL valid word list (~379,000 words, one per line)
+├── merged_valid_words.txt      # FULL valid word list (~345,000 words, one per line)
 ├── merged_valid_dict.json      # FULL dictionary with metadata for all valid words
 ├── merged_invalid_words.txt    # FULL invalid/rejected entries list
 └── merged_invalid_dict.json    # FULL invalid dictionary with rejection reasons
@@ -185,11 +185,25 @@ eight sources that all say *unlikely*:
 
 Note the synthetic records have no `word` field — the word is the object key.
 
-### Validation Rules (Scrabble-Compatible)
+### Validation Rules — deliberately NOT Scrabble-compatible
 
-These are the rules applied to **newly discovered words** by the daily pipeline:
+**The form rule is `^[a-z]+$` with no length limit.** As of 16 August 2026 this
+list is **deliberately not Scrabble-legal**. It previously carried a 2-character
+minimum and a 45-character maximum, both inherited from Scrabble tournament
+dictionaries, and both were removed because both excluded real English:
 
-- ✅ Contain only lowercase letters (a-z)
+- the minimum excluded **`a` and `i`**. No Scrabble list can hold them — ENABLE,
+  SOWPODS, NWL2023 and CSW21 have zero one-letter entries between them, by rule.
+- the maximum excluded **`phosphoribosylaminoimidazolesuccinocarboxamide`**, 46
+  characters, which carries a Wiktionary English entry. Chemical nomenclature is
+  productive and unbounded, so any ceiling is arbitrary.
+
+**If you need Scrabble legality, use the `scrabble-legal.txt` download**, which
+applies the 2–45 bounds. The main list follows English rather than the game.
+
+Rules applied to **newly discovered words** by the daily pipeline:
+
+- ✅ Contain only lowercase letters (a-z), any length
 - ✅ Are recognized by Merriam-Webster Collegiate Dictionary
 - ❌ Are NOT proper nouns (unless commonly used as verbs)
 - ❌ Are NOT abbreviations or acronyms
@@ -198,6 +212,11 @@ Words already in the list arrived through earlier intakes and were not all
 checked against Merriam-Webster — see *Composition* below. Lengths run from 1 to
 47 characters (`a` at one end, `phosphoribosylaminoimidazolesuccinocarboxamides`
 at the other).
+
+**One further note on the two files.** `merged_invalid_words.txt` is *not* a list
+of non-words. It is the pool of candidate strings that have not yet been
+validated, and words move out of it into the valid list every night. Read it as
+"not yet confirmed", never as "rejected".
 
 ## Dataset Statistics
 

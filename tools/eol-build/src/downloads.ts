@@ -33,10 +33,15 @@ const BUILDS = [
     keep: (intake: number) => intake === INTAKE.twl,
   },
   {
-    file: 'alphabetic-only.txt',
-    label: 'Strictly a–z',
-    note: 'Drops the 188 hyphenated entries and the two accented words. For code that assumes ASCII.',
-    keep: (_intake: number, nonAlpha: boolean) => !nonAlpha,
+    // Was 'Strictly a–z', which dropped 188 hyphenated and 2 accented entries.
+    // Those were deleted from the list itself on 2026-08-16, so that slice became
+    // a copy of the full list. This replaces it with the one people actually lost
+    // in the same change: the main list is no longer Scrabble-legal, because it
+    // now carries one-letter words and words past 45 characters.
+    file: 'scrabble-legal.txt',
+    label: 'Scrabble-legal subset',
+    note: 'Length 2–45, the tournament-dictionary bounds. The full list deliberately breaks both — see the rule change of 16 August 2026.',
+    keep: (_intake: number, _nonAlpha: boolean, length: number) => length >= 2 && length <= 45,
   },
 ] as const;
 
@@ -52,7 +57,9 @@ export async function writeDownloads(
   for (const build of BUILDS) {
     const lines: string[] = [];
     for (let i = 0; i < words.length; i++) {
-      if (build.keep(intake[i]!, nonAlpha[i]!)) lines.push(decoder.decode(words[i]!));
+      if (build.keep(intake[i]!, nonAlpha[i]!, words[i]!.length)) {
+        lines.push(decoder.decode(words[i]!));
+      }
     }
     const text = `${lines.join('\n')}\n`;
     await writeFile(resolve(DOWNLOADS_DIR, build.file), text, 'utf8');

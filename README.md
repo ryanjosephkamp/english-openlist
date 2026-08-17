@@ -13,7 +13,7 @@ The project exists to solve a common problem: high-quality English word lists ar
 
 It is built for a broad audience:
 
-- **Word game players and makers** who need a dependable list of playable words (for Scrabble-style games, crosswords, Wordle-style games, and more).
+- **Word game players and makers** who need a dependable list of playable words (for Scrabble-style games, crosswords, Wordle-style games, and more). Note that since 16 August 2026 the list is **deliberately not Scrabble-legal**: it accepts one-letter words such as `a` and `i`, and words longer than 45 characters. Both are excluded by tournament dictionaries but are words of English, and this list follows English rather than the game.
 - **Researchers and educators** working in linguistics, natural language processing, or data analysis.
 - **Developers** who want a clean, machine-readable word list they can drop into an application.
 - **Non-technical users** who simply want to download a reliable list of English words.
@@ -66,6 +66,23 @@ The easiest ways to access the data:
 That's all most users need. The sections below document how the data is built and maintained, and can be safely skipped if you only want to use the word lists.
 
 ---
+
+## What counts as a word here
+
+**The form rule is `^[a-z]+$`, with no length limit.** Lowercase ASCII letters, nothing else — no digits, no spaces, no punctuation, no accents, no hyphens.
+
+**This is deliberately not Scrabble-legal, as of 16 August 2026.** The list previously inherited a 2-character minimum and a 45-character maximum from Scrabble tournament dictionaries. Both were removed, because both excluded strings that are plainly words of English:
+
+- The minimum excluded **`a` and `i`**. No Scrabble list can contain them — ENABLE, SOWPODS, NWL2023 and CSW21 hold zero one-letter entries between them, by rule rather than by judgement.
+- The maximum excluded **`phosphoribosylaminoimidazolesuccinocarboxamide`**, which is 46 characters and carries a Wiktionary English entry. Chemical nomenclature is productive and unbounded, so any ceiling is arbitrary.
+
+If you need a Scrabble-legal subset, filter for length 2–45 and you have one. Going the other way — recovering words the list never accepted — is not possible, which is why the rule moved in the direction it did.
+
+Beyond form, a word needs attested conventional use by multiple unrelated authors. Presence in a dictionary is strong evidence for that, never the definition of it. The full method is in [PROTOCOL.md](PROTOCOL.md), and every methodological decision is dated and argued in [research/DECISIONS.md](research/DECISIONS.md).
+
+### The two lists
+
+`merged_valid_words.txt` holds words that have cleared validation. `merged_invalid_words.txt` is **not a list of non-words** — it is the pool of candidate strings awaiting evidence, and words move out of it into the valid list every night. Read it as "not yet confirmed", not as "rejected".
 
 ## How the Data Is Maintained (Technical Documentation)
 
@@ -128,7 +145,7 @@ python scripts/push_to_huggingface.py
 ├── manual_additions.txt        # Words submitted by hand (open a PR to add)
 ├── scripts/
 │   ├── dictionary_api.py       # Merriam-Webster API wrapper
-│   ├── word_validator.py       # Scrabble-compatible validation
+│   ├── word_validator.py       # Form-rule validation (^[a-z]+$, no length bound)
 │   ├── data_updater.py         # List/dictionary update logic
 │   ├── run_weekly_update.py    # Main orchestration (new word discovery)
 │   ├── validate_invalid_list.py # Invalid list recovery pipeline
@@ -136,7 +153,7 @@ python scripts/push_to_huggingface.py
 │   ├── generate_brrrdle_artifacts.py # Per-length Brrrdle files
 │   ├── dictionary_api.py       # Merriam-Webster API wrapper (imported)
 │   ├── data_updater.py         # List/dictionary update logic (imported)
-│   ├── word_validator.py       # Scrabble-compatible validation (imported)
+│   ├── word_validator.py       # Form-rule validation (imported)
 │   ├── generate_daily_stats.py # Daily statistics
 │   ├── generate_blog_post.py   # Release write-up
 │   ├── download_from_huggingface.py # Download data from HF
