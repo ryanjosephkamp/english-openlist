@@ -557,3 +557,77 @@ words with `action: none`.
   no validation record — while marked `validated: true` and noted as "awaiting
   validation". 95.9% are derived forms of stems already in the list, and 16,478
   of them are comparatives and superlatives on adjectives that cannot take them.
+
+## Form rules — 190 malformed entries, 16 August 2026
+
+The first correction that **deletes** strings rather than moving them, and the
+first that follows a change to the rules themselves.
+
+**The rule changed.** `^[a-z]+$` with no length bound, replacing `^[a-z]+$` with
+a 2–45 character range. Both bounds were Scrabble tournament conventions and both
+excluded real English: `a` and `i` below, and the 46-character
+`phosphoribosylaminoimidazolesuccinocarboxamide` above. **The list is now
+deliberately not Scrabble-conformant.** See `PROTOCOL.md` §1.3 and
+`research/DECISIONS.md` D-025.
+
+**190 entries on the valid list never satisfied even the old rule** — 188
+hyphenated and 2 accented. They predate the rule being written down. The site has
+in fact been shipping a "Strictly a–z" slice at 345,107 words that excludes
+exactly these 190, so the defect was already known; it had just never been
+corrected in the list itself.
+
+| | |
+| --- | ---: |
+| Deleted — truncated hyphen fragments (`self-`, `two-`) | 20 |
+| Deleted — hyphenated compounds (`day-to-day`) | 168 |
+| Deleted — accented (`norteño`, `peléan`) | 2 |
+| Added as candidates | 37 |
+| **Net universe change** | **−153** |
+| Universe 9,654,152 → | **9,653,999** |
+
+### Two new actions
+
+| Action | Meaning |
+| --- | --- |
+| `delete_malformed` | The string fails `^[a-z]+$`. It is not a candidate and never was. |
+| `add_candidate` | A form-valid string absent from both lists, added to the **invalid** list — the candidate pool. Never to the valid list. |
+
+`delete_malformed` is the only action in this project that removes a string
+outright, so `apply_form_rule_ledger.py` re-checks every such row against the
+form rule before writing anything. **If a word named for deletion actually
+satisfies `^[a-z]+$`, the run aborts.** The script cannot be made to delete a
+legitimate word even by a ledger that asks it to.
+
+### Deleting the hyphenated entries nearly lost real words
+
+Stripping the hyphen from each of the 168 compounds and looking the result up in
+seven sources found **35 attested concatenations, 19 of them not on the valid
+list** — `photorealistic` (SOWPODS, NWL2023, CSW21), `hardshell`, `hardnosed`,
+`kneejerk`, `highhanded`, `getout` and 13 more. Nine were absent from the frame
+entirely, so a plain deletion would have discarded their only trace.
+
+They are added as **candidates, not valid entries**. Attestation is evidence,
+never a verdict.
+
+The 20 fragments cost nothing: 18 of 20 stems were already on the valid list, and
+the two exceptions (`harum`, `jim`) were already candidates. `peléan` turned out
+to duplicate `pelean`, which was already valid.
+
+### Single letters
+
+All 26 are now form-legal and all 26 are in the frame. **Only `a` and `i` are
+asserted valid**; the rest are candidates. No source can settle this — the
+Scrabble lists hold no one-letter entries by rule, and Wiktionary gives a
+word-level part of speech to 25 of the 26, including `q` as a determiner. So it
+goes to adjudication rather than to anyone's judgement.
+
+### Reproducing it
+
+```bash
+python scripts/build_form_rule_ledger.py --data-dir .cache/hf --wordlists <dir> --out corrections/ledger_form_rules.csv
+python scripts/apply_form_rule_ledger.py --data-dir .cache/hf --ledger corrections/ledger_form_rules.csv --dry-run
+python scripts/verify_form_rule_correction.py --before <backup> --after .cache/hf --ledger corrections/ledger_form_rules.csv
+```
+
+The ledger is derived, not transcribed: `build_form_rule_ledger.py` re-runs every
+check each time, so the file regenerates identically from the data.
