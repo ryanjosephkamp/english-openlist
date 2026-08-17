@@ -1,0 +1,289 @@
+# sources/MANIFEST.toml
+#
+# The evidence matrix must reproduce byte-for-byte from this file alone, on a
+# clean machine, by anyone. Every source is pinned to a checksummed artifact.
+#
+# This file is a SCHEMA with four worked examples. Phase 1 fills in the rest.
+# Sources carrying `sha256 = ""` have not been ingested yet; a non-empty sha256
+# means the artifact was retrieved, hashed, and its record_count reproduced.
+#
+# HARD RULE: a source whose ingest does not reproduce its declared record_count
+# is a failure that stops the ingest. It is never downgraded to a warning.
+#
+# See PROTOCOL.md §2 for the source list and the declared dependency graph.
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Global
+# ─────────────────────────────────────────────────────────────────────────────
+
+[manifest]
+version          = 1
+protocol         = "PROTOCOL.md"
+created          = 2026-08-16
+# Pinned normalization, applied identically to every source AND to the candidate
+# universe. PROTOCOL.md §2.5. Counts move with this filter, so it is pinned here
+# rather than left to each ingest script.
+#
+# CHANGED 2026-08-16 (D-025): the length bounds are gone. They were Scrabble
+# conventions that excluded real English at both ends -- `a` and `i` below, and
+# 46-character attested chemistry above. Side benefit: under ^[a-z]+$ the strict
+# and loose filters finally agree (WordNet 77,503 / intersection 57,977), so the
+# tripwire no longer drifts with the filter.
+normalization    = "NFC; casefold; accept iff ^[a-z]+$"
+
+# NOT a form rule -- a data-integrity check against concatenation bugs. Candidates
+# over this length are flagged at ingest and need a recorded reason. Longest in the
+# universe today is 63; nothing exceeds 100.
+length_flag_over = 100
+
+[candidate_universe]
+# Frozen at a pinned Hugging Face revision, NOT at "the current dataset". The
+# nightly pipeline promotes ~1,000 words/night from invalid using Merriam-
+# Webster, so the valid/invalid split moves daily even when the universe does
+# not. PROTOCOL.md §2.1.
+repo             = "ryanjosephkamp/english-openlist"
+repo_type        = "dataset"
+revision         = "ba94dd0d1f0d30108c8ab0c866cd1369b5fddf34"  # 2026-08-16T00:17:20Z
+files            = ["data/merged_valid_words.txt", "data/merged_invalid_words.txt"]
+# Counts below are from the local snapshot of 2026-08-14, which is two nightly
+# runs behind `revision`. Phase 1 re-counts at the pinned revision and REPLACES
+# these; they are recorded so the discrepancy is visible rather than silent.
+snapshot_date        = 2026-08-14
+snapshot_valid       = 345297   # raw lines
+snapshot_invalid     = 9308855  # raw lines
+snapshot_total       = 9654152  # raw lines -- NOT the form-valid count
+snapshot_form_valid  = 9653962  # satisfies ^[a-z]+$ ; the 190-string difference
+                                # is cleared by corrections/ledger_form_rules.csv
+pinned_total         = 0        # filled by Phase 1 at `revision`
+
+# The frame is no longer inherited-only (D-026). Every source below contributes its
+# form-valid strings to the candidate frame as well as a detector column, because
+# ~248,000 English words were measured absent from the inherited frame -- including
+# 19 present in all seven curated sources. Words entering this way carry >=1
+# positive detection by construction; that is declared, not hidden.
+frame_is_source_augmented = true
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Field reference — every [[source]] entry carries these
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#   id                 stable slug; the column name in evidence.parquet
+#   group              "lexicographic" | "wordlist" | "corpus"
+#   url                where the artifact was retrieved from
+#   sha256             hash of the artifact AS DOWNLOADED, before any processing
+#   retrieved          ISO date
+#   licence            SPDX id where one applies, else a plain-language string
+#   redistributable    false => aggregate-only publication (PROTOCOL.md §2.2)
+#   normalization      "inherit" or an explicit override
+#   expansion          how surface forms are derived, when the artifact is not a
+#                      plain word list. "none" when it is.
+#   record_count       count after normalization. Reproducing it is the gate.
+#   derives_from       declared dependency edges; drives the S2 interaction terms
+#   frame_dependency   true => this detector shares an error mode with the
+#                      process that generated the candidate universe, which the
+#                      log-linear family CANNOT express as an interaction.
+#                      Requires specification S5. PROTOCOL.md §2.4.
+#   binary             whether the source yields a {0,1} column directly
+#   peak_disk_mb       high-water mark during ingest, for the 14 GiB budget
+#   notes              anything a reimplementer would otherwise get wrong
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Worked example 1 — WordNet. The simple case.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[[source]]
+id               = "wordnet"
+group            = "lexicographic"
+url              = "https://www.nltk.org/nltk_data/  (corpora/wordnet.zip)"
+sha256           = "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59"
+retrieved        = 2025-12-05          # mtime of the installed artifact
+licence          = "WordNet-3.0"
+redistributable  = true
+normalization    = "inherit"
+expansion        = "none"              # lemma names are surface forms already
+record_count     = 77477
+derives_from     = []
+frame_dependency = false
+binary           = true
+peak_disk_mb     = 11
+version          = "3.0"
+notes = """
+Already installed; no download in Phase 1. Lemmas are collected across all
+synsets and lowercased before the filter. record_count is under the pinned
+normalization: the same corpus yields 77,503 under `isalpha() and isascii()`,
+which admits 1-character lemmas and lemmas longer than 45. Do not mix the two.
+"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Worked example 2 — hunspell en_US. Exercises `expansion` and `derives_from`.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[[source]]
+id               = "hunspell_en_US"
+group            = "lexicographic"
+url              = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/en/en_US.dic"
+sha256           = ""                  # filled by Phase 1 ingest
+retrieved        = 1970-01-01          # filled by Phase 1 ingest
+licence          = "LGPL-2.1-or-later OR MPL-1.1"   # LibreOffice en dictionaries
+redistributable  = true
+normalization    = "inherit"
+expansion        = "spylls"
+record_count     = 0                   # filled by Phase 1 ingest
+derives_from     = ["scowl"]
+frame_dependency = false
+binary           = true
+peak_disk_mb     = 3
+aff_url          = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/en/en_US.aff"
+aff_sha256       = ""                  # filled by Phase 1 ingest
+notes = """
+A .dic file is stems plus affix flags, NOT a word list. "hunspell lists X" is
+therefore ambiguous between `X is a stem` and `X is generated by a stem and an
+affix rule`, and the two give very different record_counts. This manifest
+resolves it in writing: expansion = "spylls" means the .dic and .aff are
+expanded to surface forms with spylls (1.51 MB, pure Python) and the surface
+forms are the detector. No hunspell binary is installed on the build machine and
+none is required.
+
+en_GB, en_CA and en_AU follow this entry exactly, and each declares
+derives_from = ["scowl", "hunspell_en_US"] for the shared upstream.
+"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Worked example 3 — Google Books 1-grams. Streaming, volume_count, and the
+#  frame dependency that forces specification S5.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[[source]]
+id               = "google_books_1gram_eng_2020"
+group            = "corpus"
+url              = "https://storage.googleapis.com/books/ngrams/books/20200217/eng/1-{NNNNN}-of-00024.gz"
+sha256           = ""                  # per-shard; see [[source.shard]] below
+retrieved        = 1970-01-01          # filled by Phase 1 ingest
+licence          = "CC-BY-3.0"
+redistributable  = true                # aggregates only; raw shards are deleted
+normalization    = "inherit"
+expansion        = "none"
+record_count     = 0                   # distinct types after normalization
+derives_from     = []
+frame_dependency = true                # <<<< see notes
+binary           = false               # enters as features, not a {0,1} column
+peak_disk_mb     = 300
+shard_count      = 24
+shard_bytes      = 265116429           # measured on shard 00000, 2026-08-16
+columns          = ["ngram", "year", "match_count", "volume_count"]
+aggregate_to     = ["total_match_count", "total_volume_count", "first_year", "last_year", "gries_dp"]
+notes = """
+STREAMING: one shard is downloaded, aggregated into the running per-type
+totals, and DELETED before the next is fetched. 24 x ~265 MB = ~6.4 GB moves
+across the wire; peak disk stays near 300 MB against a 14 GiB budget.
+
+WHY THE RAW SHARDS AND NOT THE NGRAM VIEWER API: the shards carry volume_count.
+The API does not expose it, and volume-level dispersion is the only signal that
+separates OCR noise from rare real words. Nothing else in this manifest depends
+on a column the convenient interface omits.
+
+frame_dependency = true, AND THIS IS THE IMPORTANT FIELD.
+
+The candidate universe was built from scanned text. So was Google Books. The two
+therefore share an error mode, and it was measured rather than assumed
+(2026-08-16, Ngram Viewer, en-2019, smoothing 0):
+
+    schoolinaster     OCR of *schoolmaster*   peak 4.79e-08   168/220 years
+    iscences          OCR fragment            peak 7.98e-09   186/220 years
+    amountes          OCR of *amounts*        peak 8.94e-09   160/220 years
+    phlebothromboses  real, medical           peak 1.88e-09    74/220 years
+    dicarboxylation   real, chemistry         peak 1.12e-09    71/220 years
+
+The OCR artifacts outrank the genuine technical vocabulary on frequency AND on
+year-spread at once. No threshold on either separates them.
+
+This is NOT conditional dependence between two detectors -- the log-linear model
+handles that with an interaction term. It is dependence between a detector and
+the process that generated the sampling frame, which the log-linear family
+cannot express at all, and which would be absorbed silently into an inflated
+prevalence and an inflated corpus specificity.
+
+Hence specification S5 (three latent classes, {real word, OCR-artifact,
+neither}) and stopping rule SR3. PROTOCOL.md §2.4, §4, §7.
+
+NEVER binarise this source on raw frequency. Where a binary column is needed the
+threshold is on volume-level dispersion, declared here before fitting and
+reported with a sensitivity analysis.
+"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Worked example 4 — Wiktionary titles. Already cached; real hash.
+#  Exercises the screen-vs-verdict distinction and a normalization override.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[[source]]
+id               = "wiktionary_titles"
+group            = "lexicographic"
+url              = "https://dumps.wikimedia.org/enwiktionary/latest/enwiktionary-latest-all-titles-in-ns0.gz"
+sha256           = "468b58bc03f0d8e69b7df0c90c2ac3841be288acd5afe3b052939d70e44d633c"
+retrieved        = 2026-08-15
+dump_date        = 2026-08-04          # from the Wikimedia index listing
+licence          = "CC-BY-SA-4.0"
+redistributable  = true
+normalization    = "inherit"
+expansion        = "none"
+record_count     = 4416714
+derives_from     = []
+frame_dependency = false
+binary           = true
+peak_disk_mb     = 28
+artifact_bytes   = 27792989
+notes = """
+A SCREEN, NOT A VERDICT. A title exists if ANY language uses that spelling.
+record_count = 4,416,714 is titles in all languages matching the pinned filter.
+English must be confirmed separately -- `agiler` has a page because it is
+German -- via the `== English ==` section, over the API or from the article
+dump. That confirmation is a SEPARATE source id (`wiktionary_english`) with its
+own record_count, and it is the one that enters the model. This entry is
+retained because the screen is what makes the confirmation affordable.
+
+Reusable implementation: scripts/wiktionary.py already does both halves.
+"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Remaining sources — declared, not yet ingested. Phase 1 fills each in.
+#  Sizes were probed 2026-08-16; see research/FEASIBILITY.md.
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#   id                       group           artifact_bytes   licence / note
+#   ─────────────────────────────────────────────────────────────────────────
+#   wiktionary_english       lexicographic    1622726291      CC-BY-SA-4.0, streamed
+#   web2                     lexicographic       2493885      public domain (1934);
+#                                                             sha256 be41ad97...bab9,
+#                                                             record_count 234,428.
+#                                                             Lineage independent of
+#                                                             every modern source.
+#   hunspell_en_GB           lexicographic       1230571      derives_from scowl,
+#                                                             hunspell_en_US
+#   hunspell_en_CA           lexicographic        551583      "
+#   hunspell_en_AU           lexicographic        554336      "
+#   enable1                  wordlist            1743363      public domain
+#   sowpods_legacy           wordlist            2707014      freely mirrored
+#   scowl                    wordlist            2569810      ORDINAL, not ten binary
+#                                                             columns: tiers 10..95 are
+#                                                             nested by construction.
+#                                                             Value = smallest tier
+#                                                             containing the string.
+#   nwl2023                  wordlist            7560173      PROPRIETARY (NASPA):
+#                                                             redistributable = false
+#   csw21                    wordlist           12579093      PROPRIETARY (Collins):
+#                                                             redistributable = false
+#   wordfreq                 corpus             56800000      MIT; NOT INSTALLED;
+#                                                             derives_from google_books,
+#                                                             wikipedia, subtitles
+#
+# redistributable = false means: per-source sensitivity/specificity and the
+# pattern table are published; the raw per-word column is NOT. The
+# reproducibility package ships a fetch script for those two, not the data.

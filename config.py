@@ -74,14 +74,24 @@ HF_DATASET_PRIVATE = False
 # UPDATE PIPELINE CONFIGURATION
 # =============================================================================
 
-# Validation rules (Scrabble-compatible)
+# Validation rules.
+#
+# NOT Scrabble-compatible, deliberately, since 2026-08-16. Both length bounds
+# were removed because both excluded real English: the 2-character minimum ruled
+# out `a` and `i`, and the 45-character maximum ruled out
+# `phosphoribosylaminoimidazolesuccinocarboxamide`, which is 46 and carries a
+# Wiktionary English entry. Chemical nomenclature is productive, so any ceiling
+# is arbitrary. See PROTOCOL.md §1.3 and research/DECISIONS.md D-025.
 VALIDATION_RULES = {
     "lowercase_only": True,
     "alphabetic_only": True,
     "no_proper_nouns": True,
-    "min_length": 2,
-    "max_length": 45,  # Longest English word is ~45 chars
 }
+
+#: Not a validation rule — an ingest integrity check against concatenation bugs.
+#: A candidate longer than this is flagged and needs a recorded reason before it
+#: enters the frame. The longest string in the universe today is 63 characters.
+LENGTH_FLAG_OVER = 100
 
 # Scheduling
 UPDATE_SCHEDULE = "daily"  # "daily" or "weekly"

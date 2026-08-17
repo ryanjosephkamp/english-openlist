@@ -1,14 +1,20 @@
-# Words this project moved off the valid list.
+# Words the nightly run must look at again, and would otherwise miss.
 #
-# They are here because no dictionary we could reach recognised
-# them on the day they were demoted -- which is not the same as
-# their not being words. The nightly run reserves part of each
-# night for this queue and ignores the pre-filter that would
-# otherwise hide the longer ones, so every one of them gets
-# looked at again. See corrections/README.md.
+# Three kinds live here:
 #
-# Demoted 2026-08-14 by stage 4: gerund plurals, verb forms and agent-noun plurals. The 28,605 synthetic plurals were deliberately left alone.
-# 33594 words
+#   * words this project moved off the valid list. No dictionary we
+#     could reach recognised them on the day they were demoted, which
+#     is not the same as their not being words.
+#   * candidates added by a correction, which have never been looked up.
+#   * single letters, which the pre-filter cannot pass at any value:
+#     is_likely_english drops anything under 3 characters, and its
+#     vowel-ratio band cannot be satisfied by a 1-character string.
+#
+# The nightly reserves part of each night for this queue and ignores the
+# pre-filter that would otherwise hide the shortest and longest entries,
+# so every one of them gets looked at. See corrections/README.md.
+#
+# 33647 words
 abacavired
 abacaviring
 abacteremicer
@@ -1607,6 +1613,7 @@ azonalest
 azoticer
 azoticest
 azurer
+b
 baahings
 baaings
 babbiest
@@ -3163,6 +3170,7 @@ buzzlesser
 buzzlessest
 bylinings
 byplayers
+c
 caballings
 cabbagings
 cabbings
@@ -4299,6 +4307,7 @@ closabler
 closablest
 closeabler
 closeablest
+closeknit
 closurings
 clotheslinings
 clothespinnings
@@ -5413,6 +5422,7 @@ custardliker
 custardlikest
 customisings
 customizings
+customtailored
 cutined
 cutining
 cutinisings
@@ -5611,6 +5621,7 @@ cytolysessed
 cytonemesed
 czardased
 czardasing
+d
 dackerings
 dactylated
 dactylating
@@ -6932,6 +6943,7 @@ direstest
 dirgefuler
 dirgefulest
 dirlings
+dirtpoor
 dirtyings
 disabusings
 disaccordings
@@ -7619,6 +7631,7 @@ dysgonicer
 dysgonicest
 dysphemizings
 dysregulatings
+e
 eaglings
 earlybirder
 earmuffing
@@ -9067,6 +9080,7 @@ eyemasked
 eyemasking
 eyestrained
 eyewitnessings
+f
 fablings
 fabricabler
 fabricablest
@@ -10369,6 +10383,7 @@ futzings
 fuzzifyings
 fuzzings
 fuzztoning
+g
 gabardining
 gabblings
 gabbroed
@@ -10881,6 +10896,7 @@ godlesser
 godlessest
 godmotherings
 godparentings
+gogetting
 gogglings
 goldarning
 goldbrickings
@@ -11147,6 +11163,7 @@ gyroscopings
 gyttjaed
 gyttjaing
 gyvings
+h
 haared
 habaneroed
 habaneroing
@@ -11268,6 +11285,7 @@ haltlessest
 hamarticer
 hamarticest
 hambonings
+hammerandtongs
 hammerings
 hammiers
 hammockings
@@ -11320,7 +11338,9 @@ harbormastering
 harborsided
 hardbacked
 hardbounder
+hardnosed
 hardscrabblest
+hardshell
 hardwirings
 harebelled
 harebelling
@@ -11816,6 +11836,8 @@ higglings
 highballings
 highbusher
 highbushest
+highmuck
+highrolling
 hightailings
 hijabber
 hilloaings
@@ -12693,6 +12715,9 @@ ileostomating
 illegalizings
 illegitimated
 illegitimating
+illfated
+illfavored
+illhumored
 illited
 illuminings
 illusionarier
@@ -13896,6 +13921,7 @@ iterabler
 iterablest
 iteratings
 itineratings
+j
 jabberings
 jackfisher
 jackhammerings
@@ -13933,6 +13959,7 @@ jauncings
 jaundicings
 jaupings
 javelinings
+jawdropping
 jawings
 jaywalkings
 jeeings
@@ -14029,6 +14056,7 @@ juteliker
 jutelikest
 juvieer
 juvieest
+k
 kaganated
 kaganating
 kakabeaked
@@ -14236,6 +14264,7 @@ knackings
 kneadabler
 kneadablest
 kneeboardings
+kneejerk
 knellings
 knemometered
 knemometering
@@ -14269,6 +14298,7 @@ kvassing
 kvellings
 kyanisings
 kyanizings
+l
 laagerings
 labdanicest
 labefacteder
@@ -14787,6 +14817,8 @@ liguliflorousest
 liguloider
 liguloidest
 liltings
+lilylivered
+lilywhite
 limbating
 limboings
 limelesser
@@ -14937,6 +14969,7 @@ longisher
 longishest
 longjumpings
 longlinings
+longsuffering
 looeded
 looniers
 loopings
@@ -15056,6 +15089,7 @@ lysozymaler
 lysozymalest
 lyxonicer
 lyxonicest
+m
 macadamizings
 maceratings
 machinatings
@@ -16964,6 +16998,7 @@ mythicer
 mythicest
 mythicizings
 mythopoeticest
+n
 nabbings
 naffings
 naganased
@@ -18581,6 +18616,7 @@ noriticer
 noriticest
 normalisings
 normalizings
+norteno
 northerner
 nosebleeded
 nosebleeding
@@ -18638,6 +18674,7 @@ nutatings
 nutrixed
 nutrixing
 nymphings
+o
 oakened
 oakening
 oakgaller
@@ -18809,6 +18846,7 @@ offishest
 offlinest
 offprintings
 offsettings
+offthecuff
 offtrackings
 oglings
 ogreisher
@@ -20202,6 +20240,7 @@ ozonosonded
 ozonosonding
 ozonousest
 ozotyper
+p
 pabularer
 pabularest
 pachucoed
@@ -21485,6 +21524,7 @@ photoradiographicer
 photoradiographicest
 photoreactings
 photoreactivatings
+photorealistic
 photoreducers
 photoreducings
 photoregeneratings
@@ -23497,6 +23537,7 @@ pyroxeniticer
 pyroxeniticest
 pyrrhicer
 pyrrhicest
+q
 qaided
 qaiding
 quadchromaticer
@@ -23821,6 +23862,7 @@ qurultaied
 qurultaiing
 qwertied
 qwertying
+r
 rababbed
 rababbing
 rabbinated
@@ -24001,6 +24043,7 @@ raftings
 raggediers
 raggings
 raggled
+raggletaggle
 raggling
 ragings
 raglanned
@@ -25704,6 +25747,7 @@ ruthfuller
 ruthfullest
 ruttings
 rykings
+s
 sabayoned
 sabayoning
 sabbings
@@ -26287,8 +26331,10 @@ selenophenolated
 selenophenolating
 selenosulfided
 selenosulfiding
+selfexaminatio
 selfhealer
 selfings
+selfsupporting
 sellabler
 sellablest
 sellings
@@ -27006,6 +27052,7 @@ slamdancings
 slangings
 slanguaged
 slanguaging
+slashandburn
 slaughterouser
 slaughterousest
 slayabler
@@ -27066,6 +27113,7 @@ slowburned
 slowfoxer
 slowings
 slowpoked
+slowwitted
 sloyded
 sloyding
 slubberings
@@ -29072,6 +29120,7 @@ syrupped
 syrupping
 systematisings
 systemizings
+t
 tabbyings
 taberings
 tabernaclings
@@ -29894,6 +29943,7 @@ toluenesulfonating
 tomahawkings
 tombings
 tomcattings
+tommade
 tongings
 tonguewormed
 tongueworming
@@ -30646,6 +30696,7 @@ typologizings
 tyrosinating
 tyrphostined
 tyrphostining
+u
 ubersexualer
 ubersexualest
 ubiquisticer
@@ -32518,6 +32569,7 @@ uptightest
 uptilter
 uptitratings
 uptossings
+uptotheminute
 upturnings
 upvotings
 upwaftings
@@ -32596,6 +32648,7 @@ uvularizinger
 uvularizingest
 uxoriouser
 uxoriousest
+v
 vacanter
 vagabondings
 vagariouser
@@ -33051,6 +33104,7 @@ vulgarizings
 vulvated
 vulvating
 vulvitiser
+w
 wackers
 waddlings
 waddyings
@@ -33185,6 +33239,7 @@ welchings
 weldabler
 weldablest
 weldings
+wellinformed
 wellsiter
 welshings
 weltschmerzer
@@ -33438,6 +33493,7 @@ wryings
 wuddest
 wutherings
 wytings
+x
 xanthicer
 xanthicest
 xanthogenamided
@@ -33454,6 +33510,7 @@ xylemming
 xylographings
 xylulosed
 xylulosing
+y
 yabberings
 yabbied
 yabbying
@@ -33515,6 +33572,7 @@ yuppifyings
 yurted
 yutzed
 yutzing
+z
 zabumbaed
 zabumbaing
 zacater
@@ -33577,6 +33635,7 @@ zoidogamouser
 zombifyings
 zonating
 zonings
+zonkedout
 zonkings
 zoologizings
 zoophiler

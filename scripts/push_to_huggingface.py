@@ -183,19 +183,32 @@ class HuggingFaceUploader:
             logger.error(f"Upload failed: {e}")
             return False
     
-    def upload_full_wordlists(self) -> bool:
+    def upload_full_wordlists(self, message: Optional[str] = None,
+                              data_dir: Optional[Path] = None) -> bool:
         """
         Upload the FULL word lists to Hugging Face.
-        
+
         This uploads the complete merged word lists and dictionaries to the
         data/ folder, allowing users to download the full dataset.
-        
+
         Files uploaded:
         - data/merged_valid_words.txt     - Complete valid word list
         - data/merged_valid_dict.json     - Complete valid dictionary with metadata
-        - data/merged_invalid_words.txt   - Complete invalid word list  
+        - data/merged_invalid_words.txt   - Complete invalid word list
         - data/merged_invalid_dict.json   - Complete invalid dictionary
-        
+
+        Args:
+            message: Commit message. Defaults to "Update full wordlist: <path>",
+                which is right for the nightly and wrong for everything else. A
+                correction or a rule change should say so in the dataset's own
+                history, since that is where someone will look for it later.
+            data_dir: Where to read the four files from. Defaults to
+                `initial_deliverables/`, which is where the nightly's download
+                step puts them. Every correction script in this project works
+                against `.cache/hf` instead (`--data-dir .cache/hf`), so a push
+                that follows a correction needs to be pointed at the same place
+                rather than silently uploading whatever the nightly left behind.
+
         Returns:
             True if upload successful
         """
@@ -205,12 +218,21 @@ class HuggingFaceUploader:
         if not self.ensure_repo_exists():
             return False
         
-        files_to_upload = [
-            (VALID_WORDS_FILE, "data/merged_valid_words.txt"),
-            (VALID_DICT_FILE, "data/merged_valid_dict.json"),
-            (INVALID_WORDS_FILE, "data/merged_invalid_words.txt"),
-            (INVALID_DICT_FILE, "data/merged_invalid_dict.json"),
-        ]
+        if data_dir is None:
+            files_to_upload = [
+                (VALID_WORDS_FILE, "data/merged_valid_words.txt"),
+                (VALID_DICT_FILE, "data/merged_valid_dict.json"),
+                (INVALID_WORDS_FILE, "data/merged_invalid_words.txt"),
+                (INVALID_DICT_FILE, "data/merged_invalid_dict.json"),
+            ]
+        else:
+            files_to_upload = [
+                (data_dir / "merged_valid_words.txt", "data/merged_valid_words.txt"),
+                (data_dir / "merged_valid_dict.json", "data/merged_valid_dict.json"),
+                (data_dir / "merged_invalid_words.txt", "data/merged_invalid_words.txt"),
+                (data_dir / "merged_invalid_dict.json", "data/merged_invalid_dict.json"),
+            ]
+            logger.info("Reading word lists from %s", data_dir)
         
         all_success = True
         for local_path, remote_path in files_to_upload:
@@ -224,7 +246,7 @@ class HuggingFaceUploader:
                     path_in_repo=remote_path,
                     repo_id=self.repo_id,
                     repo_type="dataset",
-                    commit_message=f"Update full wordlist: {remote_path}"
+                    commit_message=(message or f"Update full wordlist: {remote_path}")
                 )
                 logger.info(f"Uploaded {local_path.name} to {remote_path}")
             except Exception as e:
@@ -320,6 +342,13 @@ def main():
     parser.add_argument("--skip-brrrdle", action="store_true", help="Skip uploading Brrrdle artifacts")
     parser.add_argument("--only-full", action="store_true", help="Only upload full word lists (skip release)")
     parser.add_argument("--update-readme", action="store_true", help="Update the dataset card (README.md)")
+    parser.add_argument("--data-dir", type=Path,
+                        help="Read the four word-list files from here instead of "
+                             "initial_deliverables/. Use --data-dir .cache/hf after "
+                             "applying a correction ledger.")
+    parser.add_argument("--message", help="Commit message for the full word lists. "
+                        "Use it whenever the push is not the nightly — a correction or a rule "
+                        "change should say so in the dataset history.")
     args = parser.parse_args()
     
     uploader = HuggingFaceUploader()
@@ -349,7 +378,8 @@ def main():
 
     # Upload full word lists unless --skip-full is set
     if not args.skip_full:
-        full_success = uploader.upload_full_wordlists()
+        full_success = uploader.upload_full_wordlists(
+            message=args.message, data_dir=args.data_dir)
         if full_success:
             print("✓ Uploaded full word lists to data/")
         else:

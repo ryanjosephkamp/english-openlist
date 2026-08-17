@@ -21,15 +21,23 @@ export const EXPECTED = {
    *   378,891 -> 362,415  16,476 comparatives and superlatives
    *   362,415 -> 345,297  17,118 gerund plurals, verb forms, agent plurals
    *
-   * Those are the only sanctioned shrinks. Another one is a bug until someone
-   * writes it down here.
+   * A third, on 2026-08-16, for a different reason — the form rules changed
+   * (D-025) and the list was corrected to match them:
+   *
+   *   345,301 -> 345,103  190 entries that never satisfied the form rule
+   *                       (188 hyphenated, 2 accented), plus 8 single letters
+   *                       moved to candidate status. `a` and `i` stay.
+   *
+   * That is the whole of it, and the floor moves from 345,200 to 345,000 to
+   * match. Those are the only sanctioned shrinks. Another one is a bug until
+   * someone writes it down here.
    *
    * The 28,605 synthetic plurals were deliberately NOT demoted: Merriam-Webster
    * could rule on only 9.2% of their stems and accepted four of the eleven it
    * could, so demoting them would have discarded real words like
    * `bioterrorisms`. See corrections/README.md.
    */
-  words: { min: 345_200, max: 400_000 },
+  words: { min: 345_000, max: 400_000 },
 
   /**
    * Intake shares, as a fraction of the list. The measured split on 2026-08-14,
@@ -89,8 +97,22 @@ export const EXPECTED = {
    */
   alsoInvalid: { min: 0, max: 0 },
 
-  /** 190 words contain something outside `a-z` — 188 hyphenated, 2 accented. */
-  nonAlpha: { min: 150, max: 250 },
+  /**
+   * Zero, and now an invariant rather than a range.
+   *
+   * There were 190 until 2026-08-16 — 188 hyphenated and 2 accented — all of
+   * them predating the form rule being written down anywhere. This build has in
+   * fact been shipping a "Strictly a–z" download that excluded exactly those
+   * 190 since before anyone noticed the list itself still carried them.
+   *
+   * They were deleted through corrections/ledger_form_rules.csv, and the form
+   * rule `^[a-z]+$` is now enforced in scripts/word_validator.py, so nothing can
+   * legitimately reappear here.
+   *
+   * If this ever goes above zero, an ingest path has stopped validating.
+   * Widening the bound is the wrong fix — the same posture as `alsoInvalid`.
+   */
+  nonAlpha: { min: 0, max: 0 },
 
   /**
    * 6,680 words carry no date in any of the three fields that can hold one.

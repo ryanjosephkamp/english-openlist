@@ -1,13 +1,32 @@
 """
 Word Validator
-Validates words against Scrabble-compatible rules.
+Validates words against the English OpenList form rules.
+
+The whole rule is ``^[a-z]+$``. There is no length bound.
+
+**This is deliberately not Scrabble-compatible**, as of 2026-08-16. The list had
+inherited a 2-character minimum and a 45-character maximum from Scrabble
+tournament dictionaries, and both excluded strings that are words of English:
+
+* the minimum excluded ``a`` and ``i``. No Scrabble list can hold them — ENABLE,
+  SOWPODS, NWL2023 and CSW21 have zero one-letter entries between them.
+* the maximum excluded ``phosphoribosylaminoimidazolesuccinocarboxamide``, which
+  is 46 characters and carries a Wiktionary English entry. Chemical nomenclature
+  is productive and unbounded, so any numeric ceiling is arbitrary.
+
+Removing the ceiling admits nothing unwanted: the over-length strings that were
+being caught are Welsh, Māori and Fijian place names, and they are excluded for
+being proper nouns, which is what should have been excluding them all along.
+
+``config.LENGTH_FLAG_OVER`` replaces the ceiling with an *integrity* check —
+a guard against concatenation bugs, not a statement about wordhood.
+
+See PROTOCOL.md §1.3 and research/DECISIONS.md D-025.
 
 Rules:
 1. Lowercase letters only (a-z)
 2. No proper nouns
-3. Minimum length of 2 characters
-4. Maximum length of 45 characters
-5. No abbreviations or acronyms (handled via dictionary API)
+3. No abbreviations or acronyms (handled via dictionary API)
 """
 
 import re
@@ -34,11 +53,11 @@ class ValidationResult:
 class WordValidator:
     """
     Validates words against configurable rules.
-    
-    Default rules follow Scrabble guidelines:
+
+    Default rules:
     - Lowercase alphabetic characters only
     - No proper nouns
-    - Length between 2 and 45 characters
+    - No length bound (see the module docstring for why)
     """
     
     def __init__(self, rules: Optional[dict] = None):
@@ -98,24 +117,24 @@ class WordValidator:
                     reason="Contains non-alphabetic characters"
                 )
         
-        # Check minimum length
-        min_length = self.rules.get("min_length", 2)
-        if len(word) < min_length:
+        # Length bounds are only applied if a caller asks for them explicitly.
+        # The default rules carry neither: see the module docstring and D-025.
+        min_length = self.rules.get("min_length")
+        if min_length is not None and len(word) < min_length:
             return ValidationResult(
                 word=original_word,
                 is_valid=False,
                 reason=f"Too short (min {min_length} characters)"
             )
-        
-        # Check maximum length
-        max_length = self.rules.get("max_length", 45)
-        if len(word) > max_length:
+
+        max_length = self.rules.get("max_length")
+        if max_length is not None and len(word) > max_length:
             return ValidationResult(
                 word=original_word,
                 is_valid=False,
                 reason=f"Too long (max {max_length} characters)"
             )
-        
+
         # All checks passed
         return ValidationResult(
             word=word,
@@ -169,6 +188,25 @@ class WordValidator:
             return True
         
         return False
+
+
+def exceeds_length_flag(word: str, threshold: Optional[int] = None) -> bool:
+    """
+    Ingest integrity check, not a validation rule.
+
+    A candidate this long is far more likely to be a concatenation bug — lost
+    spaces during a scan, a field boundary crossed — than a word. It is flagged
+    for a recorded reason rather than rejected, because the rule change of
+    2026-08-16 deliberately removed the length ceiling and this must not
+    reintroduce one by the back door.
+
+    Nothing in the candidate universe currently trips it; the longest string is
+    63 characters.
+    """
+    if threshold is None:
+        from config import LENGTH_FLAG_OVER
+        threshold = LENGTH_FLAG_OVER
+    return len(word or "") > threshold
 
 
 class ProperNounDetector:
@@ -280,9 +318,13 @@ if __name__ == "__main__":
         "Hello",       # Invalid (mixed case)
         "hello123",    # Invalid (numbers)
         "hello-world", # Invalid (hyphen)
-        "a",           # Invalid (too short)
-        "hi",          # Valid (min length)
-        "supercalifragilisticexpialidocious",  # Valid (long but OK)
+        "a",           # Valid since 2026-08-16 — the indefinite article
+        "i",           # Valid since 2026-08-16 — the pronoun
+        "hi",          # Valid
+        "supercalifragilisticexpialidocious",  # Valid
+        # 46 characters, attested in Wiktionary. Valid since 2026-08-16; the
+        # 45-character Scrabble ceiling was the only thing excluding it.
+        "phosphoribosylaminoimidazolesuccinocarboxamide",
         "",            # Invalid (empty)
         "café",        # Invalid (non-ASCII)
     ]
