@@ -114,3 +114,12 @@ Thumbs.db
 
 # pytest
 .pytest_cache/
+
+# Phase 1 evidence layer — derived data is reproducible from the manifest;
+# adjudication logs are personal working data bound for the private archive
+research/data/
+research/adjudicate/logs/
+research/adjudicate/decks/
+# The per-source frame-contribution summary is a RESULT the SR2 report cites,
+# a few hundred bytes — it survives the blanket *.json like the others above.
+!research/frame_contributions.json

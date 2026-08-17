@@ -664,3 +664,76 @@ runs ahead of the artifact is worse than documentation that lags it.
 The governance documents are the exception and are updated immediately: they
 describe *intent and method*, they are uncommitted, and their entire job is to be
 correct before the work rather than after.
+
+---
+
+## D-030 — Corpus sources provide features over the frame, never frame membership
+
+**2026-08-17** · settled
+
+D-026 makes every ingested source contribute its form-valid strings to the
+candidate frame. Phase 1 implementation forced the question it left open: does
+that include the corpus sources? **No.** The frame is augmented by the binary
+detector sources only — WordNet, Wiktionary-English, web2, the four hunspells,
+ENABLE, SOWPODS, NWL2023, CSW21, SCOWL. Google Books and wordfreq contribute
+feature columns over whatever frame exists, and nothing to its membership.
+
+**Rationale.** Four reasons, in decreasing order of force.
+
+- **D-026's own wording couples membership to detectorhood** — "contributes its
+  form-valid strings to the candidate frame *as well as a detector column*."
+  Google Books never gets a detector column: §2.4 measured why it cannot be
+  binarised, and wordfreq's membership IS a frequency threshold, which is the
+  same prohibition. Sources that contribute no detector contribute no members.
+- **The mechanical consequence would gut SR2.** Google Books contains millions
+  of form-valid OCR types that no curated source lists. Adding them wholesale
+  puts an enormous all-zero-on-every-detector mass into the frame *by
+  construction* — the stopping rule would fire not as a measurement but as an
+  arithmetic identity, which tells nobody anything.
+- **It would triple the sampling-frame contamination §2.4 exists to contain.**
+  The candidate set is OCR-derived; so is Google Books. A frame defined as
+  "every string Google ever scanned" is the contaminated population at full
+  scale, and S5 would be asked to carry the whole load.
+- **Population semantics.** The paper describes the frame as "strings asserted
+  by the inherited list or by a curated source". That is a population someone
+  can reason about. "Strings observed at least 40 times in scanned books" is a
+  different and worse one.
+
+**The cost is visible, not hidden:** the SR2 report states how many form-valid
+Google Books types the frame declines to include. Words in books that no list
+ever caught are exactly what the capture–recapture estimate is *for* — they are
+estimated, not enumerated.
+
+---
+
+## D-031 — Case conventions are per-source, pinned by the recorded tripwires
+
+**2026-08-17** · settled
+
+The pinned normalization casefolds. Two sources qualify how they meet it, and
+the tripwire numbers recorded in CLAUDE.md §4 already encode both conventions —
+this entry writes down what those numbers imply so nobody re-derives it wrong.
+
+- **Wiktionary is case-sensitive by design**: `polish` and `Polish` are
+  different pages describing different lemmas. Its ingest therefore accepts
+  lowercase titles only, rather than casefolding capitalized titles onto
+  lowercase keys — folding would inject every capitalized proper-noun page
+  into a *lexicographic detector* as evidence for the common word. The
+  recorded title tripwire (4,416,714 under the old rule; 4,416,747 under
+  `^[a-z]+$`, the +33 being exactly the 26 letters and 7 long titles) was
+  measured under this convention.
+- **Flat word lists casefold** (WordNet, web2, ENABLE, SOWPODS, NWL, CSW,
+  SCOWL, hunspell): their capitalization is orthographic, not lexical, and the
+  recorded tripwires (77,503 WordNet keys, 57,977 ∩ valid, 234,454 web2) were
+  measured under casefold.
+- **Google Books casefolds and sums**: it is a corpus of occurrences, not
+  lemmas. Case variants of one word in one year can share volumes, so summed
+  volume_count overcounts for capitalization-heavy words — recorded in the
+  manifest as a documented bias on a feature, acceptable where it would not be
+  on a count.
+
+**Rationale.** One rule applied blindly would be simpler and wrong twice over:
+casefolded Wiktionary titles would hand `london` a dictionary detection, and
+lowercase-only word lists would drop every entry NWL prints in capitals — which
+is all of them. The conventions follow what each source's case actually means,
+and the tripwires freeze them.

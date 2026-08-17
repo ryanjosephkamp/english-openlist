@@ -99,29 +99,33 @@ and `sources/MANIFEST.toml`:
 
 > `NFC; casefold; accept iff ^[a-z]+$`
 
+**Tripwires are pinned to HF revision `c1139698` (2026-08-17)** — the revision
+that published the D-025 correction, and the revision Phase 1 reads. The
+nightly moves the valid/invalid *split* daily; the universe and the source
+counts do not move.
+
 | Quantity | Count |
 |---|---:|
-| valid list — raw lines | 345,297 |
-| invalid list — raw lines | 9,308,855 |
-| **raw universe (line count)** | **9,654,152** |
-| **form-valid universe** | **9,653,962** |
-| outstanding form violations | 190 (188 hyphenated, 2 accented) |
-| WordNet lemmas | 77,503 |
-| valid ∩ WordNet | 57,977 |
-| Wiktionary a–z titles (all languages) | 4,416,714 |
-| web2 entries | 234,428 |
-| no lexicographic evidence (wn/wkt/web2 all zero) | 8,261,454 (85.57%) |
+| valid list at the pin | 345,103 |
+| invalid list at the pin | 9,308,896 |
+| **universe (zero form violations)** | **9,653,999** |
+| WordNet keys | 77,503 |
+| valid ∩ WordNet at the pin | 57,970 |
+| Wiktionary lowercase titles (all languages) | 4,416,747 |
+| Wiktionary titles with an `== English ==` section | 775,869 |
+| web2 keys | 234,454 |
 
-**Never use 9,654,152 where you mean 9,653,962.** The first counts lines, the
-second counts strings that satisfy the form rule.
+**Every superseded figure is explained, not merely replaced.** 57,977 → 57,970
+is −8 demoted letters (D-027) +1 `mavik` (nightly promotion, in WordNet).
+234,428 → 234,454 and 4,416,714 → 4,416,747 are exactly the 1-character and
+>45-character keys D-025 legalised (+26/+26+7). 77,477 → 77,503 likewise. The
+old 9,654,152 / 9,653,962 / “190 outstanding violations” state predates the
+published correction; both lists now satisfy the form rule with zero
+exceptions, so the raw-lines-versus-form-valid distinction is gone.
 
-**The old `^[a-z]{2,45}$` filter produced 77,477 and 57,967** for the two WordNet
-figures. If you meet those numbers in an old document, it predates D-025. Under
-`^[a-z]+$` the strict and loose filters agree exactly, so the tripwire no longer
-drifts.
-
-If a measurement disagrees with these, **check the filter before concluding the
-data changed.**
+If a measurement disagrees with these, **check the filter and the revision
+before concluding the data changed** — and if the data did change, explain the
+delta to the digit before accepting it, the way the entries above do.
 
 ---
 
