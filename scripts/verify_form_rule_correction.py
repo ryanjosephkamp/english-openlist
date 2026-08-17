@@ -42,7 +42,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--before", type=Path, required=True)
     ap.add_argument("--after", type=Path, required=True)
-    ap.add_argument("--ledger", type=Path, required=True)
+    ap.add_argument("--ledger", type=Path, required=True, action="append",
+                    help="repeat once per ledger applied; all are verified together")
     args = ap.parse_args()
 
     bv = load(args.before / "merged_valid_words.txt")
@@ -50,9 +51,14 @@ def main():
     av = load(args.after / "merged_valid_words.txt")
     ai = load(args.after / "merged_invalid_words.txt")
 
-    rows = list(csv.DictReader(open(args.ledger, encoding="utf-8", newline="")))
+    rows = []
+    for lp in args.ledger:
+        rows += list(csv.DictReader(open(lp, encoding="utf-8", newline="")))
     led_del = {r["word"] for r in rows if r["action"] == "delete_malformed"}
     led_add = {r["word"] for r in rows if r["action"] == "add_candidate"}
+    led_demote = {r["word"] for r in rows if r["action"] == "demote_to_invalid"}
+    print(f"verifying {len(args.ledger)} ledger(s), {len(rows)} rows: "
+          f"{len(led_del)} delete, {len(led_add)} add, {len(led_demote)} demote")
 
     print("\n=== 1. no word was lost or gained without the ledger saying so ===")
     lost = (bv | bi) - (av | ai)
@@ -68,15 +74,19 @@ def main():
     check(not (led_del - lost), "every ledger deletion actually happened")
     check(not (led_add - gained), "every ledger addition actually happened")
 
-    print("\n=== 2. nothing crossed between lists unintentionally ===")
-    promoted = (av - bv) - led_add          # invalid -> valid, not from the ledger
-    demoted = (ai - bi) - led_add           # valid -> invalid, not from the ledger
-    check(not promoted, "no word moved invalid -> valid",
+    print("\n=== 2. every list crossing is named by a ledger ===")
+    promoted = (av - bv) - led_add          # arrived on valid, not via the ledger
+    demoted = (ai - bi) - led_add - led_demote
+    check(not promoted, "nothing appeared on the valid list unbidden",
           f"{sorted(promoted)[:5]}")
-    check(not demoted, "no word moved valid -> invalid",
+    check(not demoted, "nothing appeared on the invalid list unbidden",
           f"{sorted(demoted)[:5]}")
-    check((bv - av) == led_del & bv, "valid list lost exactly its ledger deletions")
+    check((bv - av) == (led_del | led_demote) & bv,
+          "valid list lost exactly its deletions and demotions")
     check((bi - ai) == led_del & bi, "invalid list lost exactly its ledger deletions")
+    check(led_demote <= ai, "every demoted word landed on the invalid list",
+          f"missing={sorted(led_demote - ai)[:5]}")
+    check(not (led_demote & av), "no demoted word is still on the valid list")
 
     print("\n=== 3. the form rule now holds everywhere ===")
     bad_v = [w for w in av if not FORM_RULE.match(w)]
@@ -92,7 +102,10 @@ def main():
     check(after_n == 9653999, "universe after  = 9,653,999", f"got {after_n:,}")
     check(before_n - len(led_del) + len(led_add) == after_n,
           f"{before_n:,} - {len(led_del)} + {len(led_add)} = {after_n:,}")
-    check(len(av) == 345107, "valid list = 345,107", f"got {len(av):,}")
+    check(len(av) == 345099, "valid list = 345,099", f"got {len(av):,}")
+    check(len(bv) - len(led_del & bv) - len(led_demote) == len(av),
+          f"valid list: {len(bv):,} - {len(led_del & bv)} deleted - "
+          f"{len(led_demote)} demoted = {len(av):,}")
 
     print("\n=== 5. the 19 attested concatenations ===")
     NINETEEN = ["photorealistic", "hardshell", "highhanded", "hardnosed", "kneejerk",
@@ -103,10 +116,14 @@ def main():
     check(len(present) == 19, "all 19 present in the frame", f"{len(present)}/19")
     check(all(w in ai for w in NINETEEN), "all 19 are candidates, none auto-promoted")
 
-    print("\n=== 6. the 26 single letters ===")
+    print("\n=== 6. the 26 single letters (D-027) ===")
     letters = "abcdefghijklmnopqrstuvwxyz"
     missing = [L for L in letters if L not in av and L not in ai]
     check(not missing, "all 26 letters present in the frame", f"missing={missing}")
+    valid_letters = sorted(L for L in letters if L in av)
+    check(valid_letters == ["a", "i"], "only 'a' and 'i' are asserted valid",
+          f"got {valid_letters}")
+    check(sum(1 for L in letters if L in ai) == 24, "the other 24 are candidates")
 
     print("\n=== 7. the dictionary tracks the valid list ===")
     d = json.load(open(args.after / "merged_valid_dict.json", encoding="utf-8"))
