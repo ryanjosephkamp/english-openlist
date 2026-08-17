@@ -737,3 +737,39 @@ casefolded Wiktionary titles would hand `london` a dictionary detection, and
 lowercase-only word lists would drop every entry NWL prints in capitals — which
 is all of them. The conventions follow what each source's case actually means,
 and the tripwires freeze them.
+
+---
+
+## D-032 — SR2 is evaluated under reading B; reading A becomes a reported diagnostic
+
+**2026-08-17** · settled · *ruled by the dataset owner on the Phase 1 report*
+
+SR2's operative test: the undifferentiated stratum is the set of frame words
+with an all-zero binary detector pattern AND no corpus data of any kind. At
+Phase 1 close that stratum holds **845,150 words — 8.63%** of the 9,787,841-word
+frame, passing the 50% threshold. Phase 2 proceeds.
+
+**Rationale.** The rule's motivation (§7) is "the majority of the population
+shares one posterior." Under S4/S5 the corpus features differentiate within a
+binary pattern — two all-zero words with different volume histories receive
+different posteriors — so the sharing SR2 forbids does not occur merely because
+the binary detectors are silent. Reading A, the tuple-of-detectors reading,
+fires at **90.50% by construction**: the curated detectors are near-subsets of
+one another, and no amount of curated ingest was going to differentiate an
+OCR-era candidate mass. What reading A measures is the limitation of the pure
+latent-class specifications S1–S3, not of the evidence layer.
+
+**Reading A's number is still reported in the paper**, as the honest bound for
+S1–S3: any specification that sees only the binary pattern hands one posterior
+to 8,858,214 words, and that sentence belongs in print next to the model
+comparison.
+
+**Recorded with the ruling:**
+
+- The 845,150 no-evidence words are the frame's hardest stratum and the
+  population estimate's blind spot — nothing anywhere attests them, so
+  capture–recapture extrapolates into them entirely on model structure.
+- **The Phase 4 adjudication sample must stratify over this stratum
+  explicitly**, not merely by posterior decile: posteriors inside it will
+  cluster, and a decile stratification alone could sample it almost entirely
+  from one cell.
