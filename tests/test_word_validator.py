@@ -64,12 +64,25 @@ class TestWordValidator:
         result = self.validator.validate("hello world")
         assert result.is_valid is False
     
-    def test_invalid_too_short(self):
-        """Test that single letters are rejected."""
+    def test_single_letter_a_is_valid(self):
+        """`a` is a word. The 2-character floor that excluded it was a Scrabble
+        convention, removed 2026-08-16 — see D-025."""
         result = self.validator.validate("a")
-        assert result.is_valid is False
-        assert "too short" in result.reason.lower()
-    
+        assert result.is_valid is True
+        assert result.word == "a"
+
+    def test_single_letter_i_is_valid(self):
+        """`i` likewise — the pronoun, not the glyph name."""
+        result = self.validator.validate("i")
+        assert result.is_valid is True
+
+    def test_every_single_letter_passes_the_form_rule(self):
+        """All 26 are form-legal. Which of them are *words* is decided by
+        evidence, not by this function — D-027."""
+        for letter in "abcdefghijklmnopqrstuvwxyz":
+            assert self.validator.validate(letter).is_valid is True, letter
+
+
     def test_invalid_empty(self):
         """Test that empty strings are rejected."""
         result = self.validator.validate("")
@@ -111,18 +124,29 @@ class TestWordValidator:
         assert result.is_valid is True
         assert result.word == "hello"
     
-    def test_exactly_max_length(self):
-        """Test word at exactly max length."""
-        word = "a" * 45
-        result = self.validator.validate(word)
-        assert result.is_valid is True
-    
-    def test_exceeds_max_length(self):
-        """Test word exceeding max length."""
-        word = "a" * 46
-        result = self.validator.validate(word)
-        assert result.is_valid is False
-        assert "too long" in result.reason.lower()
+    def test_forty_five_characters_still_valid(self):
+        """The old ceiling. Still fine, just no longer a boundary."""
+        assert self.validator.validate("a" * 45).is_valid is True
+
+    def test_attested_46_character_word_is_valid(self):
+        """The concrete word the 45-character ceiling was excluding. It carries
+        a Wiktionary English entry — D-025."""
+        word = "phosphoribosylaminoimidazolesuccinocarboxamide"
+        assert len(word) == 46
+        assert self.validator.validate(word).is_valid is True
+
+    def test_no_upper_length_bound_at_all(self):
+        """Chemical nomenclature is productive, so any ceiling is arbitrary."""
+        assert self.validator.validate("a" * 500).is_valid is True
+
+    def test_length_flag_is_not_a_validation_rule(self):
+        """A string over the integrity threshold is still form-valid. The flag
+        exists to catch concatenation bugs, and must not become a ceiling."""
+        from scripts.word_validator import exceeds_length_flag
+        long_string = "a" * 150
+        assert exceeds_length_flag(long_string) is True
+        assert self.validator.validate(long_string).is_valid is True
+        assert exceeds_length_flag("a" * 63) is False   # longest real candidate
 
 
 class TestCustomRules:
