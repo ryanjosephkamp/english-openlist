@@ -1,0 +1,79 @@
+{
+  "built": "2026-08-17",
+  "frame_rows": 9787841,
+  "partitions": {
+    "seed": "phase2-partitions-2026-08-17",
+    "rule": "sha256(seed:word) unit in [0,1): train<0.7, dev<0.8, else test",
+    "pool_rule": ">= 8 of 12 binary detectors",
+    "pool": 101385,
+    "train": 71095,
+    "dev": 10071,
+    "test": 20219,
+    "phase4_exclusion": "calibration items must exclude train+dev; re-derive by seed and rule above"
+  },
+  "charmodel": {
+    "order": 4,
+    "lambdas": [
+      0.0008599828649195751,
+      0.0032671246831199657,
+      0.02480422415507246,
+      0.12691810525639668,
+      0.8441505630404913
+    ],
+    "trained_on": "train types only",
+    "perplexity_test": 7.033954086733376,
+    "perplexity_train_slice": 6.542100712263142
+  },
+  "reference_lexicon": "wordnet u web2",
+  "ocr_pairs": [
+    [
+      "m",
+      "in"
+    ],
+    [
+      "rn",
+      "m"
+    ],
+    [
+      "l",
+      "i"
+    ],
+    [
+      "e",
+      "c"
+    ],
+    [
+      "c",
+      "e"
+    ],
+    [
+      "li",
+      "h"
+    ]
+  ],
+  "productivity": {
+    "measure": "REALIZED productivity V/N per affix (Baayen type-count family), NOT potential productivity P = n1/N",
+    "why": "the GB 2020 floor is 40 on match AND volume (both minima measured); hapaxes do not exist in the corpus under any definition, so P is not computable \u2014 the censoring is visible in the table's zero hapax columns",
+    "table": "research/productivity_table.json"
+  },
+  "dispersion": {
+    "computed": [
+      "gb_year_span",
+      "gb_span_fill",
+      "gb_tokens_per_volume",
+      "gb_volumes_per_year",
+      "gb_log10_match",
+      "gb_log10_volume"
+    ],
+    "not_computable": "Gries DP, Juilland D \u2014 need per-part counts; the ingest kept year-level totals only"
+  },
+  "zipf": {
+    "alpha": 1.5617227395371682,
+    "beta": 100.0,
+    "logC": 13.042100148185055,
+    "sse": 15.377127430970798,
+    "fit_points": 346,
+    "population": 14808627
+  },
+  "feature_detector_dependence": "reference lexicon and pool overlap the wordnet/web2 detector columns; declared for S4/S5 conditioning"
+}

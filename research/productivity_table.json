@@ -1,0 +1,490 @@
+{
+  "suffix:s": {
+    "N_tokens": 79643502079,
+    "V_types": 86364,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.0843822502221688e-06
+  },
+  "suffix:es": {
+    "N_tokens": 36341231949,
+    "V_types": 58948,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.6220693916685472e-06
+  },
+  "suffix:ed": {
+    "N_tokens": 56499875496,
+    "V_types": 39116,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 6.923201096747422e-07
+  },
+  "suffix:ing": {
+    "N_tokens": 35638660868,
+    "V_types": 34646,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 9.721465160636462e-07
+  },
+  "suffix:ings": {
+    "N_tokens": 1581007409,
+    "V_types": 9021,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 5.705855613735457e-06
+  },
+  "suffix:er": {
+    "N_tokens": 23985879510,
+    "V_types": 29043,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.210837400725357e-06
+  },
+  "suffix:ers": {
+    "N_tokens": 6105407280,
+    "V_types": 16815,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 2.7541160202501675e-06
+  },
+  "suffix:est": {
+    "N_tokens": 2046587687,
+    "V_types": 9242,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 4.51580944159174e-06
+  },
+  "suffix:ly": {
+    "N_tokens": 17291043362,
+    "V_types": 26032,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.505519328996059e-06
+  },
+  "suffix:ness": {
+    "N_tokens": 2116179854,
+    "V_types": 14617,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 6.907257893213078e-06
+  },
+  "suffix:nesses": {
+    "N_tokens": 124854065,
+    "V_types": 1066,
+    "n1_volume": 0,
+    "min_match_seen": 41,
+    "P_vol": 0.0,
+    "P_vn": 8.537967906771797e-06
+  },
+  "suffix:ish": {
+    "N_tokens": 954385884,
+    "V_types": 5823,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 6.101305664323929e-06
+  },
+  "suffix:able": {
+    "N_tokens": 2703143493,
+    "V_types": 8724,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 3.227353643116422e-06
+  },
+  "suffix:ible": {
+    "N_tokens": 961082779,
+    "V_types": 1572,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.6356551530718874e-06
+  },
+  "suffix:ation": {
+    "N_tokens": 7748863455,
+    "V_types": 8043,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.0379586692562257e-06
+  },
+  "suffix:ations": {
+    "N_tokens": 1872497566,
+    "V_types": 3304,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.7644882749075895e-06
+  },
+  "suffix:ize": {
+    "N_tokens": 278938520,
+    "V_types": 3182,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.1407531666834684e-05
+  },
+  "suffix:ise": {
+    "N_tokens": 238192331,
+    "V_types": 3206,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.3459711261652668e-05
+  },
+  "suffix:ized": {
+    "N_tokens": 765554361,
+    "V_types": 4985,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 6.511621191065228e-06
+  },
+  "suffix:ised": {
+    "N_tokens": 285507085,
+    "V_types": 2782,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 9.744066421328914e-06
+  },
+  "suffix:izes": {
+    "N_tokens": 64350659,
+    "V_types": 1241,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.928496179036799e-05
+  },
+  "suffix:ises": {
+    "N_tokens": 47072240,
+    "V_types": 1239,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 2.6321245812818767e-05
+  },
+  "suffix:izing": {
+    "N_tokens": 184011179,
+    "V_types": 2856,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.552079615771605e-05
+  },
+  "suffix:ising": {
+    "N_tokens": 139624671,
+    "V_types": 1723,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.2340226033549615e-05
+  },
+  "suffix:ic": {
+    "N_tokens": 3114828207,
+    "V_types": 14666,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 4.708445867749906e-06
+  },
+  "suffix:al": {
+    "N_tokens": 17054641416,
+    "V_types": 18603,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.0907881054917631e-06
+  },
+  "suffix:ous": {
+    "N_tokens": 1615339096,
+    "V_types": 5417,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 3.3534754488478004e-06
+  },
+  "suffix:ment": {
+    "N_tokens": 8075343585,
+    "V_types": 6058,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 7.501847984837167e-07
+  },
+  "suffix:ments": {
+    "N_tokens": 1951246039,
+    "V_types": 2751,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.4098683328576382e-06
+  },
+  "suffix:ity": {
+    "N_tokens": 5245301837,
+    "V_types": 7161,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.3652217207953213e-06
+  },
+  "suffix:ities": {
+    "N_tokens": 1417331301,
+    "V_types": 2260,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.5945460305614177e-06
+  },
+  "suffix:less": {
+    "N_tokens": 466470034,
+    "V_types": 6672,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.4303169579377525e-05
+  },
+  "suffix:ful": {
+    "N_tokens": 1230554579,
+    "V_types": 3057,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 2.4842457637955773e-06
+  },
+  "suffix:dom": {
+    "N_tokens": 409117168,
+    "V_types": 1885,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 4.607482030673423e-06
+  },
+  "suffix:hood": {
+    "N_tokens": 192442016,
+    "V_types": 1463,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 7.602289928203621e-06
+  },
+  "suffix:ship": {
+    "N_tokens": 866065393,
+    "V_types": 3155,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 3.642911985053766e-06
+  },
+  "suffix:like": {
+    "N_tokens": 39768212,
+    "V_types": 10025,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 0.00025208576136136066
+  },
+  "suffix:oses": {
+    "N_tokens": 47246635,
+    "V_types": 526,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.113306799521278e-05
+  },
+  "suffix:osis": {
+    "N_tokens": 79736078,
+    "V_types": 1019,
+    "n1_volume": 0,
+    "min_match_seen": 42,
+    "P_vol": 0.0,
+    "P_vn": 1.27796604192145e-05
+  },
+  "suffix:ette": {
+    "N_tokens": 95740022,
+    "V_types": 3163,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 3.303738534758223e-05
+  },
+  "suffix:ism": {
+    "N_tokens": 695830849,
+    "V_types": 8836,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.2698488451178168e-05
+  },
+  "suffix:isms": {
+    "N_tokens": 53029090,
+    "V_types": 1479,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 2.78903522576005e-05
+  },
+  "suffix:ist": {
+    "N_tokens": 684852284,
+    "V_types": 7204,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.0519056690478965e-05
+  },
+  "suffix:ists": {
+    "N_tokens": 375351845,
+    "V_types": 5189,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.382436257906232e-05
+  },
+  "prefix:un": {
+    "N_tokens": 3648102716,
+    "V_types": 20452,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 5.6062017964299005e-06
+  },
+  "prefix:non": {
+    "N_tokens": 303418325,
+    "V_types": 23031,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 7.590510559967003e-05
+  },
+  "prefix:re": {
+    "N_tokens": 12148455900,
+    "V_types": 18714,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.5404426829256547e-06
+  },
+  "prefix:de": {
+    "N_tokens": 5151791995,
+    "V_types": 14868,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 2.885986082984315e-06
+  },
+  "prefix:anti": {
+    "N_tokens": 181924166,
+    "V_types": 9835,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 5.406098714779871e-05
+  },
+  "prefix:pre": {
+    "N_tokens": 2240468778,
+    "V_types": 13271,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 5.923313964609954e-06
+  },
+  "prefix:over": {
+    "N_tokens": 536567245,
+    "V_types": 8747,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.6301777794878253e-05
+  },
+  "prefix:under": {
+    "N_tokens": 911386050,
+    "V_types": 5155,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 5.656219995906235e-06
+  },
+  "prefix:out": {
+    "N_tokens": 828007604,
+    "V_types": 3923,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 4.7378791946456565e-06
+  },
+  "prefix:micro": {
+    "N_tokens": 160791312,
+    "V_types": 6222,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 3.869612059636655e-05
+  },
+  "prefix:pseudo": {
+    "N_tokens": 12318036,
+    "V_types": 5498,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 0.0004463373869016132
+  },
+  "prefix:quasi": {
+    "N_tokens": 3457367,
+    "V_types": 2396,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 0.0006930129199474629
+  },
+  "prefix:super": {
+    "N_tokens": 196872977,
+    "V_types": 6418,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 3.259970005939413e-05
+  },
+  "prefix:sub": {
+    "N_tokens": 954000361,
+    "V_types": 9785,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 1.0256809535945238e-05
+  },
+  "prefix:inter": {
+    "N_tokens": 1756358265,
+    "V_types": 7344,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 4.181379247246006e-06
+  },
+  "prefix:intra": {
+    "N_tokens": 65902537,
+    "V_types": 2827,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 4.289667937973314e-05
+  },
+  "prefix:multi": {
+    "N_tokens": 158674542,
+    "V_types": 5166,
+    "n1_volume": 0,
+    "min_match_seen": 40,
+    "P_vol": 0.0,
+    "P_vn": 3.2557207570197365e-05
+  }
+}
