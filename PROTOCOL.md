@@ -14,9 +14,10 @@ rates are estimable from the detectors' agreement structure with no ground
 truth.** Nobody decides whether Wiktionary is credible; the model estimates it.
 
 This document is written first and changed only by an entry in
-`research/DECISIONS.md`. Numbers quoted here were measured on 2026-08-16 by the
-commands recorded in `research/FEASIBILITY.md`; none is an estimate unless it
-says so.
+`research/DECISIONS.md`. Every figure quoted here re-derives from the pinned
+data: `python -m research.verify_doc_numbers` recomputes them and fails — in
+the test suite, on every run — if a quoted number and the data disagree
+(§9 mechanism 1, implemented per D-033).
 
 **Nothing in Phases 0–4 moves a word.** The live list, the site and the nightly
 pipeline are untouched until Phase 5.
@@ -134,19 +135,19 @@ re-derived from primary sources.
 
 | Quantity | Count |
 |---|---:|
-| `merged_valid_words.txt` — raw lines | 345,297 |
-| `merged_invalid_words.txt` — raw lines | 9,308,855 |
-| **raw universe (line count)** | **9,654,152** |
-| form-valid under `^[a-z]+$` | **9,653,962** |
-| outstanding form violations | 190 (188 hyphenated, 2 accented) |
+| `merged_valid_words.txt` at the pin | 345,103 |
+| `merged_invalid_words.txt` at the pin | 9,308,896 |
+| **candidate universe** | **9,653,999** |
+| form violations | **0** |
 
-**The two universe figures are not interchangeable and the protocol must not
-conflate them.** 9,654,152 counts lines; 9,653,962 counts strings that satisfy
-§1.3. The 190-string difference is a known defect being cleared through
-`corrections/ledger_form_rules.csv`, after which the two converge.
+The form-rule correction (D-025, `corrections/ledger_form_rules.csv`) is
+published: every string in the universe satisfies §1.3, so the raw-line count
+and the form-valid count are the same number and the old distinction between
+them is retired. The frame the model actually runs on is larger — the universe
+plus the strings the binary sources contribute (§3.1; D-026, D-030).
 
-The universe is **frozen at a pinned Hugging Face revision**, not at "the current
-dataset". The nightly pipeline promotes roughly 1,000 words per night from the
+The universe is **frozen at a pinned Hugging Face revision** —
+`c1139698` (2026-08-17) — not at "the current dataset". The nightly pipeline promotes roughly 1,000 words per night from the
 invalid list using Merriam-Webster, so the valid/invalid split moves every day
 even when the universe does not. Phase 1 records the pinned revision in
 `sources/MANIFEST.toml` and every later phase reads that revision alone.
@@ -161,10 +162,10 @@ the manifest alone. Sizes below were probed on 2026-08-16.
 
 | Source | Artifact | Size | Notes |
 |---|---|---:|---|
-| WordNet 3.0 | nltk corpus, installed | — | 77,477 lemmas matching `^[a-z]{2,45}$` |
-| Wiktionary titles | `enwiktionary-latest-all-titles-in-ns0.gz` | 27.8 MB | 4,416,714 a–z titles, **all languages** |
-| Wiktionary articles | `enwiktionary-latest-pages-articles.xml.bz2` | 1.62 GB | streamed; source of the `== English ==` confirmation |
-| web2 | `/usr/share/dict/words` | 2.5 MB | Webster's Second International, 1934; 234,428 a–z entries; public domain |
+| WordNet 3.0 | nltk corpus, installed | — | 77,503 keys under `^[a-z]+$` |
+| Wiktionary titles | `enwiktionary-latest-all-titles-in-ns0.gz` | 27.8 MB | 4,416,747 lowercase titles, **all languages** — a screen, never a detector |
+| Wiktionary articles | `enwiktionary-latest-pages-articles.xml.bz2` | 1.62 GB | streamed; 775,869 lowercase-titled pages carry an `== English ==` section — the detector that enters the model |
+| web2 | `/usr/share/dict/words` | 2.5 MB | Webster's Second International, 1934; 234,454 keys; public domain |
 | hunspell en_US | LibreOffice `dictionaries` | 0.55 MB | `.dic` + `.aff`; expanded with `spylls` — see §3.1 |
 | hunspell en_GB | " | 1.23 MB | " |
 | hunspell en_CA | " | 0.55 MB | " |
@@ -249,11 +250,11 @@ implementation detail.
 > `NFC; casefold; accept iff ^[a-z]+$`
 
 **The rule change of §1.3 removed a tripwire ambiguity rather than adding one.**
-Under the former `^[a-z]{2,45}$` filter, WordNet ∩ valid came to 57,967, while the
-looser `isalpha() and isascii()` gave 57,977 — a 10-word drift caused entirely by
-the length bounds. Under `^[a-z]+$` the two filters agree exactly: **77,503**
-WordNet lemmas and **57,977** in the intersection. The tripwire is now
-filter-independent for every source that contains no digits or non-ASCII.
+Under the retired length-bounded filter the WordNet counts drifted by ten words
+depending on which filter produced them; under `^[a-z]+$` the strict and loose
+filters agree exactly at **77,503** WordNet keys. The valid ∩ WordNet tripwire
+at the pinned revision is **57,970**, and CLAUDE.md §4 explains its every
+movement to the digit rather than merely restating it.
 
 Applied identically to every source and to the candidate universe.
 `sources/MANIFEST.toml` records it per source, and a source whose ingest does not
@@ -265,8 +266,10 @@ reproduce its declared `record_count` is a hard failure, not a warning.
 
 ### 3.1 Layer 1 — the evidence matrix
 
-`E[word, source] ∈ {0,1}` over all 9,654,152 candidates and K sources, built by
-streaming ingest, stored as parquet. Raw dumps are hashed and deleted; the
+`E[word, source] ∈ {0,1}` over the full candidate frame — **9,787,841** words:
+the pinned universe of 9,653,999 plus **133,842** contributed by the binary
+detector sources (D-026, scoped by D-030: corpus sources contribute features,
+never frame membership) — built by streaming ingest, stored as parquet. Raw dumps are hashed and deleted; the
 manifest makes them re-fetchable.
 
 **hunspell requires an expansion step and the choice is recorded.** A `.dic` file
@@ -289,9 +292,9 @@ same model.
 
 | Channel | Measures | Instrument |
 |---|---|---|
-| **Orthotactic plausibility** | P(string \| English spelling patterns) | character-level model: n-gram back-off first, small torch model only if it earns the complexity |
-| **Morphological productivity** | is this a legal derivation of an attested stem by a *measurably* productive process | Baayen's **P = n₁/N**, hapax ratio per affix, computed on corpus data |
-| **Dispersion** | usage spread across volumes, or concentrated | Gries's **DP**, Juilland's **D**, volume frequency, burstiness |
+| **Orthotactic plausibility** | P(string \| English spelling patterns) | interpolated character n-gram (order 4), weights EM-tuned on the dev partition and renormalized over observed histories — interpolation rather than back-off because the Phase 2 gate is held-out perplexity, and a score that is not a probability distribution cannot be gated on |
+| **Morphological productivity** | is this a legal derivation of an attested stem by a *measurably* productive process | **realized productivity V/N** per affix (Baayen's type-count family). Potential productivity P = n₁/N is **not computable from this corpus**: the Google Books 2020 floor is 40 on match count AND volume count — both minima measured at exactly 40 — so hapaxes do not exist under any definition. The censoring is visible in `research/productivity_table.json`'s zero hapax columns |
+| **Dispersion** | usage spread across volumes, or concentrated | six proxies the year-level aggregates support: year span, span fill, tokens-per-volume, volumes-per-year, log volume, log match. Gries's **DP** and Juilland's **D** are **not computable** — both need per-part counts, and the ingest kept year-level totals only (features manifest, `dispersion.not_computable`) |
 | **Zipf conformity** | does the frequency sit where a word of that rank should | deviation from a fitted Zipf–Mandelbrot curve |
 | **Typed OCR neighbourhood** | is this string one known scanning confusion away from a commoner word | confusion pairs `m→in`, `rn→m`, `l→i`, `e→c`, `c→e`, `li→h`, applied directionally against a reference lexicon |
 
@@ -315,14 +318,21 @@ discriminating feature: `schoolmaster` → `schoolinaster` is exactly `m→in`.
 
 The character model is trained only on strings held out of every evaluation set,
 and never on anything whose label the model will later be asked to predict.
-Train/test partitions are fixed by `sha256(seed:partition:word)` ranking, not by
-a library RNG, so they are recomputable in any language and immune to stdlib
-changes. Partition assignments are committed.
+Partitions are assigned by **hash range**: `sha256(seed:word)` maps each word to
+a unit in [0, 1), and fixed cut-points assign train / dev / test. Stronger than
+ranking a pool: one word's membership never depends on which other words are in
+the pool, so the assignment survives any future change to the pool rule. No
+library RNG anywhere — recomputable in any language, immune to stdlib changes.
+The seed, cut-points, pool rule and realized counts are committed in
+`research/features_manifest.json`; the assignments re-derive exactly from them,
+and Phase 4's calibration sample excludes train ∪ dev by re-derivation.
 
 ### 3.4 Why the feature layer is load-bearing rather than supplementary
 
-Measured over the full candidate universe against three lexicographic detectors —
-WordNet, Wiktionary titles, web2:
+Measured 2026-08-16 over the **pre-augmentation universe** against three
+lexicographic detectors — WordNet, Wiktionary titles, web2. This table is kept
+as the measurement that motivated the design; it is
+**superseded by the post-ingest measurement** in `research/SR2_REPORT.md`:
 
 ```
   wn/wkt/web2      valid      invalid         total   P(valid | pattern)
@@ -336,15 +346,15 @@ WordNet, Wiktionary titles, web2:
           000     82,909    8,178,545     8,261,454         0.0100
 ```
 
-The pattern ordering is coherent, which is the first good sign for a latent-class
-fit. But **8,261,454 strings — 85.57% of the universe — share the all-zero
-cell**, and under conditional independence every one of them receives the same
-posterior. Adding SCOWL, ENABLE, SOWPODS, hunspell and NWL barely dents it: they
-are near-subsets of Wiktionary's 4.4M titles.
-
-So the corpus arm and the feature layer are not decoration. They are the only
-things that can say anything at all about 85% of the population — and the corpus
-arm is the contaminated one. §7 attaches a stopping rule to exactly this.
+The pattern ordering is coherent, which was the first good sign for a
+latent-class fit — and the all-zero cell dominating the table is why the corpus
+arm and the feature layer are load-bearing rather than decoration. The
+post-ingest measurement over the full 9,787,841-word frame and all twelve
+binary detectors (SR2_REPORT.md, D-032): the all-zero binary cell holds
+**8,858,214** words (**90.50%**, reading A, reported as the S1–S3 diagnostic),
+of which Google Books has data for all but **845,150** — the truly
+undifferentiated stratum, **8.63%**, which passes the operative reading of SR2.
+§7 attaches the stopping rule to exactly this.
 
 *(The table above is also a preview of the Phase 4 held-out comparison. It is
 reported here as a property of the sources. It is never fitted to.)*
@@ -354,9 +364,9 @@ reported here as a property of the sources. It is never fitted to.)*
 ## 4. Model specifications
 
 Fitting is over **evidence patterns, not words**: with K sources there are at
-most 2^K distinct patterns and far fewer observed, so 9.65M rows collapse to a
-contingency table of a few thousand cells, EM runs in seconds, and the fit is
-exactly reproducible.
+most 2^K distinct patterns and far fewer observed — **677** in the assembled
+matrix — so 9.79M rows collapse to a small contingency table, EM runs in
+seconds, and the fit is exactly reproducible.
 
 | # | Specification | What it buys |
 |---|---|---|
@@ -662,9 +672,13 @@ resumable elsewhere by clone-and-replay.
 Five mechanisms against hallucination and drift, in descending order of leverage.
 
 1. **Every number comes from code.** No figure appears in any document unless a
-   committed script produced it and can regenerate it. Enforced by a check that
-   re-derives the numbers quoted in markdown and fails on mismatch. A
-   hallucinated statistic cannot survive this.
+   committed script produced it and can regenerate it. Enforced by
+   `research/verify_doc_numbers.py`, which re-derives the figures quoted in
+   this document and CLAUDE.md from the pinned data and fails — inside the test
+   suite, on every run — on any mismatch or on any reappearance of a superseded
+   figure. Built per D-033, after a status review found fifteen instances of
+   exactly the drift it now prevents. A hallucinated statistic cannot survive
+   this.
 2. **`CLAUDE.md`**, loaded automatically each session: the definition, the
    `candidate_source` prohibition, the never-write rule, and the tripwire counts
    *with the normalization that produces them*.
@@ -677,7 +691,8 @@ Five mechanisms against hallucination and drift, in descending order of leverage
    changes.
 
 **`candidate_source` is a discovery log and is never evidence.** It credits
-WordNet for 2,127 words; the real intersection is 57,977, a 27× undercount. It
+WordNet for 2,127 words; the real intersection at the pinned revision is
+57,970 — a 27× undercount. It
 records where a candidate was first *seen*, not which sources *contain* it. Any
 evidence model built on it measures the wrong quantity.
 
