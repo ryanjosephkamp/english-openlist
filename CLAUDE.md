@@ -152,6 +152,12 @@ Consequences that matter:
 No figure appears in any document unless a committed script produced it and can
 regenerate it. If you cannot point at the command, do not write the number.
 
+**The enforcer exists and runs in the test suite**:
+`python -m research.verify_doc_numbers` re-derives every figure quoted in
+PROTOCOL.md and this file from the pinned data and fails on mismatch — and on
+any reappearance of a superseded figure (D-033). If you change a count
+anywhere, the suite tells you where else it must change.
+
 Sampled quantities always carry intervals. **A sampled figure is never reported
 as a count.**
 

@@ -773,3 +773,65 @@ comparison.
   explicitly**, not merely by posterior decile: posteriors inside it will
   cluster, and a decile stratification alone could sample it almost entirely
   from one cell.
+
+---
+
+## D-033 — Governance mechanism 1 is implemented, and the drift it would have caught is repaired
+
+**2026-08-18** · settled
+
+PROTOCOL §9 has ranked "every number comes from code… enforced by a check that
+re-derives the numbers quoted in markdown and fails on mismatch" as the
+highest-leverage governance mechanism since Phase 0. **The check was specified
+and never built.** A status review on 2026-08-18 found fifteen documentation
+defects in PROTOCOL.md — eleven stale figures and four method statements
+superseded by Phase 2 — every one of them exactly the drift the unbuilt
+mechanism was designed to catch. An independent verification pass then
+re-derived all fifteen claims from the pinned data and the code before
+touching anything: **fifteen of fifteen verified; none refuted.**
+
+**The check now exists**: `research/verify_doc_numbers.py`, wired into pytest
+as `tests/test_doc_numbers.py`. It re-derives the quoted figures from the
+pinned frame, the derived source sets, the correction ledgers and the
+regenerable gate reports; requires them verbatim in PROTOCOL.md and CLAUDE.md;
+forbids nine superseded figures from reappearing in PROTOCOL.md; and requires
+the one deliberately retained historical table (§3.4) to carry its
+supersession label. Run before the repair it reported 19 failures; after, it
+passes — and it caught a line-wrap defect in the repair itself on the way.
+
+**The repairs.** PROTOCOL.md now states the pinned-revision counts (345,103 /
+9,308,896 / 9,653,999, zero form violations), the post-ingest source counts
+(77,503 / 4,416,747 / 775,869 / 234,454), the pinned intersection (57,970),
+and the frame (9,787,841 = universe + 133,842; the §3.4 table is kept as the
+labelled historical motivation with the SR2 measurement beside it).
+
+**Where protocol text and implementation disagreed, the protocol moved to
+match the better implementation, not the reverse:**
+
+- §3.2 productivity: potential productivity P = n₁/N is **not computable** —
+  the Google Books 2020 floor is 40 on match count AND volume count (both
+  minima re-measured at exactly 40 in this verification), so hapaxes do not
+  exist in the corpus under any definition. The instrument is realized
+  productivity V/N, and the censoring is visible in the productivity table's
+  own zero columns.
+- §3.2 dispersion: Gries's DP and Juilland's D need per-part counts the
+  year-level aggregates cannot supply; the six supported proxies are named
+  instead, as proxies.
+- §3.2 orthotactics: the model is interpolated, not back-off, because the
+  gate is held-out perplexity and a score that is not a probability
+  distribution cannot be gated on.
+- §3.3 partitions: assignment is by hash range on sha256(seed:word), not by
+  ranking sha256(seed:partition:word) — strictly stronger, since one word's
+  membership never depends on the rest of the pool — and the overclaim that
+  "assignments are committed" is corrected to what is true: the seed, rule
+  and counts are committed and the assignments re-derive exactly.
+
+**Not touched, by rule:** research/DECISIONS.md's own historical figures
+(append-only; its five 57,977 occurrences are dated records and correct), the
+three data files (checksummed identical at both ends), `is_likely_english`,
+and the live dataset.
+
+**Branch note, stated rather than buried:** the repair branched off
+`research/phase2-features` rather than bare `main`, because the documents
+under repair — including D-032's own SR2 row — and the Phase 2 code they must
+match live there; branching off main would have repaired a superseded copy.
