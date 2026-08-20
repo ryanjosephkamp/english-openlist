@@ -909,3 +909,52 @@ structural failure — non-identifiability, EM pathology, label drift — can
 breach it, and tight enough that any such failure cannot hide. The 5% and
 0.15 clauses scale the same logic to parameters with less data per degree of
 freedom.
+
+---
+
+## D-036 — The measurement programme pauses at the pre-registration gate; the CEOL becomes the destination
+
+**2026-08-18** · settled · *ruled by the dataset owner*
+
+**What is paused.** Phases 0–3 are complete and merged to main: the protocol,
+the pinned evidence layer, the gated feature layer, five fitted
+specifications, the identifiability battery, and the pilot. The programme
+stops exactly where D-010 said it would — the confirmatory design is drafted
+(`research/PREREG_DRAFT.md`) and NOT frozen. No registration has been filed.
+Phase 4 (the owner's 1,770 adjudications) has not begun; no adjudication
+minute is sunk.
+
+**Why it pauses rather than proceeds.** The owner is extending the project's
+universe: the Common English OpenList (CEOL) will admit hyphenated forms,
+accepted accented loanwords, standard and archaic contractions, and
+(pending analysis) possessives — words the pinned `^[a-z]+$` frame excludes
+by construction. Pre-registering a confirmatory study against a universe
+about to be superseded would either waste the single pre-registration or
+force a second one. The correct sequencing is: build the CEOL universe first,
+re-run the (fully automated) evidence and feature layers over it, refit, and
+freeze the confirmatory design once, against the universe the paper is
+actually about.
+
+**What survives, which is everything.** Nothing in Phases 0–3 is invalidated.
+The manifest pattern, the ingest modules, the feature channels, the five
+model implementations, the gates and their verdicts, the adjudication app,
+the enforcer (`verify_doc_numbers`), and this decision log all transfer to
+the CEOL with an extended normalization grammar in place of `^[a-z]+$`. The
+pinned artifacts are the SAME sources — Wiktionary, hunspell, SCOWL and web2
+all contain the hyphenated, accented and apostrophe-bearing entries that the
+EOL's normalize() dropped on the floor; the CEOL re-ingests the same bytes
+under a wider rule. The 190 form-rule deletions of D-025 (188 hyphenated, 2
+accented) were preserved in `corrections/ledger_form_rules.csv` with reasons,
+and become the CEOL's first seed candidates.
+
+**The EOL's standing invariants are unchanged by the pivot.** The live
+dataset, site and nightly continue untouched. The never-write rule, the
+`candidate_source` prohibition, the append-only decision log and the doc-
+numbers enforcer remain binding in this repository. The EOL is planned to
+become a filterable subset of the CEOL (`eol: true`), and until that
+integration is proven, nothing here changes.
+
+**Resume conditions for the confirmatory study**: a pinned CEOL universe; the
+evidence/feature layers re-verified over it (the manifest gate and Phase 2
+gate re-run); the model batteries re-run per D-034/D-035; PREREG_DRAFT
+re-derived against the new pilot; then the owner freezes and files.

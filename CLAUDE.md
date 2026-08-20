@@ -2,6 +2,13 @@
 
 Loaded automatically every session. Read it before touching anything.
 
+> **Programme status (2026-08-18, D-036):** the measurement programme is
+> **paused at the pre-registration gate** — Phases 0–3 complete and merged,
+> `research/PREREG_DRAFT.md` drafted, nothing frozen or filed. Active work has
+> pivoted to the **Common English OpenList (CEOL)** in its own repository;
+> this repo's live dataset, nightly pipeline and every rule below remain in
+> force and untouched by the pivot.
+
 The full method is in [`PROTOCOL.md`](PROTOCOL.md). This file carries only the
 rules that must never be rediscovered.
 
