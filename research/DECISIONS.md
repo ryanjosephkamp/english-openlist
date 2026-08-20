@@ -835,3 +835,77 @@ and the live dataset.
 `research/phase2-features` rather than bare `main`, because the documents
 under repair — including D-032's own SR2 row — and the Phase 2 code they must
 match live there; branching off main would have repaired a superseded copy.
+
+---
+
+## D-034 — Anchor and orientation constraints, declared before any fit
+
+**2026-08-18** · settled
+
+Latent-class models are identified only up to relabelling — a two-class fit
+worse, a three-class fit worse still — so the classes are oriented by
+constraints declared here, before the first EM run, and enforced by
+**relabelling after convergence**, never by constrained optimisation (which
+would distort the likelihood surface the identifiability checks examine).
+
+- **The anchor source is `wiktionary_english`**, constrained to α + β > 1: the
+  class in which Wiktionary-English fires more often than it false-alarms is
+  the WORD class. Rationale: it is the largest single detector (775,869 keys),
+  it is the only lexicographic source with in-model confirmation semantics
+  (the `== English ==` section), and its Phase 1 pattern behaviour — present
+  in the maximal all-twelve cell, dominant in the single-detector cells that
+  look like real vocabulary — makes a relabelled optimum in which it behaves
+  worse than chance on words implausible on its face.
+- **S5's OCR class is oriented by the typed-confusion channel**: the class
+  whose posterior-weighted mean of `ocr_neighbor_freq_ratio` is highest is
+  OCR. Rationale: Phase 2 measured the asymmetry — the channel fires on 0.3%
+  of held-out real words and 67.5% of manufactured corruptions with AUC 0.977
+  — so no other class can plausibly claim that mean.
+- **S5's remaining ambiguity (WORD vs NEITHER)** is resolved by the anchor:
+  WORD is the class with the higher `wiktionary_english` fire rate.
+
+**Also declared here, because §5.2 requires it before fitting:** the Fisher
+condition-number threshold is **10⁸ on the logit scale**. Parameters are
+transformed to logits before the Hessian is taken (boundary-adjacent rates
+make raw-scale curvature meaningless), and a condition number above 10⁸ is a
+failure, not a caveat.
+
+**Boundary handling:** weakly informative Beta(2, 2) priors on every α and β
+(penalised EM / MAP), with a sensitivity refit at Beta(1.5, 1.5) and
+Beta(4, 4) reported beside the main fit. Hyperparameters fixed here, in
+advance.
+
+---
+
+## D-035 — Simulation recovery tolerance, stated before the simulation runs
+
+**2026-08-18** · settled
+
+SR5's gate, made concrete before a single synthetic world is generated:
+
+**A specification passes recovery iff, fitted to five replicate worlds
+generated from its own fitted parameters at the observed frame size
+(9,787,841 draws) and the observed pattern sparsity, every replicate
+satisfies:**
+
+- max over detectors of |α̂ − α| ≤ **0.02** and |β̂ − β| ≤ **0.02**;
+- relative prevalence error |π̂ − π| / π ≤ **5%** per class;
+- for S2, additionally max |λ̂ − λ| ≤ **0.15** on the nine declared
+  interaction terms (natural-parameter scale — interaction terms are harder
+  to pin than rates, and pretending otherwise would set a gate the true model
+  cannot pass).
+
+**Failing any clause in any replicate fires SR5** for that specification: it
+is excluded from selection regardless of BIC, and the exclusion is reported.
+
+**Also run, reported, and NOT gated:** the misspecification cross — S1 fitted
+to S2-generated worlds — which measures how badly ignoring the declared
+dependence hurts. That number is a result the paper wants, not a pass/fail
+criterion; S1 exists to have its wrongness measured (PROTOCOL §4).
+
+**Rationale for the numbers.** At N = 9.79M the sampling error on a detector
+rate is order 10⁻⁴; a 0.02 tolerance is therefore loose enough that only
+structural failure — non-identifiability, EM pathology, label drift — can
+breach it, and tight enough that any such failure cannot hide. The 5% and
+0.15 clauses scale the same logic to parameters with less data per degree of
+freedom.
