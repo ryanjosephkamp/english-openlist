@@ -1,15 +1,15 @@
 {
-  "last_updated": "2026-09-14",
-  "total_valid_words": 345159,
-  "total_invalid_entries": 9308840,
-  "total_updates": 120,
+  "last_updated": "2026-09-15",
+  "total_valid_words": 345161,
+  "total_invalid_entries": 9308838,
+  "total_updates": 121,
   "word_length_distribution": {
     "1": 5,
     "2": 134,
     "3": 1116,
     "5": 9782,
     "6": 18049,
-    "4": 4294,
+    "4": 4296,
     "8": 40240,
     "9": 44705,
     "10": 41817,
@@ -51,7 +51,7 @@
     "47": 1
   },
   "starting_letter_distribution": {
-    "a": 17922,
+    "a": 17924,
     "b": 16838,
     "c": 29373,
     "d": 21359,
