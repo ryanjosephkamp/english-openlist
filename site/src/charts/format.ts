@@ -15,6 +15,12 @@ function trim(x: number): string {
   return s.replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
 }
 
+/** A count with its noun: "1 letter", "2 letters". The plural is the singular
+ *  with an s unless `many` names it. */
+export function plural(n: number, one: string, many = `${one}s`): string {
+  return `${full(n)} ${n === 1 ? one : many}`;
+}
+
 /** A share as a percentage, with enough digits that a small share is not
  *  shown as 0. */
 export function pct(part: number, whole: number): string {

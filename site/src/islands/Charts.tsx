@@ -2,7 +2,7 @@ import BarList from '../charts/BarList';
 import ChartFrame from '../charts/ChartFrame';
 import Columns from '../charts/Columns';
 import Growth from '../charts/Growth';
-import { full, pct } from '../charts/format';
+import { full, pct, plural } from '../charts/format';
 import type { DecidedName, Stats } from '../util/data';
 import '../charts/charts.css';
 
@@ -35,16 +35,16 @@ export default function Charts({ stats, decidedOrder, decidedLabel, decidedWhat,
         <ChartFrame
           title="Length"
           note={`From 1 letter to ${maxLen}. The list has no length bound.`}
-          table={lengths.map((l) => ({ label: `${l.length} ${l.length === 1 ? 'letter' : 'letters'}`, value: l.count }))}
+          table={lengths.map((l) => ({ label: plural(l.length, 'letter'), value: l.count }))}
           total={total}
           valueLabel="Words"
         >
           <Columns
             label="Words by length in letters"
-            columns={lengths.map((l) => ({ key: String(l.length), label: String(l.length), name: `${l.length} letters`, value: l.count }))}
+            columns={lengths.map((l) => ({ key: String(l.length), label: String(l.length), name: plural(l.length, 'letter'), value: l.count }))}
             total={total}
             labelEvery={5}
-            unit="words"
+            unit="word"
           />
         </ChartFrame>
 
@@ -72,7 +72,7 @@ export default function Charts({ stats, decidedOrder, decidedLabel, decidedWhat,
             label="Letters by how often they appear in the list"
             columns={stats.letters.map((l) => ({ key: l.letter, label: l.letter, name: `The letter ${l.letter}`, value: l.count }))}
             total={stats.letterTotal}
-            unit="letters"
+            unit="letter"
           />
         </ChartFrame>
       </div>

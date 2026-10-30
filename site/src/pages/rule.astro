@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { manifest, stats, record, fmt, moved, DECIDED_LABEL, DECIDED_ORDER, DECIDED_WHAT, REPO } from '../util/data';
 import { usDate } from '../util/dates';
+import { plural } from '../charts/format';
 import { CEOL_PUBLIC } from '../util/release-state';
 
 const count = (length: number) => stats.lengths.find((l) => l.length === length)?.count ?? 0;
@@ -141,19 +142,19 @@ const tree = `${REPO}/tree/main`;
           <span class="when">{ledgerDate('ledger_form_rules.csv')}</span>
           <p>
             The rule changed to <code>^[a-z]+$</code> with no length bound. <strong>{fmt(malformed)}</strong> entries that
-            broke it (hyphenated or accented) were deleted; {fmt(letters)} single letters were moved to the invalid list; and
+            broke it (hyphenated or accented) were deleted; {plural(letters, 'single letter')} {letters === 1 ? 'was' : 'were'} moved to the invalid list; and
             {fmt(candidates)} strings that were on neither list were added to the invalid list as candidates, never to the
             list.
           </p>
         </li>
         <li>
           <span class="when">{ledgerDate('ledger_letters_recheck.csv')}</span>
-          <p>{fmt(requeued)} single letters were queued to be checked again under the new rule.</p>
+          <p>{plural(requeued, 'single letter')} {requeued === 1 ? 'was' : 'were'} queued to be checked again under the new rule.</p>
         </li>
         <li>
           <span class="when">From {usDate(lastBig)}</span>
           <p>
-            The nightly run added <strong>{fmt(nightlyAfter)}</strong> words{lastAdded && <>, the last on {usDate(lastAdded.date)}</>}.
+            The nightly run added <strong>{fmt(nightlyAfter)}</strong> {nightlyAfter === 1 ? 'word' : 'words'}{lastAdded && <>, the last on {usDate(lastAdded.date)}</>}.
             The list was last published on {usDate(g.last.date)}.
           </p>
         </li>
