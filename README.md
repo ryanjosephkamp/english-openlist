@@ -282,7 +282,6 @@ pytest tests/ -v
 ### Documentation
 
 - [docs/PHASE3_STRATEGY.md](docs/PHASE3_STRATEGY.md) - Full strategy and architecture
-- [docs/CONSTITUTION.md](docs/CONSTITUTION.md) - Project principles
 - [templates/dataset_card.md](templates/dataset_card.md) - Hugging Face dataset description
 
 ### Word Discovery Sources

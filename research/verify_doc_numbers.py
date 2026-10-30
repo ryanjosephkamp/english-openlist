@@ -120,13 +120,18 @@ def main() -> int:
         return 0
 
     figures = derive_figures()
-    docs = {name: (REPO / name).read_text(encoding="utf-8")
-            for name in ("PROTOCOL.md", "CLAUDE.md")}
+    docs = {"PROTOCOL.md": (REPO / "PROTOCOL.md").read_text(encoding="utf-8")}
+    # The agent file is kept out of git, as CLAUDE.local.md. Where it exists,
+    # its figures are checked under its old name; a clone without it checks
+    # PROTOCOL.md alone.
+    for local in ("CLAUDE.md", "CLAUDE.local.md"):
+        if (REPO / local).exists():
+            docs["CLAUDE.md"] = (REPO / local).read_text(encoding="utf-8")
     failures: list[str] = []
 
     print("=== REQUIRED: derived figures present, formatted exactly ===")
     for label, (value, targets) in figures.items():
-        for doc in targets:
+        for doc in (t for t in targets if t in docs):
             ok = value in docs[doc]
             print(f"  {'ok  ' if ok else 'FAIL'}  {doc:12s} contains {value:>12s}  ({label})")
             if not ok:
