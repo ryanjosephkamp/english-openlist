@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { encodeWords, encodeMeta, compareBytes, INTAKE, WordFlag } from './format.ts';
+import { encodeWords, encodeMeta, compareBytes, DECIDED, WordFlag } from './format.ts';
 import { decodeWords, decodeMeta, wordAt } from './decode.ts';
 import { runQuery, DEFAULT_QUERY, type Query } from './query.ts';
 
@@ -12,14 +12,15 @@ const WORDS = ['cat', 'cot', 'cut', 'cart', 'dog', 'dogs', 'zzz', 'ad-lib', 'nor
 const table = decodeWords(encodeWords(WORDS));
 const names = Array.from({ length: table.count }, (_, i) => wordAt(table, i));
 
-// Intake and flags assigned by position so the filters have something to bite on.
-const intake = new Uint8Array(table.count);
+// What decided each word, and flags, assigned by position so the filters have
+// something to bite on.
+const decided = new Uint8Array(table.count);
 const flags = new Uint8Array(table.count);
 names.forEach((word, i) => {
-  intake[i] = word.startsWith('d') ? INTAKE.synthetic : INTAKE.twl;
+  decided[i] = word.startsWith('d') ? DECIDED.engine : DECIDED.none;
   if (word === 'zzz') flags[i] = WordFlag.LlmSaysInvalid;
 });
-const meta = decodeMeta(encodeMeta(table.count, intake, new Uint16Array(table.count), flags));
+const meta = decodeMeta(encodeMeta(table.count, decided, new Uint16Array(table.count), flags));
 
 const run = (patch: Partial<Query>) => {
   const result = runQuery(table, meta, { ...DEFAULT_QUERY, ...patch });
@@ -68,8 +69,9 @@ describe('filters', () => {
     expect(run({ minLength: 3, maxLength: 3 }).words).toEqual(['cat', 'cot', 'cut', 'dog', 'zzz']);
   });
 
-  it('intake', () => {
-    expect(run({ intakes: ['synthetic'] }).words).toEqual(['dog', 'dogs']);
+  it('what decided the word', () => {
+    expect(run({ decided: ['engine'] }).words).toEqual(['dog', 'dogs']);
+    expect(run({ decided: ['none'] }).words).not.toContain('dog');
   });
 
   it('filters by first letter', () => {
@@ -102,7 +104,7 @@ describe('filters', () => {
   });
 
   it('combines filters', () => {
-    expect(run({ intakes: ['synthetic'], maxLength: 3 }).words).toEqual(['dog']);
+    expect(run({ decided: ['engine'], maxLength: 3 }).words).toEqual(['dog']);
   });
 });
 

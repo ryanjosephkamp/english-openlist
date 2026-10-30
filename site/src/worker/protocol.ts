@@ -4,43 +4,25 @@ import type { Query } from '@eol/wordlist/query';
  * A single result row, in the shape the list renders.
  *
  * The worker keeps the current result set to itself and hands over only the
- * rows on screen. Transferring all 345,297 matching indices on every keystroke
- * would be 1.5 MB per press for a list that shows forty of them; a page is
+ * rows on screen. Transferring all 345,000 matching indices on every keystroke
+ * would be 1.4 MB per press for a list that shows forty of them; a page is
  * roughly 3 KB.
  */
 export type Row = {
   readonly word: string;
   readonly index: number;
-  readonly intake: number;
+  /** A `DECIDED` code. */
+  readonly decided: number;
   /** `YYYY-MM-DD`, or empty when the record carries no date. */
   readonly added: string;
   readonly flags: number;
 };
 
+/** The part of `manifest.json` the worker reads. */
 export type Manifest = {
   readonly builtAt: string;
   readonly wordCount: number;
   readonly dateTable: readonly string[];
-  readonly intakeCounts: Readonly<Record<string, number>>;
-  readonly llmSaysInvalid: number;
-  /** Size of the invalid list. It shrinks whenever the nightly run promotes a word. */
-  readonly invalidCount: number;
-  readonly alsoInvalid: number;
-  readonly alsoInvalidWords: readonly string[];
-  readonly nonAlpha: number;
-  readonly addedSingly: number;
-  readonly bulkDates: readonly { date: string; count: number }[];
-  /** String tables the provenance shards index into, rather than repeating. */
-  readonly provenance: {
-    readonly shards: number;
-    readonly sources: readonly string[];
-    readonly manualSources: readonly string[];
-    readonly llms: readonly string[];
-    readonly categories: readonly string[];
-    readonly statuses: readonly string[];
-    readonly words: number;
-    readonly withDefinition: number;
-  };
   readonly files: Readonly<Record<string, { name: string; bytes: number; brotliBytes: number }>>;
 };
 

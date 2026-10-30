@@ -1,0 +1,363 @@
+---
+import '../styles/global.css';
+import Mark from '../components/Mark.astro';
+import Credit from '../components/Credit.astro';
+import NavList from '../components/NavList.astro';
+import Family from '../components/Family.astro';
+import { manifest, HF, REPO } from '../util/data';
+import { usDate } from '../util/dates';
+
+interface Props {
+  title: string;
+  description: string;
+  section: string;
+}
+
+const { title, description, section } = Astro.props;
+const pageTitle = section === 'Search' ? 'English OpenList' : `${title} · English OpenList`;
+// A build is a review preview unless EOL_PRODUCTION=1: a preview carries a
+// banner and asks search engines not to index it.
+const preview = process.env.EOL_PRODUCTION !== '1';
+const built = usDate(manifest.builtAt.slice(0, 10));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Ryan Kamp" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f9fafc" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1115" />
+    {preview && <meta name="robots" content="noindex" />}
+    <link rel="icon" href="/mark.svg" type="image/svg+xml" />
+    <script is:inline>
+      // the stored theme, set before the first paint
+      try {
+        const t = localStorage.getItem('eol-theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to the content</a>
+    {
+      preview && (
+        <div class="preview">
+          <p class="frame">Preview for review. Not the published site.</p>
+        </div>
+      )
+    }
+    <header class="masthead">
+      <div class="frame">
+        <Family where="header" />
+      </div>
+      <div class="frame masthead-row">
+        <a class="wordmark" href="/" aria-label="English OpenList, search">
+          <Mark size={28} />
+          <span>English OpenList</span>
+        </a>
+        <nav class="nav-wide" aria-label="Sections">
+          <NavList section={section} />
+        </nav>
+        <details class="menu">
+          <summary>Sections</summary>
+          <nav aria-label="Sections, menu">
+            <NavList section={section} />
+          </nav>
+        </details>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="frame footer-grid">
+        <div class="footer-about">
+          <p class="footer-title">
+            <Mark size={20} /> The English OpenList
+          </p>
+          <p>
+            Built {built} from the dataset{manifest.revision && <> at revision <code>{manifest.revision.slice(0, 8)}</code></>}.
+            Every figure on these pages is computed from the list when the site is built.
+          </p>
+          <p>
+            <a href={HF} rel="noopener">The dataset</a> on Hugging Face, with its terms on its card;
+            <a href={REPO} rel="noopener">the code</a> on GitHub, under MIT.
+          </p>
+          <Family where="footer" />
+        </div>
+        <div class="footer-controls">
+          <button type="button" class="toggle" id="theme-toggle">Theme: system</button>
+        </div>
+      </div>
+      <div class="frame">
+        <Credit />
+      </div>
+    </footer>
+
+    <script>
+      const root = document.documentElement;
+      const save = (k: string, v: string | null) => {
+        try {
+          if (v === null) localStorage.removeItem(k);
+          else localStorage.setItem(k, v);
+        } catch {}
+      };
+
+      // the phone menu closes on Escape and on a click outside it
+      const menu = document.querySelector<HTMLDetailsElement>('.menu');
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menu?.open) {
+          menu.open = false;
+          menu.querySelector('summary')?.focus();
+        }
+      });
+      document.addEventListener('click', (e) => {
+        if (menu?.open && !menu.contains(e.target as Node)) menu.open = false;
+      });
+
+      const theme = document.getElementById('theme-toggle');
+      const order = ['system', 'light', 'dark'] as const;
+      const current = () => (root.dataset.theme as 'light' | 'dark' | undefined) ?? 'system';
+      const paintTheme = () => {
+        if (theme) theme.textContent = `Theme: ${current()}`;
+      };
+      theme?.addEventListener('click', () => {
+        const next = order[(order.indexOf(current()) + 1) % order.length];
+        if (next === 'system') delete root.dataset.theme;
+        else root.dataset.theme = next;
+        save('eol-theme', next === 'system' ? null : next);
+        paintTheme();
+      });
+      paintTheme();
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: 1rem;
+    top: -3rem;
+    padding: var(--space-2) var(--space-3);
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: var(--radius);
+    z-index: var(--z-toast);
+  }
+  .skip:focus {
+    top: 0.5rem;
+  }
+
+  .preview {
+    background: var(--sunken);
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-soft);
+    font-size: var(--step--1);
+    padding-block: var(--space-2);
+  }
+
+  .masthead {
+    position: relative;
+    border-bottom: 1px solid var(--rule);
+    background: var(--ground);
+  }
+  .masthead-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+    padding-block: var(--space-4);
+  }
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--ink);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--step-1);
+    letter-spacing: -0.005em;
+  }
+  .wordmark:hover {
+    color: var(--ink);
+  }
+
+  /* The sections: a row on wide screens, a menu on narrow ones. */
+  .masthead :global(.nav-list) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    font-size: var(--step--1);
+  }
+  .masthead :global(.nav-list a) {
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding-block: var(--space-1);
+    border-bottom: 2px solid transparent;
+  }
+  .masthead :global(.nav-list a:hover) {
+    color: var(--ink);
+  }
+  .masthead :global(.nav-list a[aria-current='page']) {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+    
+  .menu {
+    display: none;
+  }
+  .menu > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    list-style: none;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius);
+    font-size: var(--step--1);
+    color: var(--ink);
+    min-height: 2.75rem;
+  }
+  .menu > summary::-webkit-details-marker {
+    display: none;
+  }
+  .menu > summary::after {
+    content: '';
+    width: 0.45em;
+    height: 0.45em;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-0.15em) rotate(45deg);
+    transition: transform 160ms var(--ease-out);
+  }
+  .menu[open] > summary::after {
+    transform: translateY(0.1em) rotate(-135deg);
+  }
+  .menu[open] > summary {
+    background: var(--sunken);
+  }
+  /* the open menu is a sheet under the whole header, so it fits whichever
+     side of the wordmark the button wraps to */
+  .menu nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    z-index: var(--z-menu);
+    background: var(--surface);
+    border-bottom: 1px solid var(--rule-strong);
+    padding-block: var(--space-3) var(--space-5);
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+    box-shadow: 0 12px 24px oklch(0.2 0.02 258 / 0.12);
+  }
+  @media (min-width: 48rem) {
+    .menu nav {
+      padding-left: max(2rem, env(safe-area-inset-left, 0px));
+      padding-right: max(2rem, env(safe-area-inset-right, 0px));
+    }
+  }
+  .menu :global(.nav-list) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+    gap: 0 var(--space-5);
+    font-size: var(--step-0);
+  }
+  .menu :global(.nav-list li) {
+    border-bottom: 1px solid var(--rule);
+  }
+  .menu :global(.nav-list a) {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-block: var(--space-2);
+    border-bottom: 0;
+  }
+  .menu :global(.nav-list a[aria-current='page']) {
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 var(--accent);
+    padding-left: var(--space-3);
+  }
+
+  
+  @media (max-width: 52rem) {
+    .nav-wide {
+      display: none;
+    }
+    .menu {
+      display: block;
+    }
+  }
+
+  main {
+    padding-block: var(--space-7) var(--space-8);
+  }
+
+  .site-footer {
+    border-top: 1px solid var(--rule);
+    background: var(--sunken);
+    color: var(--ink-soft);
+    font-size: var(--step--1);
+    padding-block: var(--space-6);
+  }
+  .footer-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+  .footer-about {
+    display: grid;
+    gap: var(--space-2);
+    max-width: 44rem;
+    min-width: 0;
+  }
+  .footer-about code {
+    overflow-wrap: anywhere;
+  }
+  .footer-title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--step-0);
+  }
+  .footer-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+  .toggle {
+    cursor: pointer;
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius);
+    padding: var(--space-2) var(--space-3);
+    min-height: 2.75rem;
+    color: var(--ink);
+    font-size: var(--step--1);
+  }
+  .toggle:hover {
+    border-color: var(--ink-faint);
+  }
+  .toggle[aria-pressed='true'] {
+    background: var(--accent-wash);
+    border-color: var(--accent);
+  }
+</style>

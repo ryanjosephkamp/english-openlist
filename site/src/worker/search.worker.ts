@@ -108,7 +108,7 @@ function rowAt(index: number): Row {
   return {
     word: wordAt(table!, index),
     index,
-    intake: meta!.intake[index]!,
+    decided: meta!.decided[index]!,
     added: manifest!.dateTable[meta!.added[index]!] ?? '',
     flags: meta!.flags[index]!,
   };

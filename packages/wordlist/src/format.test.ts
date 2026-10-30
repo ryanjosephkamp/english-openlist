@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { encodeWords, encodeMeta, frontCode, compareBytes, WordFlag, INTAKE } from './format.ts';
+import { encodeWords, encodeMeta, frontCode, compareBytes, WordFlag, DECIDED } from './format.ts';
 import { decodeWords, decodeMeta, wordAt, prefixRange, includesAt, endsWithAt } from './decode.ts';
 
 const encoder = new TextEncoder();
@@ -118,7 +118,7 @@ describe('substring and suffix', () => {
 describe('columnar metadata', () => {
   it('round-trips every column', () => {
     const count = 5;
-    const intake = new Uint8Array([INTAKE.twl, INTAKE.pipeline, INTAKE.synthetic, INTAKE.other, INTAKE.twl]);
+    const decided = new Uint8Array([DECIDED.none, DECIDED.model_pipeline, DECIDED.model_alone, DECIDED.engine, DECIDED.none]);
     const added = new Uint16Array([0, 1, 2, 65535, 7]);
     const flags = new Uint8Array([
       0,
@@ -128,15 +128,15 @@ describe('columnar metadata', () => {
       WordFlag.NonAlpha,
     ]);
 
-    const back = decodeMeta(encodeMeta(count, intake, added, flags));
-    expect(Array.from(back.intake)).toEqual(Array.from(intake));
+    const back = decodeMeta(encodeMeta(count, decided, added, flags));
+    expect(Array.from(back.decided)).toEqual(Array.from(decided));
     expect(Array.from(back.added)).toEqual(Array.from(added));
     expect(Array.from(back.flags)).toEqual(Array.from(flags));
   });
 
   it('refuses a column of the wrong length', () => {
     expect(() => encodeMeta(3, new Uint8Array(2), new Uint16Array(3), new Uint8Array(3))).toThrow(
-      /intake length/,
+      /decided length/,
     );
   });
 });

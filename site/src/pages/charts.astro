@@ -1,0 +1,76 @@
+---
+import Base from '../layouts/Base.astro';
+import Charts from '../islands/Charts.tsx';
+import { manifest, stats, fmt, DECIDED_LABEL, DECIDED_ORDER, DECIDED_WHAT } from '../util/data';
+
+const props = { stats, decidedOrder: DECIDED_ORDER, decidedLabel: DECIDED_LABEL, decidedWhat: DECIDED_WHAT };
+---
+
+<Base
+  title="Charts"
+  section="Charts"
+  description="The English OpenList in charts: its words by length and letter, what decided each word, the channels they came in by, and its size day by day."
+>
+  <div class="frame page">
+    <header class="page-head">
+      <h1>The list in charts</h1>
+      <p class="lede">
+        Every chart is computed from all {fmt(manifest.wordCount)} words when the site is built, and each has a table of the
+        same figures behind its Table button.
+      </p>
+    </header>
+
+    <section aria-labelledby="shape">
+      <h2 id="shape">Its shape</h2>
+      <Charts client:visible part="shape" {...props} />
+    </section>
+
+    <section aria-labelledby="origin">
+      <h2 id="origin">Where its words came from</h2>
+      <p class="section-note">
+        The list kept a record of how each word came in. "What decided it" sorts those records into 4 values;
+        <a href="/rule/#decided">the rule page</a> says what each means.
+      </p>
+      <Charts client:visible part="origin" {...props} />
+    </section>
+
+    <section aria-labelledby="growth">
+      <h2 id="growth">Its size over time</h2>
+      <p class="section-note">
+        The 2 drops are corrections, each recorded word by word in a ledger: <a href="/rule/#record">the record</a> lists them.
+      </p>
+      <Charts client:visible part="growth" {...props} />
+    </section>
+  </div>
+</Base>
+
+<style>
+  .page {
+    display: grid;
+    gap: var(--space-8);
+  }
+  .page-head {
+    display: grid;
+    gap: var(--space-3);
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+  section {
+    display: grid;
+    gap: var(--space-5);
+  }
+  h2 {
+    font-size: var(--step-3);
+  }
+  .section-note {
+    color: var(--ink-soft);
+    max-width: var(--measure);
+    margin-top: calc(-1 * var(--space-3));
+  }
+  @media (max-width: 36rem) {
+    h1 {
+      font-size: var(--step-4);
+    }
+  }
+</style>

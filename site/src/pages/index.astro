@@ -1,0 +1,89 @@
+---
+import Base from '../layouts/Base.astro';
+import Mark from '../components/Mark.astro';
+import Search from '../islands/Search.tsx';
+import { manifest, stats, fmt, DECIDED_LABEL, HF } from '../util/data';
+import { usDate } from '../util/dates';
+
+const maxLength = stats.lengths[stats.lengths.length - 1]!.length;
+const lastPublished = usDate(stats.growth.last.date);
+
+// Words to start from, chosen from a vetted list of examples; the build fails
+// if one leaves the list.
+const EXAMPLES = ['steamship', 'epiphysis', 'trehalose', 'mainmast', 'remittance', 'capsaicin', 'autophagy', 'regift'];
+---
+
+<Base
+  title="Search"
+  section="Search"
+  description={`Search and filter the English OpenList: ${fmt(manifest.wordCount)} English words, lowercase a to z, in your browser.`}
+>
+  <div class="frame home">
+    <header class="home-head">
+      <Mark size={56} />
+      <div>
+        <h1>English OpenList</h1>
+        <p class="lede">
+          A free list of <strong class="n">{fmt(manifest.wordCount)}</strong> English words, lowercase a to z only, for word
+          games and apps, research, and teaching. The whole list is on this page, so every search runs in your browser.
+        </p>
+        <p class="home-sub">
+          This is the list as published on {lastPublished}. Its files are on
+          <a href={HF} rel="noopener">Hugging Face</a>; <a href="/rule/">its rule and record</a> say what is on it and why.
+        </p>
+      </div>
+    </header>
+
+    <Search
+      client:load
+      decidedLabels={DECIDED_LABEL}
+      decidedCounts={stats.decided}
+      maxLength={maxLength}
+      examples={EXAMPLES}
+    />
+  </div>
+</Base>
+
+<style>
+  .home {
+    display: grid;
+    gap: var(--space-7);
+  }
+  .home-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+  }
+  .home-head :global(.mark) {
+    margin-top: 0.4rem;
+  }
+  .home-head > div {
+    display: grid;
+    gap: var(--space-3);
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+  .lede .n {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .home-sub {
+    color: var(--ink-soft);
+    max-width: var(--measure);
+  }
+  @media (max-width: 36rem) {
+    .home-head {
+      grid-template-columns: 1fr;
+      gap: var(--space-3);
+    }
+    .home-head :global(.mark) {
+      width: 40px;
+      height: 40px;
+    }
+    h1 {
+      font-size: var(--step-4);
+    }
+  }
+</style>

@@ -11,50 +11,31 @@
 # file that must stay fresh cacheable for a year.
 
 # The manifest points at the content-hashed artifacts. If it were cached hard, a
-# rebuild would never be picked up — the browser would keep asking for filenames
-# that no longer exist. The daily pipeline rebuilds this site every morning, so
-# this is the file that has to notice.
+# rebuild would never be picked up: the browser would keep asking for filenames
+# that no longer exist.
 /data/manifest.json
   Cache-Control: public, max-age=300, must-revalidate
 
-# Same class as the manifest: rebuilt every deploy, keeps its name, so it cannot
-# be pinned. Without a rule it falls through to Cloudflare's default of
-# max-age=0, must-revalidate, which spends a round trip on every visit to the
-# Shape page to be told nothing changed.
-/data/stats.json
-  Cache-Control: public, max-age=300, must-revalidate
-
 # The pre-compressed artifacts. These are brotli streams on disk, served under
-# their own URL rather than negotiated — Pages does not pick between sibling
-# files — so the encoding has to be declared here or the browser hands the
+# their own URL rather than negotiated (Pages does not pick between sibling
+# files), so the encoding has to be declared here or the browser hands the
 # decoder raw brotli. The worker checks the decoded length against the manifest
 # and falls back to the plain `.bin` if this header ever goes missing.
-#
-# Without this the word list crosses the wire uncompressed: octet-stream is not
-# on Cloudflare's on-the-fly compression list, so 3.1 MB instead of 666 KB.
 /data/*.br
   Content-Encoding: br
   Cache-Control: public, max-age=31536000, immutable
 
 # Artifacts carry a content hash in the filename, so a change is a new URL and
-# these can never go stale. Listed by extension so manifest.json above keeps its
-# short life — see the note at the top.
+# these can never go stale.
 /data/*.bin
   Cache-Control: public, max-age=31536000, immutable
 
-# Vite's own output is content-hashed too.
-/assets/*
+# Astro's own output is content-hashed too.
+/_astro/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Provenance shards are addressed by word hash, so `0.json` keeps its name across
-# rebuilds and cannot be pinned. A day is long enough to be free for anyone
-# reading several words and short enough to pick up the next promotion.
-/data/prov/*
-  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
-
 # Derived word lists are rebuilt every deploy and keep their names, so they are
-# revalidated rather than pinned. A day is long enough to be free for repeat
-# visitors and short enough that a promoted word shows up promptly.
+# revalidated rather than pinned.
 /downloads/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 

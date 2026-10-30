@@ -1,0 +1,21 @@
+---
+// The English OpenList's mark: its filled square in the corner of an outlined
+// one. The CEOL Universe's mark is the same drawing with the outline in its
+// blue; here the outline is the page's own rule color.
+interface Props {
+  size?: number;
+}
+const { size = 24 } = Astro.props;
+---
+
+<svg class="mark" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="var(--rule-strong)" stroke-width="2.25"></rect>
+  <rect x="5" y="12" width="7" height="7" fill="var(--accent)"></rect>
+</svg>
+
+<style>
+  .mark {
+    flex: none;
+    display: block;
+  }
+</style>

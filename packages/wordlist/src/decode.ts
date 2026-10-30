@@ -2,7 +2,7 @@ import {
   MAGIC_WORDS,
   MAGIC_META,
   SECTION_WORDS,
-  SECTION_INTAKE,
+  SECTION_DECIDED,
   SECTION_ADDED,
   SECTION_FLAGS,
   decodeContainer,
@@ -66,7 +66,7 @@ export function decodeWords(bytes: Uint8Array): WordTable {
 }
 
 export type MetaTable = {
-  readonly intake: Uint8Array;
+  readonly decided: Uint8Array;
   readonly added: Uint16Array;
   readonly flags: Uint8Array;
 };
@@ -74,16 +74,16 @@ export type MetaTable = {
 export function decodeMeta(bytes: Uint8Array): MetaTable {
   const container = decodeContainer(bytes, MAGIC_META);
 
-  const intake = container.sections.get(SECTION_INTAKE);
+  const decided = container.sections.get(SECTION_DECIDED);
   const addedRaw = container.sections.get(SECTION_ADDED);
   const flags = container.sections.get(SECTION_FLAGS);
-  if (!intake || !addedRaw || !flags) throw new Error('meta artifact is missing a column');
+  if (!decided || !addedRaw || !flags) throw new Error('meta artifact is missing a column');
 
   // `addedRaw` is a subarray of the fetched buffer, and its byteOffset is
   // 4-aligned by construction, so a Uint16Array view over it is always legal.
   const added = new Uint16Array(addedRaw.buffer, addedRaw.byteOffset, addedRaw.byteLength / 2);
 
-  return { intake, added, flags };
+  return { decided, added, flags };
 }
 
 const decoder = new TextDecoder();
