@@ -1,0 +1,13 @@
+# The old site's paths, sent to the pages that replaced them, so links made to
+# it keep working. Pages evaluates these top to bottom and stops at the first
+# match.
+/use          /downloads/  301
+/use/         /downloads/  301
+/shape        /charts/     301
+/shape/       /charts/     301
+/as-it-is     /rule/       301
+/as-it-is/    /rule/       301
+/word/:word   /?q=:word    302
+# The daily posts live in the repository.
+/blog         https://github.com/ryanjosephkamp/english-openlist/tree/main/_posts  302
+/blog/*       https://github.com/ryanjosephkamp/english-openlist/tree/main/_posts  302
