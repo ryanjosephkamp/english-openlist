@@ -1,0 +1,227 @@
+---
+import Base from '../layouts/Base.astro';
+import { manifest, stats, record, fmt, moved, DECIDED_LABEL, DECIDED_ORDER, DECIDED_WHAT, REPO } from '../util/data';
+import { usDate } from '../util/dates';
+import { CEOL_PUBLIC } from '../util/release-state';
+
+const count = (length: number) => stats.lengths.find((l) => l.length === length)?.count ?? 0;
+const maxLength = stats.lengths[stats.lengths.length - 1]!.length;
+const over45 = stats.lengths.filter((l) => l.length > 45).reduce((s, l) => s + l.count, 0);
+
+const g = stats.growth;
+const big = g.events.filter((e) => Math.abs(e.delta) >= 100);
+const lastBig = big.length ? big[big.length - 1]!.date : g.first.date;
+const nightlyAfter = g.events.filter((e) => e.date > lastBig).reduce((s, e) => s + e.delta, 0);
+const lastAdded = [...g.events].reverse().find((e) => e.delta > 0);
+
+// The record, from the ledgers in corrections/. Each line names its ledger.
+const cleared = moved('remove_from_invalid_list', 'ledger_stage1.csv');
+const comparatives = moved('demote_to_invalid', 'ledger_demotions.csv');
+const forms = moved('demote_to_invalid', 'ledger_demotions_stage4.csv');
+const malformed = moved('delete_malformed', 'ledger_form_rules.csv');
+const letters = moved('demote_to_invalid', 'ledger_single_letters.csv');
+const candidates = moved('add_candidate', 'ledger_form_rules.csv');
+const requeued = moved('queue_for_recheck', 'ledger_letters_recheck.csv');
+const reviewed = record.filter((r) => r.action === 'none').reduce((s, r) => s + r.count, 0);
+const ledgerDate = (ledger: string) => usDate(record.find((r) => r.ledger === ledger)!.date);
+
+const bulk = [...manifest.bulkDates].sort((a, b) => a.date.localeCompare(b.date));
+const bulkTotal = bulk.reduce((s, b) => s + b.count, 0);
+const tree = `${REPO}/tree/main`;
+---
+
+<Base
+  title="Rule and record"
+  section="Rule and record"
+  description="The English OpenList's rule for what is on it, how a word gets on or off, what decided each word, and its record of corrections."
+>
+  <div class="frame page">
+    <header class="page-head">
+      <h1>Its rule and its record</h1>
+      <p class="lede">
+        What may be on the list, how a word gets on or off it, and every correction made by hand, counted from the ledgers
+        that recorded them.
+      </p>
+    </header>
+
+    <div class="doc">
+      <h2 id="rule">The rule</h2>
+      <p>
+        An entry is lowercase a to z and nothing else: the pattern <code>^[a-z]+$</code>, with no length bound. No capital,
+        space, hyphen, apostrophe, digit, or accent.
+      </p>
+      <p>
+        So the list is deliberately not a tournament word list. It holds {fmt(count(1))} one-letter
+        {count(1) === 1 ? 'word' : 'words'} and {fmt(over45)} {over45 === 1 ? 'word' : 'words'} longer than 45 letters, the
+        longest {maxLength} letters long; tournament lists exclude both. The download
+        <a href="/downloads/">"Lengths 2 to 45"</a> is the list in that shape.
+      </p>
+
+      <h2 id="moves">How a word gets on or off</h2>
+      <ul>
+        <li>
+          <strong>The nightly run</strong> is the only automated process that adds words. It looks for new words (Merriam-Webster's
+          and Wordnik's words of the day, and a file of manual additions) and checks about 1,000 entries of the invalid list
+          against dictionary APIs. A word a dictionary recognizes is promoted to the list. A word whose check was refused or
+          rate-limited is not checked that night, and nothing records it as rejected.
+        </li>
+        <li>
+          <strong>A correction ledger</strong> is the only other way a word moves. Each row of a ledger in
+          <a href={`${tree}/corrections`} rel="noopener"><code>corrections/</code></a> names the word, the action, the reason,
+          the method, the source that ruled, and the date, before any list changes.
+        </li>
+        <li>
+          <strong>No word is invalid for good.</strong> A word moved off the list is queued to be checked again, because "no
+          dictionary we could reach knew it that day" is a statement about the dictionaries, not about English.
+        </li>
+      </ul>
+
+      <h2 id="decided">What decided each word</h2>
+      <p>
+        The list's record of each word says how it got on. This site sorts the records into 4 values by 1 rule{
+          CEOL_PUBLIC && ', the rule the CEOL Universe uses, so both count the same words'
+        }:
+      </p>
+      <div class="doc-table">
+        <table>
+          <thead>
+            <tr><th scope="col">Value</th><th scope="col">What it means</th><th scope="col" class="num">Words</th></tr>
+          </thead>
+          <tbody>
+            {
+              DECIDED_ORDER.map((d) => (
+                <tr>
+                  <th scope="row">{DECIDED_LABEL[d]}</th>
+                  <td>{DECIDED_WHAT[d]}</td>
+                  <td class="num">{fmt(stats.decided[d])}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The synthetic engine made {fmt(stats.decided.engine)} words by rule: affixes on the list's own words, chemical names by
+        substitution, medical and scientific prefixes, and Greek plurals. They are kept, and marked, so a project can leave them
+        out: the download <a href="/downloads/">"Without the synthetic engine"</a> does.
+      </p>
+      <p>
+        {fmt(manifest.llmSaysInvalid)} words carry a note from 1 pass of a language model that called them invalid, and the
+        list kept them. The note is an opinion, not a verdict; the search can leave those words out.
+      </p>
+      <p>
+        The list was assembled in 3 large loads: {bulk.map((b, i) => (
+          <>{i > 0 && (i === bulk.length - 1 ? ', and ' : ', ')}{usDate(b.date)} ({fmt(b.count)} words)</>
+        ))}. Together they hold {fmt(bulkTotal)} of its words; {fmt(manifest.missingDate)} carry no date. Sorting by date added
+        is mostly sorting by load.
+      </p>
+
+      <h2 id="record">The record of corrections</h2>
+      <p>
+        Every word moved by hand is a row of a ledger. These are their counts, read from the ledgers when the site is built.
+      </p>
+      <ol class="record">
+        <li>
+          <span class="when">{ledgerDate('ledger_stage1.csv')}</span>
+          <p>
+            <strong>{fmt(cleared)}</strong> words that were on both lists were removed from the invalid list. Each already
+            carried a dictionary's ruling in its own record. The list itself did not change.
+          </p>
+        </li>
+        <li>
+          <span class="when">{ledgerDate('ledger_demotions.csv')}</span>
+          <p>
+            <strong>{fmt(comparatives + forms)}</strong> synthetic forms were moved to the invalid list:
+            {fmt(comparatives)} comparatives and superlatives, and {fmt(forms)} gerund plurals, verb forms, and agent plurals.
+            They were decided by the inflections Merriam-Webster records for their stems, generalized from a sample. Every one
+            is queued for another check.
+          </p>
+        </li>
+        <li>
+          <span class="when">{ledgerDate('ledger_form_rules.csv')}</span>
+          <p>
+            The rule changed to <code>^[a-z]+$</code> with no length bound. <strong>{fmt(malformed)}</strong> entries that
+            broke it (hyphenated or accented) were deleted; {fmt(letters)} single letters were moved to the invalid list; and
+            {fmt(candidates)} strings that were on neither list were added to the invalid list as candidates, never to the
+            list.
+          </p>
+        </li>
+        <li>
+          <span class="when">{ledgerDate('ledger_letters_recheck.csv')}</span>
+          <p>{fmt(requeued)} single letters were queued to be checked again under the new rule.</p>
+        </li>
+        <li>
+          <span class="when">From {usDate(lastBig)}</span>
+          <p>
+            The nightly run added <strong>{fmt(nightlyAfter)}</strong> words{lastAdded && <>, the last on {usDate(lastAdded.date)}</>}.
+            The list was last published on {usDate(g.last.date)}.
+          </p>
+        </li>
+      </ol>
+      <p class="note">
+        The ledgers also hold {fmt(reviewed)} rows of samples that were checked and moved nothing; they are the evidence for the
+        corrections above. How each was decided is in
+        <a href={`${tree}/corrections/README.md`} rel="noopener"><code>corrections/README.md</code></a>.
+      </p>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page {
+    display: grid;
+    gap: var(--space-7);
+  }
+  .page-head {
+    display: grid;
+    gap: var(--space-3);
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+  .doc h2:first-child {
+    margin-top: 0;
+  }
+  .num {
+    text-align: right;
+    white-space: nowrap;
+  }
+  .doc td.num {
+    padding-right: 0;
+  }
+  .record {
+    list-style: none;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .doc .record li + li {
+    margin-top: 0;
+  }
+  .record li {
+    display: grid;
+    grid-template-columns: 10.5rem minmax(0, 1fr);
+    gap: var(--space-1) var(--space-5);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+  }
+  .when {
+    color: var(--ink-soft);
+    font-size: var(--step--1);
+    padding-top: 0.15em;
+  }
+  .record strong {
+    color: var(--accent);
+  }
+  .note {
+    color: var(--ink-soft);
+    font-size: var(--step--1);
+  }
+  @media (max-width: 36rem) {
+    h1 {
+      font-size: var(--step-4);
+    }
+    .record li {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

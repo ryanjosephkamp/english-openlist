@@ -130,3 +130,6 @@ CLAUDE.local.md
 AGENTS.md
 .claude/
 .codex/
+
+# Astro writes generated types here on every build.
+site/.astro/

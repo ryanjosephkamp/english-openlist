@@ -5,10 +5,15 @@ import { chain } from 'stream-chain';
 import Parser from 'stream-json/Parser.js';
 import StreamObject from 'stream-json/streamers/StreamObject.js';
 import { VALID_DICT } from './paths.ts';
-import { INTAKE, type IntakeName } from '@eol/wordlist/format';
+import type { DecidedName } from '@eol/wordlist/format';
+import { channelsOf, type Channels } from './channels.ts';
+
+/** The intakes a record can be written by; internal to the build. */
+export const INTAKE_NAMES = ['twl', 'pipeline', 'synthetic', 'other'] as const;
+export type IntakeName = (typeof INTAKE_NAMES)[number];
 
 /**
- * The three facts the site needs about every word, reduced from a 291 MB file.
+ * The facts the site needs about every word, reduced from a 291 MB file.
  *
  * `merged_valid_dict.json` is a single top-level object with 378,891 keys, and
  * entries are not uniformly shaped — the exploration found 31 distinct
@@ -19,7 +24,16 @@ import { INTAKE, type IntakeName } from '@eol/wordlist/format';
  * survive anyway.
  */
 export type Facts = {
+  /**
+   * The intake the record was written by. Used for the build's own tripwires
+   * and never written to a public file: 1 of its values names the tournament
+   * word list, whose label the public files withhold.
+   */
   readonly intake: IntakeName;
+  /** What decided the word; see `DECIDED`. */
+  readonly decided: DecidedName;
+  /** The channels the word came in by, withheld labels taken out. */
+  readonly channels: Channels;
   /** `YYYY-MM-DD`, or null when the record carries no usable date. */
   readonly added: string | null;
   /**
@@ -33,6 +47,8 @@ export type Facts = {
 
 type Record_ = {
   source?: unknown;
+  candidate_source?: unknown;
+  manual_validation?: unknown;
   validation_source?: unknown;
   unverified_llm_verdict?: unknown;
   /** Pre-August-2026 name for the field above. */
@@ -59,6 +75,22 @@ export function intakeOf(record: Record_): IntakeName {
   if (source === 'synthetic_generation') return 'synthetic';
   if (record.validation_source === 'verification_pipeline') return 'pipeline';
   return 'other';
+}
+
+/**
+ * What decided a word, by the rule of the CEOL Universe's `model_or_engine`
+ * column, so both projects count
+ * the same words in each value.
+ */
+export function decidedOf(record: Record_): DecidedName {
+  if (record.source === 'synthetic_generation') return 'engine';
+  const manual = record.manual_validation;
+  const named =
+    !!manual && typeof manual === 'object' && !!(manual as Record<string, unknown>)['manual_validation_llm'];
+  if (!named) return 'none';
+  if (record.validation_source === 'verification_pipeline') return 'model_pipeline';
+  if ('unverified_llm_verdict' in record && !('validation_source' in record)) return 'model_alone';
+  return 'none';
 }
 
 /**
@@ -92,6 +124,8 @@ export async function loadFacts(
     const record = entry.value ?? {};
     facts.set(entry.key, {
       intake: intakeOf(record),
+      decided: decidedOf(record),
+      channels: channelsOf(record),
       added: addedOf(record),
       // Accepts the old `status` name as well, so the data and this code can
       // land in either order without a window where the build reads a field
@@ -105,4 +139,3 @@ export async function loadFacts(
   return facts;
 }
 
-export const INTAKE_CODE = INTAKE;

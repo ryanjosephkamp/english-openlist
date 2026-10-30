@@ -3,12 +3,12 @@ import { mkdir, rename, stat, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { CACHE_DIR, HF_BASE, HF_REPO } from './paths.ts';
+import { CACHE_DIR, HF_BASE, HF_REPO, HF_REVISION } from './paths.ts';
 
 /**
  * Download the dataset files the build reads.
  *
- * Against `main`, not a pinned revision. Ars Magna pins deliberately — a silent
+ * Against `main` unless `EOL_REVISION` names a revision. Ars Magna pins deliberately — a silent
  * dictionary change there silently changes every result it produces. This site
  * *is* English OpenList's own surface, so it should show what the dataset says
  * today; the daily pipeline pushes at about 00:26 UTC and this rebuilds behind
@@ -59,7 +59,7 @@ const kb = (n: number) => `${(n / 1024 / 1024).toFixed(1)} MB`;
 
 await mkdir(CACHE_DIR, { recursive: true });
 
-const revision = await currentRevision();
+const revision = HF_REVISION === 'main' ? await currentRevision() : HF_REVISION;
 const cached = await readFile(STAMP, 'utf8').catch(() => '');
 const fresh = cached.trim() === revision;
 

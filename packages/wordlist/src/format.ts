@@ -26,12 +26,19 @@
  */
 
 export const MAGIC_WORDS = 'EOLWORDS';
-export const MAGIC_META = 'EOLMETA1';
-export const FORMAT_VERSION = 1;
+export const MAGIC_META = 'EOLMETA2';
+export const FORMAT_VERSION = 2;
 
 export const SECTION_WORDS = 1;
-/** One byte per word: which intake the word arrived through. */
-export const SECTION_INTAKE = 3;
+/**
+ * One byte per word: what decided the word, a `DECIDED` code.
+ *
+ * Kind 3 carried the word's intake in format 1. It is retired rather than
+ * reused, because 1 of its values named the tournament word list, a channel
+ * the list's public files no longer label; a stale reader that finds kind 3
+ * missing fails instead of reading the new column as the old one.
+ */
+export const SECTION_DECIDED = 6;
 /** Two bytes per word, little-endian: index into the manifest's date table. */
 export const SECTION_ADDED = 4;
 /** One byte per word of bit flags; see `WordFlag`. */
@@ -41,19 +48,29 @@ const HEADER_BYTES = 24;
 const SECTION_ENTRY_BYTES = 12;
 
 /**
- * Intake codes, in the order the dataset card documents them. A byte per word
- * rather than a string per word: 378,891 bytes raw, 71,578 brotli.
+ * What decided each word, by the rule the CEOL Universe's `model_or_engine`
+ * column uses, so the 2 projects count the same things:
+ *
+ * - `engine`: made by the list's synthetic engine (`source` is
+ *   `synthetic_generation`);
+ * - `model_pipeline`: passed the verification pipeline, which used a language
+ *   model (`validation_source` is `verification_pipeline`, and the record's
+ *   manual validation names the model);
+ * - `model_alone`: a language model's verdict is the record's only basis (the
+ *   manual validation names the model, and there is an `unverified_llm_verdict`
+ *   and no `validation_source`);
+ * - `none`: everything else: a list, a dictionary API, or a domain extract.
  */
-export const INTAKE = {
-  twl: 0,
-  pipeline: 1,
-  synthetic: 2,
-  other: 3,
+export const DECIDED = {
+  none: 0,
+  model_pipeline: 1,
+  model_alone: 2,
+  engine: 3,
 } as const;
 
-export type IntakeName = keyof typeof INTAKE;
+export type DecidedName = keyof typeof DECIDED;
 
-export const INTAKE_NAMES = ['twl', 'pipeline', 'synthetic', 'other'] as const satisfies readonly IntakeName[];
+export const DECIDED_NAMES = ['none', 'model_pipeline', 'model_alone', 'engine'] as const satisfies readonly DecidedName[];
 
 export const WordFlag = {
   /** One LLM pass called the word invalid; the dataset kept it. An opinion, not a verdict. */
@@ -229,8 +246,8 @@ export function encodeWords(words: readonly Uint8Array[]): Uint8Array {
 /**
  * Build the columnar metadata artifact.
  *
- * Every column is aligned to the word index, so the browser reads word `i`'s
- * intake at `intake[i]` with no lookup structure at all. Measured against the
+ * Every column is aligned to the word index, so the browser reads what decided
+ * word `i` at `decided[i]` with no lookup structure at all. Measured against the
  * alternative of a JSON array of `{word, source, date}` objects: 1,115,639
  * bytes brotli for the JSON against ~148 KB for these three columns, because
  * JSON re-encodes the word in every record and the word list is already being
@@ -238,16 +255,16 @@ export function encodeWords(words: readonly Uint8Array[]): Uint8Array {
  */
 export function encodeMeta(
   wordCount: number,
-  intake: Uint8Array,
+  decided: Uint8Array,
   added: Uint16Array,
   flags: Uint8Array,
 ): Uint8Array {
-  if (intake.length !== wordCount) throw new Error(`intake length ${intake.length} != ${wordCount}`);
+  if (decided.length !== wordCount) throw new Error(`decided length ${decided.length} != ${wordCount}`);
   if (added.length !== wordCount) throw new Error(`added length ${added.length} != ${wordCount}`);
   if (flags.length !== wordCount) throw new Error(`flags length ${flags.length} != ${wordCount}`);
 
   return encodeContainer(MAGIC_META, wordCount, 0, [
-    { kind: SECTION_INTAKE, data: intake },
+    { kind: SECTION_DECIDED, data: decided },
     {
       kind: SECTION_ADDED,
       data: new Uint8Array(added.buffer, added.byteOffset, added.byteLength),

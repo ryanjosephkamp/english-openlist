@@ -1,6 +1,6 @@
 import type { WordTable, MetaTable } from './decode.ts';
 import { prefixRange, includesAt, endsWithAt, wordAt } from './decode.ts';
-import { INTAKE, type IntakeName } from './format.ts';
+import { DECIDED, type DecidedName } from './format.ts';
 
 export type MatchMode = 'prefix' | 'contains' | 'suffix' | 'pattern' | 'regex';
 
@@ -23,8 +23,8 @@ export type Query = {
   readonly mode: MatchMode;
   readonly minLength: number;
   readonly maxLength: number;
-  /** Empty means every intake. */
-  readonly intakes: readonly IntakeName[];
+  /** What decided the word; empty means anything. */
+  readonly decided: readonly DecidedName[];
   /** Empty means every first letter. Single lowercase letters only. */
   readonly letters: readonly string[];
   readonly charset: Charset;
@@ -38,8 +38,8 @@ export const DEFAULT_QUERY: Query = {
   text: '',
   mode: 'prefix',
   minLength: 1,
-  maxLength: 47,
-  intakes: [],
+  maxLength: 255,
+  decided: [],
   letters: [],
   charset: 'any',
   sort: 'alpha',
@@ -148,7 +148,7 @@ export function runQuery(table: WordTable, meta: MetaTable, query: Query): Query
     }
   }
 
-  const intakeMask = intakeBits(query.intakes);
+  const decidedMask = decidedBits(query.decided);
   const letterSet = letterBytes(query.letters);
 
   const out = new Uint32Array(to - from);
@@ -158,7 +158,7 @@ export function runQuery(table: WordTable, meta: MetaTable, query: Query): Query
     const length = table.lengths[i]!;
     if (length < query.minLength || length > query.maxLength) continue;
 
-    if (intakeMask !== 0b1111 && (intakeMask & (1 << meta.intake[i]!)) === 0) continue;
+    if (decidedMask !== 0b1111 && (decidedMask & (1 << meta.decided[i]!)) === 0) continue;
     if (!query.includeContested && (meta.flags[i]! & FLAG_STATUS_INVALID) !== 0) continue;
 
     if (letterSet !== null && !letterSet.has(table.bytes[table.offsets[i]!]!)) continue;
@@ -184,10 +184,10 @@ export function runQuery(table: WordTable, meta: MetaTable, query: Query): Query
   return { indices, millis: performance.now() - started, error: null };
 }
 
-function intakeBits(intakes: readonly IntakeName[]): number {
-  if (intakes.length === 0) return 0b1111;
+function decidedBits(decided: readonly DecidedName[]): number {
+  if (decided.length === 0) return 0b1111;
   let mask = 0;
-  for (const name of intakes) mask |= 1 << INTAKE[name];
+  for (const name of decided) mask |= 1 << DECIDED[name];
   return mask;
 }
 

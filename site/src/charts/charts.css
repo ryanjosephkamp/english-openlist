@@ -1,0 +1,533 @@
+/*
+ * The charts. Thin marks from 1 baseline with a 4px rounded data end;
+ * hairline grids a step off the ground; text in text tokens, never in a
+ * series color. Every series is the list's red; a bar that is not a value of
+ * the series (a withheld or unrecorded channel) recedes to gray.
+ */
+
+:root {
+  --chart-muted: color-mix(in oklch, var(--ink-faint) 38%, var(--ground));
+  --chart-track: color-mix(in oklch, var(--rule) 55%, var(--ground));
+}
+
+.t-accent { --mark: var(--accent); }
+.t-eol { --mark: var(--eol); }
+.t-muted { --mark: var(--chart-muted); }
+
+/* The frame */
+.chart {
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+.chart-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--step-1);
+  line-height: 1.25;
+}
+.chart-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+.chart-switch {
+  font-size: var(--step--2);
+  padding: 0.2rem 0.6rem;
+  min-height: 1.9rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.chart-switch:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+.chart-switch[aria-pressed='true'] {
+  background: var(--accent-wash);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.chart-note {
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+  max-width: 62ch;
+}
+.chart-table-wrap {
+  overflow-x: auto;
+}
+.chart-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--step--1);
+}
+.chart-table th,
+.chart-table td {
+  text-align: left;
+  padding: var(--space-1) var(--space-3) var(--space-1) 0;
+  border-bottom: 1px solid var(--rule);
+  font-weight: 400;
+}
+.chart-table thead th {
+  color: var(--ink-soft);
+}
+.chart-table .num {
+  text-align: right;
+  padding-right: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Horizontal bars */
+.barlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.bl-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.35rem 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  font-size: var(--step--1);
+}
+.barlist.is-interactive .bl-row {
+  padding-inline: var(--space-2);
+  cursor: pointer;
+  transition: background-color 150ms var(--ease-out);
+}
+.barlist.is-interactive .bl-row:hover {
+  background: var(--sunken);
+}
+.barlist .is-on .bl-row {
+  background: var(--accent-wash);
+}
+.barlist .is-zero .bl-row {
+  color: var(--ink-faint);
+}
+.barlist.is-interactive .is-zero .bl-row {
+  cursor: default;
+}
+.barlist.is-interactive .is-zero .bl-row:hover {
+  background: none;
+}
+.barlist .is-zero .bl-pct {
+  color: var(--ink-faint);
+}
+.bl-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+.bl-track {
+  position: relative;
+  height: 0.9rem;
+}
+.bl-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--mark);
+  border-radius: 0 4px 4px 0;
+  transition: width 220ms var(--ease-out), background-color 150ms var(--ease-out);
+}
+.bl-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  min-width: 8.5rem;
+  font-variant-numeric: tabular-nums;
+}
+.bl-pct {
+  color: var(--ink-soft);
+  min-width: 3.6rem;
+  text-align: right;
+}
+@media (max-width: 34rem) {
+  .bl-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.2rem;
+  }
+  .bl-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .bl-value {
+    min-width: 0;
+  }
+}
+
+/* Vertical columns */
+.cols {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.cols-plot {
+  position: relative;
+  height: var(--h);
+  margin-left: 2.6rem;
+  min-width: 0;
+}
+.cols-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.cols-tick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--rule);
+}
+.cols-tick-label {
+  position: absolute;
+  right: calc(100% + 0.45rem);
+  top: -0.6em;
+  font-size: var(--step--2);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.cols-bars {
+  position: absolute;
+  inset: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+.cols-bars li {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+}
+.cols-hit {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: default;
+  border-radius: 2px;
+}
+button.cols-hit {
+  cursor: pointer;
+}
+.cols-hit:hover,
+.cols-hit:focus-visible {
+  background: color-mix(in oklch, var(--sunken) 70%, transparent);
+}
+.cols-bar {
+  display: block;
+  width: min(100%, 24px);
+  background: var(--mark);
+  border-radius: 4px 4px 0 0;
+  transition: height 220ms var(--ease-out), background-color 150ms var(--ease-out);
+}
+.cols-axis {
+  list-style: none;
+  margin: 0 0 0 2.6rem;
+  padding: 0;
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+  overflow: visible;
+}
+.cols-axis li {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  font-size: var(--step--2);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* a label wider than its column overflows toward the plot, never past its edge */
+.cols-axis li:last-child {
+  direction: rtl;
+  text-align: right;
+}
+
+/* The tooltip: the value leads, the label follows */
+.tip {
+  position: absolute;
+  bottom: calc(100% + 0.4rem);
+  transform: translateX(-50%);
+  display: grid;
+  gap: 0.1rem;
+  min-width: 8rem;
+  padding: 0.45rem 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px oklch(0.2 0.02 258 / 0.14);
+  font-size: var(--step--1);
+  pointer-events: none;
+  z-index: var(--z-menu);
+  white-space: nowrap;
+}
+.tip strong {
+  font-size: var(--step-0);
+  font-variant-numeric: tabular-nums;
+}
+.tip span {
+  color: var(--ink-soft);
+}
+.tip-multi {
+  bottom: auto;
+  top: 0;
+  transform: translateX(-50%) translateY(-0.25rem);
+}
+.tip-head {
+  font-weight: 600;
+  color: var(--ink) !important;
+  margin-bottom: 0.15rem;
+}
+.tip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.tip-row strong {
+  min-width: 3.6rem;
+}
+
+/* Lines */
+.linec {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  font-size: var(--step--1);
+}
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.legend-n {
+  color: var(--ink-soft);
+}
+.key-line {
+  display: inline-block;
+  width: 1rem;
+  height: 2px;
+  background: var(--mark);
+  border-radius: 1px;
+  flex: none;
+}
+.linec-plot {
+  position: relative;
+  max-width: 46rem;
+}
+.linec-plot svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.linec-plot svg:focus-visible {
+  outline-offset: 4px;
+}
+.linec .grid {
+  stroke: var(--rule);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.linec .axis {
+  fill: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.linec .crosshair {
+  stroke: var(--ink-faint);
+  stroke-width: 1;
+}
+.linec .line {
+  fill: none;
+  stroke: var(--mark);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.linec .dot {
+  fill: var(--mark);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+/* The squares: the selection to scale inside the universe */
+.squares {
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.squares svg {
+  width: 100%;
+  max-width: 15rem;
+  height: auto;
+  display: block;
+}
+.sq-u {
+  fill: var(--accent-wash);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.sq-s {
+  fill: var(--accent);
+  transition: width 260ms var(--ease-out), height 260ms var(--ease-out), y 260ms var(--ease-out);
+}
+.sq-frame {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  transition: width 260ms var(--ease-out), height 260ms var(--ease-out), y 260ms var(--ease-out);
+}
+.sq-e {
+  fill: var(--eol);
+  transition: width 260ms var(--ease-out), height 260ms var(--ease-out), y 260ms var(--ease-out);
+}
+/* the intro: a square grows down from its starting size, once */
+.sq-intro {
+  transform-box: fill-box;
+  transform-origin: 0 100%;
+  animation: sq-intro 1100ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
+}
+.sq-frame.sq-intro {
+  vector-effect: non-scaling-stroke;
+}
+@keyframes sq-intro {
+  from {
+    transform: scale(var(--from, 1));
+  }
+}
+.sq-zoom {
+  fill: var(--surface);
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+.squares-key {
+  display: grid;
+  gap: 0.2rem;
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+}
+.squares-key > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.key-sq {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex: none;
+}
+.k-u { background: var(--accent-wash); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.k-s { background: var(--accent); }
+.k-e { background: var(--eol); }
+.squares-zoom {
+  font-style: italic;
+}
+
+.mini-sq {
+  flex: none;
+  display: inline-block;
+  vertical-align: middle;
+}
+.mini-sq .sq-u {
+  stroke-width: 1.25;
+}
+
+/* The chart pages: 1 chart a row on a phone, 2 a row from about 60rem */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+  gap: var(--space-7);
+  align-items: start;
+}
+
+/* The size over time */
+.growth {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.growth svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: pan-y;
+}
+.g-grid {
+  stroke: var(--chart-track);
+  stroke-width: 1;
+}
+.g-tick {
+  fill: var(--ink-soft);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.g-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.g-dot {
+  fill: var(--accent);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.g-mark {
+  fill: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.g-cross {
+  stroke: var(--rule-strong);
+  stroke-dasharray: 3 3;
+}
+.growth-read {
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+  min-height: 1.6em;
+}
+.growth-read strong {
+  color: var(--ink);
+}

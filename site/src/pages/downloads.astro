@@ -1,0 +1,202 @@
+---
+import Base from '../layouts/Base.astro';
+import { manifest, fmt, HF, REPO } from '../util/data';
+
+const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+const main = `${HF}/resolve/main`;
+
+// Each snippet was run against the dataset, and its output is the one shown.
+const python = `from huggingface_hub import hf_hub_download
+
+path = hf_hub_download(
+    "ryanjosephkamp/english-openlist",
+    "data/merged_valid_words.txt",
+    repo_type="dataset",
+)
+words = open(path, encoding="utf-8").read().split()
+print(len(words))`;
+const js = `const url =
+  "https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_valid_words.txt";
+const words = (await (await fetch(url)).text()).split("\\n").filter(Boolean);
+console.log(words.length);`;
+const shell = `curl -sL -o merged_valid_words.txt \\
+  https://huggingface.co/datasets/ryanjosephkamp/english-openlist/resolve/main/data/merged_valid_words.txt
+wc -l < merged_valid_words.txt`;
+---
+
+<Base
+  title="Downloads"
+  section="Downloads"
+  description="Download the English OpenList: the list, every word's record, the candidates not on it, and ready-made subsets, with the code to load them."
+>
+  <div class="frame page">
+    <header class="page-head">
+      <h1>Downloads</h1>
+      <p class="lede">
+        The list is plain text, 1 word a line, sorted. Its files live on
+        <a href={HF} rel="noopener">Hugging Face</a>; the subsets below are built from them with this site.
+      </p>
+    </header>
+
+    <section aria-labelledby="dataset">
+      <h2 id="dataset">From the dataset</h2>
+      <ul class="files">
+        <li>
+          <a href={`${main}/data/merged_valid_words.txt`} rel="noopener">The list</a>
+          <p><code>data/merged_valid_words.txt</code>: {fmt(manifest.wordCount)} words, about 4 MB.</p>
+        </li>
+        <li>
+          <a href={`${main}/data/merged_valid_dict.json`} rel="noopener">Every word's record</a>
+          <p>
+            <code>data/merged_valid_dict.json</code>: how each word got on the list, about 280 MB. Fields vary by how the word
+            came in; the dataset's card describes them.
+          </p>
+        </li>
+        <li>
+          <a href={`${main}/data/merged_invalid_words.txt`} rel="noopener">The candidates</a>
+          <p>
+            <code>data/merged_invalid_words.txt</code>: {fmt(manifest.invalidCount)} strings not on the list, about 90 MB. The
+            nightly run checks about 1,000 of them a night.
+          </p>
+        </li>
+        <li>
+          <a href={`${HF}/tree/main/latest/brrrdle`} rel="noopener">Word-game files</a>
+          <p><code>latest/brrrdle/</code>: answers and allowed guesses for lengths 2 to 35, in JSON.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="subsets">
+      <h2 id="subsets">Subsets</h2>
+      <ul class="files">
+        {
+          manifest.downloads.map((d) => (
+            <li>
+              <a href={`/downloads/${d.file}`} download>
+                {d.label}
+              </a>
+              <p>
+                <code>{d.file}</code>: {fmt(d.words)} words, {mb(d.bytes)}. {d.note}
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section aria-labelledby="code">
+      <h2 id="code">Load it in code</h2>
+      <p class="section-note">Each prints the number of words: {fmt(manifest.wordCount)} for the list this site was built from.</p>
+      <div class="snippets">
+        <figure>
+          <figcaption>Python, with <code>huggingface_hub</code></figcaption>
+          <pre><code>{python}</code></pre>
+        </figure>
+        <figure>
+          <figcaption>JavaScript, in a module or a browser console</figcaption>
+          <pre><code>{js}</code></pre>
+        </figure>
+        <figure>
+          <figcaption>A shell</figcaption>
+          <pre><code>{shell}</code></pre>
+        </figure>
+      </div>
+    </section>
+
+    <p class="foot">
+      The list changes when the nightly run publishes. To pin a version, put a revision of the dataset in place of
+      <code>main</code> in a link. The code that builds and checks the list is
+      <a href={REPO} rel="noopener">on GitHub</a>.
+    </p>
+  </div>
+</Base>
+
+<style>
+  .page {
+    display: grid;
+    gap: var(--space-7);
+  }
+  .page-head {
+    display: grid;
+    gap: var(--space-3);
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+  section {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 56rem;
+  }
+  h2 {
+    font-size: var(--step-3);
+  }
+  .files {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .files li {
+    display: grid;
+    grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr);
+    gap: var(--space-2) var(--space-5);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .files a {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .files a:hover {
+    text-decoration: underline;
+  }
+  .files p {
+    color: var(--ink-soft);
+  }
+  .files code {
+    overflow-wrap: anywhere;
+  }
+  .section-note {
+    color: var(--ink-soft);
+  }
+  .snippets {
+    display: grid;
+    gap: var(--space-5);
+  }
+  figure {
+    margin: 0;
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  figcaption {
+    font-size: var(--step--1);
+    font-weight: 600;
+  }
+  pre {
+    margin: 0;
+    padding: var(--space-4);
+    background: var(--sunken);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+  .foot {
+    color: var(--ink-soft);
+    max-width: var(--measure);
+  }
+  @media (max-width: 36rem) {
+    h1 {
+      font-size: var(--step-4);
+    }
+    .files li {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

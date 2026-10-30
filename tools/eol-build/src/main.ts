@@ -1,17 +1,15 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { encodeWords, encodeMeta, INTAKE, INTAKE_NAMES, WordFlag } from '@eol/wordlist/format';
+import { encodeWords, encodeMeta, DECIDED, DECIDED_NAMES, WordFlag } from '@eol/wordlist/format';
 import { decodeWords, decodeMeta } from '@eol/wordlist/decode';
 import { loadWords, loadWordSet } from './words.ts';
-import { loadFacts } from './facts.ts';
+import { INTAKE_NAMES, loadFacts, type Facts } from './facts.ts';
 import { emit, clearStale, kb, type Artifact } from './emit.ts';
 import { writeDownloads } from './downloads.ts';
 import { buildGrowth, buildStats } from './stats.ts';
-import { buildProvenance, SHARD_COUNT } from './provenance.ts';
-import { loadPosts } from './posts.ts';
-import { writeFeeds } from './feeds.ts';
+import { buildRecord } from './record.ts';
 import { EXPECTED, check, assertExpectations } from './expected.ts';
-import { DATA_DIR, INVALID_WORDS } from './paths.ts';
+import { CACHE_DIR, DATA_DIR, INVALID_WORDS } from './paths.ts';
 
 const decoder = new TextDecoder();
 
@@ -20,6 +18,7 @@ function step(n: number, label: string): void {
 }
 
 const started = Date.now();
+const revision = (await readFile(resolve(CACHE_DIR, '.revision'), 'utf8').catch(() => '')).trim() || null;
 
 // ---------------------------------------------------------------- 1. word list
 
@@ -30,9 +29,9 @@ check('word count', words.length, EXPECTED.words);
 
 const wordStrings = words.map((w) => decoder.decode(w));
 
-// ------------------------------------------------------------- 2. provenance
+// ------------------------------------------------------------- 2. the records
 
-step(2, 'Provenance (streaming merged_valid_dict.json, 291 MB)');
+step(2, 'Records (streaming merged_valid_dict.json, 291 MB)');
 const facts = await loadFacts((seen) => {
   process.stdout.write(`      ${seen.toLocaleString()} entries\r`);
 });
@@ -44,10 +43,10 @@ step(3, 'Cross-checking against the invalid list (91 MB)');
 const invalid = await loadWordSet(INVALID_WORDS);
 console.log(`      ${invalid.size.toLocaleString()} invalid entries`);
 
-const alsoInvalid: string[] = [];
-for (const word of wordStrings) if (invalid.has(word)) alsoInvalid.push(word);
-console.log(`      ${alsoInvalid.length} words appear in both lists`);
-check('words in both lists', alsoInvalid.length, EXPECTED.alsoInvalid);
+let alsoInvalid = 0;
+for (const word of wordStrings) if (invalid.has(word)) alsoInvalid++;
+console.log(`      ${alsoInvalid} words appear in both lists`);
+check('words in both lists', alsoInvalid, EXPECTED.alsoInvalid);
 
 // ------------------------------------------------------------- 4. columns
 
@@ -60,12 +59,13 @@ const dateTable = ['', ...[...dates].sort()];
 const dateIndex = new Map(dateTable.map((d, i) => [d, i]));
 if (dateTable.length > 0xffff) throw new Error(`${dateTable.length} distinct dates exceeds u16`);
 
-const intake = new Uint8Array(words.length);
+const decided = new Uint8Array(words.length);
 const added = new Uint16Array(words.length);
 const flags = new Uint8Array(words.length);
-const nonAlpha: boolean[] = new Array(words.length).fill(false);
+const ordered: (Facts | undefined)[] = new Array(words.length);
 
-const intakeCounts: Record<string, number> = { twl: 0, pipeline: 0, synthetic: 0, other: 0 };
+// The intakes are counted for the tripwires below and never written out.
+const intakeCounts: Record<string, number> = Object.fromEntries(INTAKE_NAMES.map((n) => [n, 0]));
 let llmSaysInvalidCount = 0;
 let nonAlphaCount = 0;
 let missingDate = 0;
@@ -75,17 +75,18 @@ const dateCounts = new Map<string, number>();
 for (let i = 0; i < words.length; i++) {
   const word = wordStrings[i]!;
   const fact = facts.get(word);
+  ordered[i] = fact;
   let bits = 0;
 
   if (!fact) {
     // A word in the list with no entry in the dictionary. Counted rather than
-    // guessed at: it means the two files disagree, which is worth reporting.
+    // guessed at: it means the 2 files disagree, which is worth reporting.
     missingFacts++;
-    intake[i] = INTAKE.other;
     intakeCounts['other']!++;
+    decided[i] = DECIDED.none;
   } else {
-    intake[i] = INTAKE[fact.intake];
     intakeCounts[fact.intake]!++;
+    decided[i] = DECIDED[fact.decided];
     if (fact.added) {
       added[i] = dateIndex.get(fact.added)!;
       dateCounts.set(fact.added, (dateCounts.get(fact.added) ?? 0) + 1);
@@ -101,7 +102,6 @@ for (let i = 0; i < words.length; i++) {
   for (const b of words[i]!) {
     if (b < 0x61 || b > 0x7a) {
       bits |= WordFlag.NonAlpha;
-      nonAlpha[i] = true;
       nonAlphaCount++;
       break;
     }
@@ -111,11 +111,17 @@ for (let i = 0; i < words.length; i++) {
 }
 
 for (const name of INTAKE_NAMES) {
-  const count = intakeCounts[name]!;
-  const share = count / words.length;
-  console.log(`      ${name.padEnd(10)} ${count.toLocaleString().padStart(9)}  ${(share * 100).toFixed(2)}%`);
-  check(`${name} share`, share, EXPECTED.intakeShare[name], `${count.toLocaleString()} words`);
+  const share = intakeCounts[name]! / words.length;
+  check(`${name} share`, share, EXPECTED.intakeShare[name], `${(share * 100).toFixed(2)}%`);
 }
+const decidedCounts = Object.fromEntries(DECIDED_NAMES.map((n) => [n, 0])) as Record<string, number>;
+for (const d of decided) decidedCounts[DECIDED_NAMES[d]!]!++;
+for (const name of DECIDED_NAMES) {
+  console.log(`      ${name.padEnd(15)} ${decidedCounts[name]!.toLocaleString().padStart(9)}`);
+}
+// The engine's words are exactly the synthetic intake's: the same field decides both.
+check('engine words are the synthetic intake', decidedCounts['engine']! - intakeCounts['synthetic']!, { min: 0, max: 0 });
+
 console.log(`      llm says invalid ${llmSaysInvalidCount.toLocaleString()}`);
 console.log(`      non-alphabetic ${nonAlphaCount.toLocaleString()}`);
 console.log(`      no date        ${missingDate.toLocaleString()}`);
@@ -127,16 +133,13 @@ check('non-alphabetic words', nonAlphaCount, EXPECTED.nonAlpha);
 check('words with no date', missingDate, EXPECTED.missingDate);
 check('distinct dates', dateTable.length - 1, EXPECTED.distinctDates);
 
-// The three bulk-load dates account for 98% of the list, so "sorted by date" is
-// mostly one enormous tie. The interface says so rather than implying a
-// timeline exists, and the figures it quotes come from here.
+// The 3 bulk-load dates account for most of the list, so "sorted by date" is
+// mostly 1 enormous tie. The interface says so rather than implying a timeline
+// exists, and the figures it quotes come from here.
 const bulk = [...dateCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
 const bulkTotal = bulk.reduce((sum, [, count]) => sum + count, 0);
 const individual = words.length - bulkTotal - missingDate;
-console.log(
-  `      bulk loads     ${bulkTotal.toLocaleString()} words on ${bulk.map(([d]) => d).join(', ')}` +
-    ` (${((bulkTotal / words.length) * 100).toFixed(1)}%)`,
-);
+console.log(`      bulk loads     ${bulkTotal.toLocaleString()} words on ${bulk.map(([d]) => d).join(', ')}`);
 console.log(`      added singly   ${individual.toLocaleString()} words since the bulk loads`);
 
 // ------------------------------------------------------------- 5. artifacts
@@ -144,7 +147,7 @@ console.log(`      added singly   ${individual.toLocaleString()} words since the
 step(5, 'Encoding artifacts');
 
 const wordsBin = encodeWords(words);
-const metaBin = encodeMeta(words.length, intake, added, flags);
+const metaBin = encodeMeta(words.length, decided, added, flags);
 
 // Round-trip before writing. An artifact that does not decode to what went in
 // is worse than a failed build: it ships, and the interface quietly lies.
@@ -161,16 +164,13 @@ for (let i = 0; i < words.length; i++) {
 }
 const metaBack = decodeMeta(metaBin);
 for (let i = 0; i < words.length; i++) {
-  if (metaBack.intake[i] !== intake[i]) throw new Error(`round trip: intake at ${i}`);
+  if (metaBack.decided[i] !== decided[i]) throw new Error(`round trip: decided at ${i}`);
   if (metaBack.added[i] !== added[i]) throw new Error(`round trip: added at ${i}`);
   if (metaBack.flags[i] !== flags[i]) throw new Error(`round trip: flags at ${i}`);
 }
 console.log('      round trip verified against every word');
 
-const artifacts: Artifact[] = [
-  await emit('words', 'bin', wordsBin),
-  await emit('meta', 'bin', metaBin),
-];
+const artifacts: Artifact[] = [await emit('words', 'bin', wordsBin), await emit('meta', 'bin', metaBin)];
 
 for (const a of artifacts) {
   const ratio = (a.bytes / a.brotliBytes).toFixed(2);
@@ -182,72 +182,40 @@ console.log(`      on the wire: ${wire.toLocaleString()} bytes (${kb(wire)})`);
 
 // ------------------------------------------------------------- 6. manifest
 
-step(6, 'Manifest');
+step(6, 'Manifest, statistics, record, and downloads');
 
-const downloads = await writeDownloads(words, intake, nonAlpha);
+const downloads = await writeDownloads(words, decided);
 for (const d of downloads) {
   console.log(`      ${d.file.padEnd(22)} ${d.words.toLocaleString().padStart(9)} words  ${kb(d.bytes).padStart(10)}`);
 }
 
 const growth = await buildGrowth();
-const stats = buildStats(words, intake, growth);
-const statsJson = `${JSON.stringify(stats)}\n`;
-await writeFile(resolve(DATA_DIR, 'stats.json'), statsJson);
+const { stats, unpublished } = buildStats(words, ordered, decided, growth);
+await writeFile(resolve(DATA_DIR, 'stats.json'), `${JSON.stringify(stats)}\n`);
 console.log(
-  `      stats.json             ${kb(Buffer.byteLength(statsJson)).padStart(10)}` +
-    `  ${stats.lengths.length} lengths, ${stats.growth.events.length} growth events`,
+  `      stats.json  ${stats.lengths.length} lengths, ${growth.points.length} recorded days` +
+    ` (${growth.first.date} to ${growth.last.date}), ${growth.events.length} days with a change`,
 );
 console.log(
-  `      the list moved ${growth.last - growth.first} words across ${growth.daysRecorded} recorded days` +
-    ` (${growth.recordedFrom} → ${growth.recordedTo})`,
+  `      channels: ${stats.channels.withPublished.toLocaleString()} words with a published channel,` +
+    ` ${unpublished.withheld.toLocaleString()} withheld only, ${unpublished.unrecorded.toLocaleString()} unrecorded (not published)`,
 );
 
-const provenance = await buildProvenance((n) =>
-  process.stdout.write(`      ${n.toLocaleString()} records\r`),
-);
-console.log(
-  `      prov/ ${SHARD_COUNT} shards      ${kb(provenance.shardBytes).padStart(10)} total,` +
-    ` ${kb(provenance.shardBytes / SHARD_COUNT)} average, ${kb(provenance.largestShard)} largest`,
-);
-console.log(
-  `      ${provenance.written.toLocaleString()} words carry provenance` +
-    ` · ${provenance.withDefinition} carry a real definition` +
-    ` · ${provenance.sources.length} candidate sources`,
-);
-
-const posts = await loadPosts();
-const postsJson = `${JSON.stringify(posts)}\n`;
-await writeFile(resolve(DATA_DIR, 'posts.json'), postsJson);
-console.log(
-  `      posts.json             ${kb(Buffer.byteLength(postsJson)).padStart(10)}` +
-    `  ${posts.length} posts, ${posts[0]?.date ?? '—'} back to ${posts[posts.length - 1]?.date ?? '—'}`,
-);
-
-const feeds = await writeFeeds(posts);
-console.log(`      ${feeds.join(', ')}`);
+const record = await buildRecord();
+await writeFile(resolve(DATA_DIR, 'record.json'), `${JSON.stringify(record, null, 2)}\n`);
+console.log(`      record.json  ${record.length} ledger lines`);
 
 const manifest = {
   builtAt: new Date().toISOString(),
-  posts: posts.length,
-  latestPost: posts[0]?.date ?? null,
-  provenance: {
-    shards: SHARD_COUNT,
-    sources: provenance.sources,
-    manualSources: provenance.manualSources,
-    llms: provenance.llms,
-    categories: provenance.categories,
-    statuses: provenance.statuses,
-    words: provenance.written,
-    withDefinition: provenance.withDefinition,
-  },
+  revision,
   wordCount: words.length,
   dateTable,
-  intakeCounts,
+  decidedCounts,
   llmSaysInvalid: llmSaysInvalidCount,
   invalidCount: invalid.size,
-  alsoInvalid: alsoInvalid.length,
-  alsoInvalidWords: alsoInvalid,
+  alsoInvalid,
   nonAlpha: nonAlphaCount,
+  missingDate,
   bulkDates: bulk.map(([date, count]) => ({ date, count })),
   addedSingly: individual,
   downloads,
