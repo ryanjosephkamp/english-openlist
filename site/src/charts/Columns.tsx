@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { compact, full, pct, ticks } from './format';
+import { compact, full, pct, plural, ticks } from './format';
 
 export interface Column {
   readonly key: string;
@@ -21,7 +21,7 @@ interface Props {
   readonly onPick?: (i: number, extend: boolean) => void;
   readonly tone?: 'accent' | 'eol';
   readonly height?: number;
-  /** what a column counts, for its accessible name */
+  /** what a column counts, singular, for its accessible name */
   readonly unit?: string;
 }
 
@@ -39,7 +39,7 @@ export default function Columns({
   onPick,
   tone = 'accent',
   height = 176,
-  unit = 'words',
+  unit = 'word',
 }: Props) {
   const [active, setActive] = useState<number | null>(null);
   const max = Math.max(1, ...columns.map((c) => c.value));
@@ -64,7 +64,7 @@ export default function Columns({
             const on = selected?.(i) ?? false;
             const h = c.value > 0 ? Math.max(0.8, (100 * c.value) / top) : 0;
             const cls = `cols-bar t-${holding && !on ? 'muted' : tone}`;
-            const name = `${c.name ?? c.label}: ${full(c.value)} ${unit}, ${pct(c.value, total)}`;
+            const name = `${c.name ?? c.label}: ${plural(c.value, unit)}, ${pct(c.value, total)}`;
             const inner = <span className={cls} style={{ height: `${h}%` }} />;
             return (
               <li key={c.key} className={on ? 'is-on' : undefined}>

@@ -4,6 +4,7 @@ import { DEFAULT_QUERY, type MatchMode, type Query, type SortKey } from '@eol/wo
 import { DECIDED_NAMES, WordFlag, type DecidedName } from '@eol/wordlist/format';
 import { useSearch } from './useSearch';
 import { paramsToQuery, queryToUrl } from './urlState';
+import { plural } from '../charts/format';
 import './search.css';
 
 const ROW = 52;
@@ -318,7 +319,7 @@ function Rows({ count, rowAt }: { count: number; rowAt: ReturnType<typeof useSea
               <>
                 <span className="row-word word">{row.word}</span>
                 <span className="row-meta">
-                  <span>{row.word.length} letters</span>
+                  <span>{plural(row.word.length, 'letter')}</span>
                   <span className={`decided d-${names[row.decided]}`}>{ROW_LABEL[names[row.decided]!]}</span>
                   {row.added && <span className="row-date">added {shortDate(row.added)}</span>}
                   {(row.flags & WordFlag.LlmSaysInvalid) !== 0 && (
