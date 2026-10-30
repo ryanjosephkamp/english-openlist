@@ -1,14 +1,16 @@
 # GitHub Actions Workflow: Daily Dictionary Validation
 # English OpenList Phase 3 - Invalid List Recovery + Blog Automation
 #
-# This workflow runs daily at 00:00 UTC to:
+# This workflow runs on demand (workflow_dispatch) to:
 # 1. Download current word lists from Hugging Face
 # 2. Validate ~1,000 words from the invalid list against MW APIs
 # 3. Promote validated words to the valid list
 # 4. Push full word lists to Hugging Face Datasets
 # 5. Generate daily statistics, transparency log, and blog post
 #
-# Can be triggered manually via workflow_dispatch
+# With skip_upload, it is a dry run: the Hugging Face upload and the commit and
+# push are skipped, so nothing leaves the runner except the logs and the run's
+# artifact.
 
 name: Daily Dictionary Update
 
@@ -16,11 +18,9 @@ permissions:
   contents: write
 
 on:
-  schedule:
-    # Run every day at 00:00 UTC
-    - cron: '0 0 * * *'
-  
-  # Allow manual trigger
+  # The nightly schedule is off. To turn it on, add back:
+  #   schedule:
+  #     - cron: '0 0 * * *'
   workflow_dispatch:
     inputs:
       validation_limit:
@@ -62,9 +62,10 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'requirements.txt'
       
+      # requirements.txt is a lock with hashes, so a new library release
+      # cannot change a run unseen. The pip upgrade is gone for the same reason.
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install -r requirements.txt
       
       - name: Get current date
@@ -152,7 +153,7 @@ jobs:
         with:
           name: release-${{ steps.date.outputs.date }}
           path: output/
-          retention-days: 90
+          retention-days: ${{ github.event.inputs.skip_upload == 'true' && 7 || 90 }}
       
       - name: Push to Hugging Face
         if: ${{ github.event.inputs.skip_upload != 'true' }}
@@ -185,6 +186,7 @@ jobs:
       # one started, which is why a cancelled pages-build-deployment appeared
       # every single day. One push, one build.
       - name: Commit and push the day's changes
+        if: ${{ github.event.inputs.skip_upload != 'true' }}
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -240,6 +242,11 @@ jobs:
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Invalid List Validation" >> $GITHUB_STEP_SUMMARY
+          if [ -f output/${{ steps.date.outputs.date }}/validation_summary.json ]; then
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat output/${{ steps.date.outputs.date }}/validation_summary.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
           if [ -f output/${{ steps.date.outputs.date }}/promoted_words.txt ]; then
             echo "Promoted words:" >> $GITHUB_STEP_SUMMARY
             cat output/${{ steps.date.outputs.date }}/promoted_words.txt >> $GITHUB_STEP_SUMMARY

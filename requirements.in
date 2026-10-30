@@ -1,0 +1,20 @@
+# The nightly's direct dependencies. requirements.txt is the lock built from
+# this file; the workflows install the lock, never this file.
+#
+# Regenerate the lock after changing this file, then run the tests:
+#   uv pip compile requirements.in -o requirements.txt --universal --python-version 3.12 --generate-hashes
+
+# The nightly
+huggingface_hub
+httpx
+orjson
+feedparser
+python-dotenv
+tenacity
+
+# The tests, and the research code they cover
+pytest
+numpy
+scipy
+pandas
+pyarrow

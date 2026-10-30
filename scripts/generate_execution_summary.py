@@ -41,7 +41,6 @@ def generate_execution_summary() -> Path:
         },
         "words_by_source": {
             "merriam_webster_rss": NOT_RECORDED,
-            "merriam_webster_new_words": NOT_RECORDED,
             "wordnik_wotd": NOT_RECORDED,
             "invalid_list_validation": NOT_RECORDED,
             "manual_additions": NOT_RECORDED,

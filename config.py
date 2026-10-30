@@ -181,7 +181,6 @@ LOG_FILE = PHASE3_ROOT / "logs" / "update_pipeline.log"
 
 NEW_WORD_SOURCES = {
     "merriam_webster_rss": "https://www.merriam-webster.com/wotd/feed/rss2",
-    "merriam_webster_new_words": "https://www.merriam-webster.com/wordplay/new-words-in-the-dictionary",
     "wordnik_wotd": "https://api.wordnik.com/v4/words.json/wordOfTheDay",
 }
 

@@ -70,7 +70,7 @@ Chart data was unavailable for this automated run, so no charts are shown for th
 - Wordnik API calls: {{ api_calls_wordnik }} ({{ api_success_wordnik }} success rate)
 
 **Words Discovered by Source**
-- Merriam-Webster RSS / New Words: {{ from_rss }}
+- Merriam-Webster Word of the Day: {{ from_rss }}
 - Wordnik Word of the Day: {{ from_wordnik }}
 - Invalid list validation: {{ from_invalid }}
 - Manual additions: {{ from_manual }}

@@ -149,14 +149,6 @@ def value_from_sources(*values: Any) -> Any:
     return None
 
 
-def sum_recorded_values(*values: Any) -> Any:
-    """Sum numeric recorded values, or report not recorded when none exist."""
-    recorded = [value for value in values if isinstance(value, int)]
-    if not recorded:
-        return None
-    return sum(recorded)
-
-
 def render_words_section(title: str, words: list[str] | None) -> str:
     """Render an optional word list section."""
     if not words:
@@ -221,7 +213,7 @@ def render_execution_summary(execution_summary: dict[str, Any], promoted_words: 
 - Wordnik API calls: {display_count(wordnik_health.get('calls_made'))} ({display_count(wordnik_health.get('success_rate'))} success rate)
 
 **Words Discovered by Source**
-- Merriam-Webster RSS / New Words: {display_count(sum_recorded_values(words_by_source.get('merriam_webster_rss'), words_by_source.get('merriam_webster_new_words')))}
+- Merriam-Webster Word of the Day: {display_count(words_by_source.get('merriam_webster_rss'))}
 - Wordnik Word of the Day: {display_count(words_by_source.get('wordnik_wotd'))}
 - Invalid list validation: {display_count(invalid_validation)}
 - Manual additions: {display_count(words_by_source.get('manual_additions'))}
