@@ -5,7 +5,8 @@
  * which is not released yet. Until it is, this site renders no link to it and
  * no page about it: `scripts/check-dist.mjs` fails the build if one appears.
  * At the CEOL's release, set this to true; the family link in the header and
- * the footer, and the page "The EOL in the CEOL Universe", then build.
+ * the footer, and the page "The EOL in the CEOL Universe", then build. The
+ * README gains the same family link by hand at the same time.
  */
 export const CEOL_PUBLIC = false;
 
