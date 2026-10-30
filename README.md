@@ -86,7 +86,7 @@ uv run --no-project --isolated --with playwright==1.58.0 python tools/demo_gif.p
 
 ## License
 
-The code is under the MIT license ([`LICENSE`](LICENSE)). The dataset's terms are on its [Hugging Face card](https://huggingface.co/datasets/ryanjosephkamp/english-openlist).
+Code: MIT, in [`LICENSE`](LICENSE). Data: see the dataset's [card on Hugging Face](https://huggingface.co/datasets/ryanjosephkamp/english-openlist).
 
 ## Contact
 
