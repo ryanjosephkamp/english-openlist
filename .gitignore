@@ -83,9 +83,6 @@ initial_deliverables.zip
 !site/public/**/*.json
 !tools/eol-build/package.json
 !tools/eol-build/tsconfig*.json
-# How to start the dev server. Worth committing: it is the answer to "how do I
-# run this", and the blanket *.json above would otherwise hide it.
-!.claude/launch.json
 
 # Generated on every build by tools/eol-build, from Hugging Face. Committing it
 # would put a fresh ~700 KB of binary in git history daily for no gain -- the
@@ -126,3 +123,10 @@ research/adjudicate/decks/
 !research/features_manifest.json
 !research/productivity_table.json
 !research/phase2_gate.json
+
+# Agent context and local notes stay out of git.
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+.claude/
+.codex/
