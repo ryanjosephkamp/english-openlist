@@ -12,6 +12,9 @@ running the daily update pipeline.
 """
 
 import logging
+import os
+import shutil
+import stat
 import sys
 from pathlib import Path
 
@@ -91,6 +94,39 @@ def _hf_hub_download_with_retry(**kwargs):
     return hf_hub_download(**kwargs)
 
 
+# The mode every working copy gets: the owner can write it, everyone can read it.
+WORKING_COPY_MODE = 0o644
+
+
+def writable_copy(src: Path, dest: Path) -> Path:
+    """
+    Copy a downloaded file to where the pipeline edits it, as a file it can write.
+
+    Since huggingface_hub 1.32.0 the cache stores LFS and Xet payloads read-only
+    (mode 0o400 plus read bits). `shutil.copy2` carries the mode across, so the
+    copies in initial_deliverables/ came out read-only and the first write to
+    them raised PermissionError: merged_valid_dict.json and
+    merged_invalid_words.txt, the dataset's 2 LFS files. merged_valid_words.txt
+    is a plain git file, kept its old mode, and wrote fine, which is why the
+    failure looked partial.
+
+    So copy the bytes only, never the mode, and set the mode explicitly. A
+    read-only copy left by an earlier run is removed first, because opening it
+    for writing would fail the same way.
+    """
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if dest.exists() and not os.access(dest, os.W_OK):
+        dest.unlink()
+    shutil.copyfile(src, dest)
+    os.chmod(dest, WORKING_COPY_MODE)
+    return dest
+
+
+def unwritable(paths) -> list[Path]:
+    """The paths among `paths` that exist but cannot be written."""
+    return [Path(p) for p in paths if Path(p).exists() and not os.access(p, os.W_OK)]
+
+
 class HuggingFaceDownloader:
     """
     Downloads English OpenList data from Hugging Face Datasets.
@@ -126,11 +162,12 @@ class HuggingFaceDownloader:
                 local_dir_use_symlinks=False
             )
             
-            # Move to expected location if needed
+            # Edit a copy, never the download itself.
             downloaded = Path(downloaded_path)
-            if downloaded != local_path and downloaded.exists():
-                # Copy content to expected path
-                local_path.write_bytes(downloaded.read_bytes())
+            if downloaded.resolve() != local_path.resolve():
+                writable_copy(downloaded, local_path)
+            else:
+                os.chmod(local_path, stat.S_IMODE(local_path.stat().st_mode) | stat.S_IWUSR)
             
             logger.info(f"Downloaded {remote_path} -> {local_path}")
             return True
@@ -189,8 +226,6 @@ class HuggingFaceDownloader:
         Returns:
             True if download successful
         """
-        import shutil
-        
         try:
             # Ensure output directory exists
             INITIAL_DELIVERABLES.mkdir(parents=True, exist_ok=True)
@@ -214,12 +249,12 @@ class HuggingFaceDownloader:
                 local_dir_use_symlinks=False
             )
             
-            # Copy files from data/ to initial_deliverables/
+            # Copy files from data/ to initial_deliverables/, as writable copies
             data_dir = Path(local_dir) / "data"
             if data_dir.exists():
                 for file in data_dir.iterdir():
                     dest = INITIAL_DELIVERABLES / file.name
-                    shutil.copy2(file, dest)
+                    writable_copy(file, dest)
                     logger.info(f"Copied {file.name} to {dest}")
             
             return True
@@ -257,6 +292,17 @@ def main():
         success = downloader.download_all_wordlists(skip_large_dicts=args.skip_large_dicts)
     
     if success:
+        # Every later step edits these files. Finding out here costs nothing;
+        # finding out after a night's dictionary lookups costs the night.
+        read_only = unwritable(
+            [VALID_WORDS_FILE, VALID_DICT_FILE, INVALID_WORDS_FILE, INVALID_DICT_FILE]
+        )
+        if read_only:
+            for path in read_only:
+                print(f"✗ Not writable: {path}")
+            print("\n✗ Download failed: the working copies cannot be written.")
+            return 1
+
         print("\n✓ Download successful!")
         
         # Show file sizes

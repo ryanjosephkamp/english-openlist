@@ -43,6 +43,17 @@ CACHE_DIR = PHASE3_ROOT / ".cache" / "dictionary"
 # always has, and only work that explicitly asks for the cache gets it.
 CACHE_ENV_VAR = "EOL_DICT_CACHE"
 
+# Answers that are about us, not about the word: 403 (refused) and 429 (over
+# quota). A word that met one was not checked tonight. It is neither promoted
+# nor marked as checked, so it comes back on a later night.
+REFUSAL_STATUSES = frozenset({403, 429})
+
+
+def _status_of(error: BaseException) -> Optional[int]:
+    """The HTTP status behind an httpx error, if there was one."""
+    response = getattr(error, "response", None)
+    return getattr(response, "status_code", None)
+
 
 def cache_enabled() -> bool:
     """True when EOL_DICT_CACHE is set to something meaning yes."""
@@ -153,6 +164,12 @@ class WordLookupResult:
     source: str = "unknown"
     raw_response: Optional[dict] = None
     error_message: Optional[str] = None
+    http_status: Optional[int] = None
+
+    @property
+    def checked(self) -> bool:
+        """False when no dictionary ruled on the word (an error, a refusal)."""
+        return self.status != WordStatus.ERROR
 
 
 def _first_matching_entry(data: list, matches) -> Optional[dict]:
@@ -250,7 +267,8 @@ class MerriamWebsterAPI:
             return WordLookupResult(
                 word=word,
                 status=WordStatus.ERROR,
-                error_message=str(e)
+                error_message=str(e),
+                http_status=_status_of(e),
             )
         except Exception as e:
             logger.error(f"Unexpected error for '{word}': {e}")
@@ -516,7 +534,8 @@ class FreeDictionaryAPI:
             return WordLookupResult(
                 word=word,
                 status=WordStatus.ERROR,
-                error_message=str(e)
+                error_message=str(e),
+                http_status=_status_of(e),
             )
     
     def _parse_response(self, word: str, data: list) -> WordLookupResult:
@@ -631,7 +650,8 @@ class MerriamWebsterMedicalAPI:
             return WordLookupResult(
                 word=word,
                 status=WordStatus.ERROR,
-                error_message=str(e)
+                error_message=str(e),
+                http_status=_status_of(e),
             )
         except Exception as e:
             logger.error(f"Medical API error for '{word}': {e}")
@@ -743,6 +763,22 @@ class DictionaryAPIClient:
         self.mw = MerriamWebsterAPI()
         self.mw_medical = MerriamWebsterMedicalAPI() if use_medical else None
         self.free_dict = FreeDictionaryAPI()
+        # Sources that answered 403 or 429 tonight, with the status. A source
+        # that refuses once is not asked again in the same run: the answer is
+        # about our access, and asking 1,000 more times only repeats it.
+        self.refused: dict[str, int] = {}
+
+    async def _ask(self, name: str, api, word: str) -> Optional[WordLookupResult]:
+        """Ask one source, unless it refused earlier tonight (then None)."""
+        if name in self.refused:
+            return None
+        result = await api.lookup_word(word)
+        if result.http_status in REFUSAL_STATUSES:
+            self.refused[name] = result.http_status
+            logger.warning(
+                f"{name} answered {result.http_status}; not asking it again tonight"
+            )
+        return result
 
     async def lookup_word(
         self,
@@ -753,6 +789,12 @@ class DictionaryAPIClient:
         """
         Look up a word using available APIs.
 
+        Collegiate rules first. When it does not answer (an error, or a 403 or
+        429 now or earlier tonight) the word comes back as ERROR, which means
+        not checked tonight. The medical and Free Dictionary lookups only add a
+        chance of promotion: when either fails, Collegiate's "not found" stands,
+        exactly as it did when a failed fallback ended in "still invalid".
+
         Args:
             word: The word to look up
             use_fallback: If True, try Free Dictionary if MW fails
@@ -762,20 +804,30 @@ class DictionaryAPIClient:
             WordLookupResult
         """
         # Try Merriam-Webster Collegiate first
-        result = await self.mw.lookup_word(word)
+        result = await self._ask("collegiate", self.mw, word)
+        if result is None:
+            status = self.refused["collegiate"]
+            return WordLookupResult(
+                word=word,
+                status=WordStatus.ERROR,
+                error_message=f"collegiate answered {status} earlier tonight",
+                http_status=status,
+            )
 
         # Try Medical Dictionary if Collegiate didn't find it
         if use_medical and result.status == WordStatus.NOT_FOUND:
             if self.mw_medical and self.mw_medical.is_configured:
                 logger.debug(f"Collegiate didn't find '{word}', trying Medical")
-                medical_result = await self.mw_medical.lookup_word(word)
-                if medical_result.status == WordStatus.VALID:
+                medical_result = await self._ask("medical", self.mw_medical, word)
+                if medical_result is not None and medical_result.status == WordStatus.VALID:
                     return medical_result
 
         # Use Free Dictionary fallback if still not found
         if use_fallback and result.status == WordStatus.NOT_FOUND:
             logger.debug(f"MW didn't find '{word}', trying Free Dictionary")
-            result = await self.free_dict.lookup_word(word)
+            fallback = await self._ask("free", self.free_dict, word)
+            if fallback is not None and fallback.checked:
+                result = fallback
 
         return result
 

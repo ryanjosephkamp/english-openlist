@@ -13,6 +13,7 @@ This script orchestrates the complete weekly update process:
 
 import asyncio
 import logging
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -22,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import (
     PHASE3_ROOT, OUTPUT_DIR, LOG_FILE, LOG_LEVEL, LOG_FORMAT,
+    VALID_WORDS_FILE, VALID_DICT_FILE,
     get_release_date, get_release_dir
 )
 from scripts.dictionary_api import DictionaryAPIClient, WordStatus
@@ -49,16 +51,16 @@ class NewWordDiscoverer:
     
     Sources:
     1. Merriam-Webster RSS feed for "Word of the Day"
-    2. Merriam-Webster "New Words" page (newly added dictionary entries)
-    3. Wordnik Word of the Day (past N days)
-    4. Manual word list (for testing/additions) - kept as fallback
+    2. Wordnik Word of the Day (past N days)
+    3. Manual word list (for testing/additions) - kept as fallback
+
+    Merriam-Webster's "New Words" web page is not a source. It is a page for
+    people, not an API: it answers this run with 403, and scraping it may break
+    the site's terms.
     """
     
     def __init__(self):
         self.discovered_words: list[str] = []
-        self._http_headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
     
     async def discover_from_rss(self) -> list[str]:
         """
@@ -107,68 +109,6 @@ class NewWordDiscoverer:
             return []
         except Exception as e:
             logger.error(f"Error parsing RSS feed: {e}")
-            return []
-    
-    async def discover_from_mw_new_words_page(self) -> list[str]:
-        """
-        Scrape Merriam-Webster's "New Words in the Dictionary" page.
-        
-        This page announces newly added words to the dictionary - the best source
-        for truly new dictionary entries.
-        
-        Returns:
-            List of newly added words from the page
-        """
-        try:
-            import httpx
-            from bs4 import BeautifulSoup
-            import re
-            from config import NEW_WORD_SOURCES
-            
-            url = NEW_WORD_SOURCES.get("merriam_webster_new_words")
-            if not url:
-                return []
-            
-            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
-                response = await client.get(url, headers=self._http_headers)
-                
-                if response.status_code != 200:
-                    logger.warning(f"MW new words page returned status {response.status_code}")
-                    return []
-                
-                soup = BeautifulSoup(response.text, 'html.parser')
-                
-                # Find the main article content
-                main_content = soup.find('div', class_=re.compile(r'wap-article-content|article-body|entry-content'))
-                if not main_content:
-                    logger.warning("Could not find main content on MW new words page")
-                    return []
-                
-                words = set()
-                
-                # Method 1: Find all dictionary links (most reliable)
-                for link in main_content.find_all('a', href=lambda x: x and '/dictionary/' in x):
-                    href = link.get('href', '')
-                    word = href.split('/dictionary/')[-1].split('?')[0].split('#')[0]
-                    word = word.replace('%20', ' ')
-                    # Only single alphabetic words (Scrabble-compatible)
-                    if word and ' ' not in word and word.isalpha() and len(word) > 1:
-                        words.add(word.lower())
-                
-                # Method 2: Find italic/emphasized text (often marks new words)
-                for em in main_content.find_all(['em', 'i']):
-                    text = em.get_text().strip()
-                    if text and len(text) > 1 and len(text) < 25 and text.isalpha():
-                        words.add(text.lower())
-                
-                logger.info(f"Discovered {len(words)} words from MW new words page")
-                return list(words)
-                
-        except ImportError as e:
-            logger.warning(f"Required package not installed for MW scraping: {e}")
-            return []
-        except Exception as e:
-            logger.error(f"Error scraping MW new words page: {e}")
             return []
     
     async def discover_from_wordnik(self) -> list[str]:
@@ -281,15 +221,11 @@ class NewWordDiscoverer:
         rss_words = await self.discover_from_rss()
         all_words.update(rss_words)
         
-        # 2. Merriam-Webster "New Words" page (best source for new additions)
-        mw_new_words = await self.discover_from_mw_new_words_page()
-        all_words.update(mw_new_words)
-        
-        # 3. Wordnik Word of the Day
+        # 2. Wordnik Word of the Day
         wordnik_words = await self.discover_from_wordnik()
         all_words.update(wordnik_words)
         
-        # 4. Manual additions file (fallback/testing)
+        # 3. Manual additions file (fallback/testing)
         manual_file = PHASE3_ROOT / "manual_additions.txt"
         manual_words = await self.discover_from_manual_list(manual_file)
         all_words.update(manual_words)
@@ -318,6 +254,7 @@ class WeeklyUpdatePipeline:
         # Results
         self.discovered_words: list[str] = []
         self.validated_words: list[dict] = []
+        self.not_checked: list[str] = []
         self.update_stats = None
     
     async def run(self) -> dict:
@@ -331,6 +268,15 @@ class WeeklyUpdatePipeline:
         logger.info(f"Starting weekly update pipeline for {self.release_date}")
         
         try:
+            # The update rewrites these files. Find out now if that cannot work,
+            # before any dictionary lookup is spent.
+            read_only = [
+                str(path) for path in (VALID_WORDS_FILE, VALID_DICT_FILE)
+                if path.exists() and not os.access(path, os.W_OK)
+            ]
+            if read_only:
+                raise PermissionError(f"Cannot write the source files: {', '.join(read_only)}")
+
             # Step 1: Load existing data
             logger.info("Step 1: Loading existing data...")
             self.data_manager.load_data()
@@ -361,7 +307,11 @@ class WeeklyUpdatePipeline:
             for word in rule_valid:
                 result = await self.api_client.lookup_word(word)
                 
-                if result.status == WordStatus.VALID:
+                if not result.checked:
+                    # A 403, a 429, or another error: not a verdict. The word
+                    # is not added, and nothing records it as rejected.
+                    self.not_checked.append(word)
+                elif result.status == WordStatus.VALID:
                     self.validated_words.append({
                         "word": word,
                         "metadata": create_word_metadata(
@@ -384,6 +334,9 @@ class WeeklyUpdatePipeline:
                     logger.debug(f"  ? {word} - {result.status.value}")
             
             logger.info(f"  API validated: {len(self.validated_words)}")
+            logger.info(f"  Not checked tonight: {len(self.not_checked)}")
+            if self.api_client.refused:
+                logger.info(f"  Sources that refused tonight: {self.api_client.refused}")
             
             # Step 5: Update data
             logger.info("Step 5: Updating word lists...")
@@ -515,5 +468,10 @@ async def main():
     return results
 
 
+def exit_code(results: dict) -> int:
+    """0 when the update ran, 1 when it failed, so the step fails with it."""
+    return 0 if results.get("success") else 1
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    sys.exit(exit_code(asyncio.run(main())))

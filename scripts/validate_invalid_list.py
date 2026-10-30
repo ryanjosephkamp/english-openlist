@@ -15,8 +15,10 @@ Run daily to recover ~50-100 false negatives per day.
 import asyncio
 import json
 import logging
+import os
 import re
 import sys
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -377,15 +379,18 @@ class InvalidListValidator:
     async def validate_batch(
         self, 
         words: list[str]
-    ) -> tuple[list[str], list[str]]:
+    ) -> tuple[list[str], list[str], list[tuple[str, Optional[int]]]]:
         """
         Validate a batch of words.
         
         Returns:
-            Tuple of (valid_words, still_invalid_words)
+            Tuple of (valid_words, still_invalid_words, not_checked), where
+            not_checked holds (word, http_status) for each word no dictionary
+            ruled on tonight: a 403, a 429, or another error.
         """
         valid = []
         still_invalid = []
+        not_checked = []
         
         for word in words:
             # First check basic rules
@@ -397,7 +402,9 @@ class InvalidListValidator:
             # Check dictionary API
             result = await self.api_client.lookup_word(word)
             
-            if result.status == WordStatus.VALID:
+            if not result.checked:
+                not_checked.append((word, result.http_status))
+            elif result.status == WordStatus.VALID:
                 valid.append(word)
                 logger.info(f"✅ PROMOTED: {word} ({result.source})")
             elif result.status == WordStatus.PROPER_NOUN:
@@ -409,7 +416,7 @@ class InvalidListValidator:
             else:
                 still_invalid.append(word)
         
-        return valid, still_invalid
+        return valid, still_invalid, not_checked
     
     async def run_daily_validation(
         self, 
@@ -433,6 +440,22 @@ class InvalidListValidator:
         logger.info("=" * 60)
         
         start_time = datetime.now()
+
+        # A promotion rewrites these 3 files. Find out now if that cannot work,
+        # before the night's dictionary lookups are spent.
+        read_only = [
+            str(path) for path in (VALID_WORDS_FILE, INVALID_WORDS_FILE, VALID_DICT_FILE)
+            if path.exists() and not os.access(path, os.W_OK)
+        ]
+        if read_only:
+            logger.error(f"Cannot write the source files: {', '.join(read_only)}")
+            return {
+                "success": False,
+                "promoted": 0,
+                "validated": 0,
+                "promoted_words": [],
+                "message": "source files are not writable",
+            }
         
         # Load data
         invalid_words = self.load_invalid_words()
@@ -482,25 +505,30 @@ class InvalidListValidator:
         # Validate in batches
         all_valid = []
         all_still_invalid = []
+        all_not_checked = []
         
         for i in range(0, len(candidates), VALIDATION_BATCH_SIZE):
             batch = candidates[i:i + VALIDATION_BATCH_SIZE]
             logger.info(f"Validating batch {i // VALIDATION_BATCH_SIZE + 1} ({len(batch)} words)...")
             
-            valid, still_invalid = await self.validate_batch(batch)
+            valid, still_invalid, not_checked = await self.validate_batch(batch)
             all_valid.extend(valid)
             all_still_invalid.extend(still_invalid)
+            all_not_checked.extend(not_checked)
         
         # Update progress. Dates, not a blocklist — and anything past the
         # cooldown is dropped so the file stays bounded instead of growing by
-        # 1,000 entries a day forever.
+        # 1,000 entries a day forever. A word that was not checked tonight gets
+        # no date, so it stays eligible for the next night.
+        unchecked = {word for word, _ in all_not_checked}
+        checked_tonight = [w for w in candidates if w not in unchecked]
         today = datetime.now().date().isoformat()
         checked = progress.setdefault("checked", {})
-        for word in candidates:
+        for word in checked_tonight:
             checked[word] = today
         cutoff = (datetime.now() - timedelta(days=RECHECK_AFTER_DAYS)).date().isoformat()
         progress["checked"] = {w: when for w, when in checked.items() if when > cutoff}
-        progress["validated_count"] += len(candidates)
+        progress["validated_count"] += len(checked_tonight)
         progress["promoted_count"] += len(all_valid)
         progress["last_run"] = datetime.now().isoformat()
         self.save_progress(progress)
@@ -508,25 +536,38 @@ class InvalidListValidator:
         # Calculate results
         duration = (datetime.now() - start_time).total_seconds()
         
+        not_checked_by_status = Counter(
+            str(status) if status is not None else "error" for _, status in all_not_checked
+        )
         results = {
             "success": True,
             "date": get_release_date(),
-            "validated": len(candidates),
+            "selected": len(candidates),
+            "validated": len(checked_tonight),
             "promoted": len(all_valid),
             "promoted_words": all_valid,
             "still_invalid": len(all_still_invalid),
+            "not_checked": len(all_not_checked),
+            "not_checked_by_status": dict(sorted(not_checked_by_status.items())),
+            "refused_sources": dict(self.api_client.refused),
             "duration_seconds": duration,
             "total_validated": progress["validated_count"],
             "total_promoted": progress["promoted_count"],
-            "remaining": len(invalid_words) - len(candidates)
+            "remaining": len(invalid_words) - len(checked_tonight)
         }
         
         # Summary
         logger.info("=" * 60)
         logger.info("VALIDATION COMPLETE")
+        logger.info(f"  Words selected: {results['selected']}")
         logger.info(f"  Words validated: {results['validated']}")
+        logger.info(f"  Not checked tonight: {results['not_checked']} "
+                    f"{results['not_checked_by_status'] or ''}")
+        if results["refused_sources"]:
+            logger.info(f"  Sources that refused tonight: {results['refused_sources']}")
         logger.info(f"  Words promoted: {results['promoted']}")
-        logger.info(f"  Promotion rate: {results['promoted'] / results['validated'] * 100:.2f}%")
+        if results["validated"]:
+            logger.info(f"  Promotion rate: {results['promoted'] / results['validated'] * 100:.2f}%")
         logger.info(f"  Duration: {duration:.1f}s")
         logger.info(f"  Remaining to validate: {results['remaining']:,}")
         logger.info("=" * 60)
@@ -652,10 +693,36 @@ async def main():
     # Save promoted words if any were found
     if results.get("promoted_words"):
         validator.save_promoted_words(results["promoted_words"])
-    
-    # Return exit code 0 even if no words to validate (graceful handling)
-    return results
+
+    write_validation_summary(results)
+    return exit_code(results)
+
+
+def write_validation_summary(results: dict) -> None:
+    """The night's counts, without the words, for the run's summary."""
+    summary = {k: v for k, v in results.items() if k != "promoted_words"}
+    output_dir = OUTPUT_DIR / get_release_date()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    with open(output_dir / "validation_summary.json", "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2)
+        f.write("\n")
+
+
+def exit_code(results: dict) -> int:
+    """
+    0 for a night that checked words or had none to check; 1 otherwise.
+
+    Nothing to validate is not a failure. A night on which every selected word
+    went unchecked is: it means the primary dictionary refused us (a bad key, a
+    spent quota), and a run that reports success there hides it.
+    """
+    if not results.get("success"):
+        return 1
+    if results.get("selected", 0) and not results.get("validated", 0):
+        logger.error("No selected word could be checked tonight.")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    sys.exit(asyncio.run(main()))
