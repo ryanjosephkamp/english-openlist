@@ -30,7 +30,8 @@ from config import (
     INVALID_WORDS_FILE, VALID_WORDS_FILE, VALID_DICT_FILE,
     DAILY_VALIDATION_LIMIT, VALIDATION_BATCH_SIZE,
     OUTPUT_DIR, PHASE3_ROOT, get_release_date,
-    RECHECK_AFTER_DAYS, RECHECK_DAILY_SLICE, RECHECK_QUEUE_FILE
+    RECHECK_AFTER_DAYS, RECHECK_DAILY_SLICE, RECHECK_QUEUE_FILE,
+    nightly_may_promote
 )
 from scripts.dictionary_api import DictionaryAPIClient, WordStatus
 from scripts.word_validator import WordValidator
@@ -472,6 +473,14 @@ class InvalidListValidator:
                 "message": "No invalid words file found or all words already validated"
             }
         
+        # The 24 letters D-027 leaves to adjudication sit on the recheck queue,
+        # which bypasses the pre-filter, so they are taken out here, before
+        # either selection can spend a lookup on them.
+        letters = sum(1 for w in invalid_words if not nightly_may_promote(w))
+        if letters:
+            invalid_words = [w for w in invalid_words if nightly_may_promote(w)]
+            logger.info(f"Passing over {letters} single letters (D-027)")
+
         # Words we demoted get a reserved slice, taken before anything else, so
         # they are re-examined on a known cadence instead of waiting their turn
         # among millions.
