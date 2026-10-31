@@ -8,6 +8,7 @@ import { emit, clearStale, kb, type Artifact } from './emit.ts';
 import { writeDownloads } from './downloads.ts';
 import { buildGrowth, buildStats } from './stats.ts';
 import { buildRecord } from './record.ts';
+import { writeRuns } from './runs.ts';
 import { EXPECTED, check, assertExpectations } from './expected.ts';
 import { CACHE_DIR, DATA_DIR, INVALID_WORDS } from './paths.ts';
 
@@ -227,6 +228,12 @@ const manifest = {
 await writeFile(resolve(DATA_DIR, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 const removed = await clearStale(artifacts);
 console.log(`      manifest.json written, ${removed} stale file${removed === 1 ? '' : 's'} removed`);
+
+// The daily log reads the artifacts just written, so it comes last.
+const runs = await writeRuns(growth);
+const runWords = runs.reduce((n, r) => n + r.words.length, 0);
+const runMissing = runs.reduce((n, r) => n + r.missing.length, 0);
+console.log(`      runs.json  ${runs.length} runs, ${runWords} words dated a run's day, ${runMissing} named but not dated that day`);
 
 assertExpectations();
 

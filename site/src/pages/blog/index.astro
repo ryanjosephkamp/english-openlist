@@ -1,0 +1,155 @@
+---
+import Base from '../../layouts/Base.astro';
+import NightlyChart from '../../islands/NightlyChart.tsx';
+import { runs, fmt, runHref } from '../../util/data';
+import { usDate } from '../../util/dates';
+import { newestFirst, nightlyWindow, summary } from '../../util/runs';
+
+const nightly = nightlyWindow();
+const added = runs.reduce((n, r) => n + r.words.length, 0);
+const first = runs[0]!;
+const last = runs[runs.length - 1]!;
+
+// The runs by month, newest first.
+const MONTH = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const months: { name: string; runs: typeof newestFirst[number][] }[] = [];
+for (const run of newestFirst) {
+  const name = MONTH.format(new Date(`${run.date}T00:00:00Z`));
+  if (months[months.length - 1]?.name !== name) months.push({ name, runs: [] });
+  months[months.length - 1]!.runs.push(run);
+}
+const dayOf = (iso: string) => usDate(iso).replace(/, \d{4}$/, '');
+---
+
+<Base
+  title="Daily log"
+  section="Daily log"
+  description={`The English OpenList's daily log: every nightly run since ${usDate(first.date)}, the words it added, and how the list changed.`}
+>
+  <div class="frame page">
+    <header class="page-head">
+      <h1>The daily log</h1>
+      <p class="lede">
+        Each nightly run looks for new words and checks about 1,000 entries of the invalid list against dictionary APIs,
+        Merriam-Webster's first. A word a dictionary recognizes moves to the list. Every run has a page here: the words it
+        added, how they got on, and how the list changed.
+      </p>
+      <p class="head-facts">
+        <span><strong>{fmt(runs.length)}</strong> runs from {usDate(first.date)} to {usDate(last.date)}</span>
+        <span><strong>{fmt(added)}</strong> words added</span>
+        <a href="/feed.xml">RSS feed</a>
+      </p>
+    </header>
+
+    {nightly && <NightlyChart client:visible window={nightly} base="/blog/" />}
+
+    <div class="months">
+      {
+        months.map((m) => (
+          <section aria-labelledby={`m-${m.runs[0]!.date.slice(0, 7)}`}>
+            <h2 id={`m-${m.runs[0]!.date.slice(0, 7)}`}>{m.name}</h2>
+            <ol class="runs">
+              {m.runs.map((r) => (
+                <li class:list={[{ 'has-words': r.words.length > 0, failed: r.failed }]}>
+                  <a class="run-date" href={runHref(r.date)}>{dayOf(r.date)}</a>
+                  <span class="run-what">{summary(r)}</span>
+                  {r.words.length > 0 && (
+                    <span class="run-words">
+                      {r.words.map((w, i) => <>{i > 0 && ', '}<a class="word" href={`/?w=${w.word}`}>{w.word}</a></>)}
+                    </span>
+                  )}
+                  {r.total !== null && <span class="run-total">{fmt(r.total)} on the list</span>}
+                </li>
+              ))}
+            </ol>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page {
+    display: grid;
+    gap: var(--space-7);
+  }
+  .page-head {
+    display: grid;
+    gap: var(--space-3);
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+  .head-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    color: var(--ink-soft);
+  }
+  .head-facts strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .months {
+    display: grid;
+    gap: var(--space-6);
+  }
+  h2 {
+    font-size: var(--step-2);
+    margin-bottom: var(--space-2);
+  }
+  .runs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .runs li {
+    display: grid;
+    grid-template-columns: 7.5rem 10rem minmax(0, 1fr) auto;
+    gap: var(--space-1) var(--space-4);
+    align-items: baseline;
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+  }
+  .run-date {
+    font-weight: 600;
+  }
+  .run-what {
+    color: var(--ink-soft);
+    font-size: var(--step--1);
+  }
+  .has-words .run-what {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .failed .run-what {
+    color: var(--ink);
+  }
+  .run-words {
+    grid-column: 3;
+    min-width: 0;
+  }
+  .run-total {
+    grid-column: 4;
+    color: var(--ink-faint);
+    font-size: var(--step--1);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  @media (max-width: 40rem) {
+    h1 {
+      font-size: var(--step-4);
+    }
+    .runs li {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+    .run-words {
+      grid-column: 1 / -1;
+    }
+    .run-total {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

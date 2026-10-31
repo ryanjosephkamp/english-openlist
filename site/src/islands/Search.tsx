@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useWindowVirtualizer } from '@tanstack/react-virtual';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { DEFAULT_QUERY, type MatchMode, type Query, type SortKey } from '@eol/wordlist/query';
 import { DECIDED_NAMES, WordFlag, type DecidedName } from '@eol/wordlist/format';
 import { useSearch } from './useSearch';
 import { paramsToQuery, queryToUrl } from './urlState';
+import WordPanel from './WordPanel';
+import type { ExportFormat, Row } from '../worker/protocol';
 import { plural } from '../charts/format';
+import '../charts/charts.css';
 import './search.css';
 
-const ROW = 52;
+/** Rows shown at first, and added by each press of Show more. */
+const STEP = 100;
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
 
 const MODES: readonly { mode: MatchMode; label: string; placeholder: string }[] = [
@@ -32,44 +35,128 @@ function shortDate(iso: string): string {
 
 const full = (n: number) => n.toLocaleString('en-US');
 
-/** What decided a word, in a row's few words. */
-const ROW_LABEL: Readonly<Record<DecidedName, string>> = {
-  none: 'No model or engine',
-  model_pipeline: 'Model pipeline',
-  model_alone: 'Model alone',
-  engine: 'Synthetic engine',
-};
-
 interface Props {
-  /** what decided each word, short labels, by `DECIDED` name */
+  /** what decided each word, by `DECIDED` name, and each value in a sentence */
   readonly decidedLabels: Readonly<Record<DecidedName, string>>;
+  readonly decidedWhat: Readonly<Record<DecidedName, string>>;
   /** each value's count in the whole list, for the filter's labels */
   readonly decidedCounts: Readonly<Record<DecidedName, number>>;
   readonly maxLength: number;
   /** words to start from, each from the vetted example list */
   readonly examples: readonly string[];
+  /** every day a nightly run has a page in the daily log */
+  readonly runDates: readonly string[];
+  /** the days of the large loads that built the list */
+  readonly bulkDates: readonly string[];
+}
+
+/** The URL with the open word's panel, or without it. */
+function withWord(url: string, word: string | null): string {
+  const [path, search = ''] = url.split('?');
+  const params = new URLSearchParams(search);
+  if (word) params.set('w', word);
+  else params.delete('w');
+  const query = params.toString().replace(/\+/g, '%20');
+  return query ? `${path}?${query}` : path!;
 }
 
 /** Search and filter the whole list, in the browser. */
-export default function Search({ decidedLabels, decidedCounts, maxLength, examples }: Props) {
+export default function Search({ decidedLabels, decidedWhat, decidedCounts, maxLength, examples, runDates, bulkDates }: Props) {
   const [query, setQuery] = useState<Query>(DEFAULT_QUERY);
   const [ready, setReady] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [shown, setShown] = useState(STEP);
+  /** the word whose panel is open, with its row once looked up */
+  const [panel, setPanel] = useState<{ word: string; row: Row | null | undefined } | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const runSet = useMemo(() => new Set(runDates), [runDates]);
+  const bulkSet = useMemo(() => new Set(bulkDates), [bulkDates]);
 
-  // The query comes from the URL once, after the first paint, and goes back to
-  // it on every change, so a search is a link.
+  // The query and the open word come from the URL once, after the first
+  // paint, and go back to it on every change, so a search or a word is a link.
   useEffect(() => {
-    setQuery(paramsToQuery(new URLSearchParams(window.location.search)));
+    const params = new URLSearchParams(window.location.search);
+    setQuery(paramsToQuery(params));
+    const w = params.get('w');
+    if (w) setPanel({ word: w.trim().toLowerCase(), row: undefined });
     setReady(true);
+    // Back closes a panel opened here; forward opens it again.
+    const pop = () => {
+      const again = new URLSearchParams(window.location.search).get('w');
+      setPanel(again ? { word: again, row: undefined } : null);
+    };
+    window.addEventListener('popstate', pop);
+    return () => window.removeEventListener('popstate', pop);
   }, []);
   useEffect(() => {
     if (!ready) return;
-    const url = queryToUrl(window.location.pathname, query);
-    if (url !== window.location.pathname + window.location.search) history.replaceState(null, '', url);
+    const url = withWord(queryToUrl(window.location.pathname, query), new URLSearchParams(window.location.search).get('w'));
+    if (url !== window.location.pathname + window.location.search) history.replaceState(history.state, '', url);
   }, [query, ready]);
+  // A new search starts from its first rows.
+  useEffect(() => setShown(STEP), [query]);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(null), 2000);
+    return () => clearTimeout(t);
+  }, [copied]);
 
   const search = useSearch(query);
   const set = (patch: Partial<Query>) => setQuery((q) => ({ ...q, ...patch }));
+
+  // A panel opened from a link looks its word up once the list is in.
+  const { lookup } = search;
+  useEffect(() => {
+    if (!panel || panel.row !== undefined || search.status !== 'ready') return;
+    let live = true;
+    void lookup(panel.word).then((row) => live && setPanel((p) => (p && p.word === panel.word ? { ...p, row } : p)));
+    return () => {
+      live = false;
+    };
+  }, [panel, search.status, lookup]);
+
+  const openWord = useCallback((row: Row) => {
+    setPanel({ word: row.word, row });
+    const url = withWord(window.location.pathname + window.location.search, row.word);
+    history.pushState({ eolPanel: true }, '', url);
+  }, []);
+  const closeWord = useCallback(() => {
+    setPanel(null);
+    if ((history.state as { eolPanel?: boolean } | null)?.eolPanel) history.back();
+    else history.replaceState(null, '', withWord(window.location.pathname + window.location.search, null));
+  }, []);
+  const searchFrom = (word: string) => {
+    setPanel(null);
+    history.replaceState(null, '', withWord(window.location.pathname + window.location.search, null));
+    setQuery({ ...DEFAULT_QUERY, text: word, mode: 'prefix' });
+  };
+
+  const surprise = async () => {
+    if (search.count === 0) return;
+    const row = await search.pick(Math.floor(Math.random() * search.count));
+    if (row) openWord(row);
+  };
+  const copyLink = () => {
+    navigator.clipboard
+      ?.writeText(window.location.href)
+      .then(() => setCopied('link'))
+      .catch(() => setCopied('failed'));
+  };
+  const download = async (format: ExportFormat) => {
+    setExporting(format);
+    try {
+      const text = await search.exportAs(format);
+      const blob = new Blob([text], { type: format === 'csv' ? 'text/csv' : 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `english-openlist-${search.count}-${search.count === 1 ? 'word' : 'words'}.${format}`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+    } finally {
+      setExporting(null);
+    }
+  };
   const mode = MODES.find((m) => m.mode === query.mode) ?? MODES[0]!;
   const filtered =
     query.decided.length > 0 ||
@@ -161,14 +248,17 @@ export default function Search({ decidedLabels, decidedCounts, maxLength, exampl
 
             <Group legend="What decided it" hint="Any, unless you choose">
               {DECIDED_NAMES.map((name) => (
-                <label key={name} className="opt">
+                <label key={name} className="opt opt-explained">
                   <input
                     type="checkbox"
                     checked={query.decided.includes(name)}
                     onChange={() => set({ decided: toggle(query.decided, name) })}
                   />
-                  <span className="opt-label">{decidedLabels[name]}</span>
+                  <span className="opt-label">
+                    <span className={`decided d-${name}`}>{decidedLabels[name]}</span>
+                  </span>
                   <span className="opt-n">{full(decidedCounts[name])}</span>
+                  <span className="opt-what">{decidedWhat[name]}</span>
                 </label>
               ))}
             </Group>
@@ -232,10 +322,36 @@ export default function Search({ decidedLabels, decidedCounts, maxLength, exampl
         </aside>
 
         <section className="results" aria-label="Results">
-          <Count search={search} text={query.text} />
+          <div className="results-head">
+            <Count search={search} text={query.text} />
+            {search.status === 'ready' && search.count > 0 && (
+              <div className="tools">
+                <button type="button" onClick={() => void surprise()}>
+                  Surprise me
+                </button>
+                <button type="button" onClick={copyLink}>
+                  {copied === 'link' ? 'Copied' : copied === 'failed' ? 'Could not copy' : 'Copy link'}
+                </button>
+                <span className="tools-export" role="group" aria-label="Download these words">
+                  <span className="tools-label">Download</span>
+                  {(['txt', 'csv'] as const).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      disabled={exporting !== null}
+                      onClick={() => void download(f)}
+                      aria-label={`Download ${search.count === 1 ? 'this word' : `these ${full(search.count)} words`} as ${f.toUpperCase()}`}
+                    >
+                      {exporting === f ? '…' : f.toUpperCase()}
+                    </button>
+                  ))}
+                </span>
+              </div>
+            )}
+          </div>
           {search.status === 'ready' && !query.text && !filtered && (
             <div className="start-from">
-              <p>Every word of the list is here, in your browser. Start from one:</p>
+              <p>Every word of the list is here, in your browser. Type to search, or start from one:</p>
               <ul>
                 {examples.map((w) => (
                   <li key={w}>
@@ -254,10 +370,43 @@ export default function Search({ decidedLabels, decidedCounts, maxLength, exampl
             </div>
           )}
           {search.status === 'ready' && search.count > 0 && (
-            <Rows count={search.count} rowAt={search.rowAt} />
+            <>
+              <Rows
+                count={Math.min(shown, search.count)}
+                rowAt={search.rowAt}
+                labels={decidedLabels}
+                what={decidedWhat}
+                onOpen={openWord}
+              />
+              <div className="more">
+                <p>
+                  Showing {search.count <= shown ? (search.count === 1 ? 'the only match' : `all ${full(search.count)}`) : `1 to ${full(shown)} of ${full(search.count)}`}.
+                  {search.count > shown && ' Select a word for its entry.'}
+                </p>
+                {search.count > shown && (
+                  <button type="button" onClick={() => setShown((n) => n + STEP)}>
+                    Show {full(Math.min(STEP, search.count - shown))} more
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </section>
       </div>
+
+      {panel && (
+        <WordPanel
+          key={panel.word}
+          word={panel.word}
+          row={panel.row}
+          decidedLabels={decidedLabels}
+          decidedWhat={decidedWhat}
+          runDates={runSet}
+          bulkDates={bulkSet}
+          onClose={closeWord}
+          onSearch={searchFrom}
+        />
+      )}
     </div>
   );
 }
@@ -285,52 +434,41 @@ function Count({ search, text }: { search: ReturnType<typeof useSearch>; text: s
   );
 }
 
-function Rows({ count, rowAt }: { count: number; rowAt: ReturnType<typeof useSearch>['rowAt'] }) {
-  const list = useRef<HTMLOListElement>(null);
-  const [margin, setMargin] = useState(0);
-  useEffect(() => {
-    const measure = () => setMargin((list.current?.getBoundingClientRect().top ?? 0) + window.scrollY);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(document.body);
-    return () => ro.disconnect();
-  }, []);
+interface RowsProps {
+  readonly count: number;
+  readonly rowAt: ReturnType<typeof useSearch>['rowAt'];
+  readonly labels: Readonly<Record<DecidedName, string>>;
+  readonly what: Readonly<Record<DecidedName, string>>;
+  readonly onOpen: (row: Row) => void;
+}
 
-  const virtualizer = useWindowVirtualizer({ count, estimateSize: () => ROW, overscan: 10, scrollMargin: margin });
-  const items = virtualizer.getVirtualItems();
-  const names = useMemo(() => DECIDED_NAMES, []);
-
+/** The rows shown so far, numbered; each opens its word's panel. */
+function Rows({ count, rowAt, labels, what, onOpen }: RowsProps) {
   return (
-    <ol
-      ref={list}
-      className="rows"
-      aria-label="Matching words"
-      style={{ height: `${virtualizer.getTotalSize()}px` }}
-    >
-      {items.map((item) => {
-        const row = rowAt(item.index);
+    <ol className="rows" aria-label="Matching words" style={{ ['--nw' as string]: `${String(count).length + 1}ch` }}>
+      {Array.from({ length: count }, (_, i) => {
+        const row = rowAt(i);
+        const name = row ? DECIDED_NAMES[row.decided]! : null;
         return (
-          <li
-            key={item.key}
-            className="row"
-            style={{ transform: `translateY(${item.start - virtualizer.options.scrollMargin}px)` }}
-          >
-            {row ? (
-              <>
+          <li key={i} className="row">
+            {row && name ? (
+              <button type="button" className="row-hit" onClick={() => onOpen(row)}>
+                <span className="row-n">{full(i + 1)}</span>
                 <span className="row-word word">{row.word}</span>
                 <span className="row-meta">
                   <span>{plural(row.word.length, 'letter')}</span>
-                  <span className={`decided d-${names[row.decided]}`}>{ROW_LABEL[names[row.decided]!]}</span>
+                  <span className={`decided d-${name}`} title={what[name]}>
+                    {labels[name]}
+                  </span>
                   {row.added && <span className="row-date">added {shortDate(row.added)}</span>}
-                  {(row.flags & WordFlag.LlmSaysInvalid) !== 0 && (
-                    <span className="flag" title="One pass of a language model called it invalid; the list kept it.">
-                      a model called it invalid
-                    </span>
-                  )}
+                  {(row.flags & WordFlag.LlmSaysInvalid) !== 0 && <span className="flag">a model called it invalid</span>}
                 </span>
-              </>
+              </button>
             ) : (
-              <span className="row-wait" aria-hidden="true" />
+              <span className="row-hit row-wait-wrap" aria-hidden="true">
+                <span className="row-n">{full(i + 1)}</span>
+                <span className="row-wait" />
+              </span>
             )}
           </li>
         );

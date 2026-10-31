@@ -23,6 +23,7 @@ export const INVALID_WORDS = resolve(CACHE_DIR, 'merged_invalid_words.txt');
 export const UPDATES_LOG = resolve(ROOT, 'updates/updates_log.csv');
 export const DAILY_METRICS_DIR = resolve(ROOT, 'archive/daily-metrics');
 export const CORRECTIONS_DIR = resolve(ROOT, 'corrections');
+export const POSTS_DIR = resolve(ROOT, '_posts');
 
 /** Build outputs. Never committed; regenerated on every deploy. */
 export const DATA_DIR = resolve(ROOT, 'site/public/data');

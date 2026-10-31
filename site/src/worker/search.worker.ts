@@ -1,7 +1,8 @@
 /// <reference lib="webworker" />
 import { decodeWords, decodeMeta, wordAt, prefixRange, type WordTable, type MetaTable } from '@eol/wordlist/decode';
 import { runQuery, type Query } from '@eol/wordlist/query';
-import type { Manifest, Request, Response, Row } from './protocol.ts';
+import { DECIDED_NAMES, WordFlag } from '@eol/wordlist/format';
+import type { ExportFormat, Manifest, Request, Response, Row } from './protocol.ts';
 
 let table: WordTable | null = null;
 let meta: MetaTable | null = null;
@@ -121,6 +122,24 @@ function page(offset: number, limit: number): Row[] {
   return rows;
 }
 
+/** The current result as a file: 1 word a line, or a CSV with what the list records of each. */
+function exportText(format: ExportFormat): string {
+  const lines: string[] = [];
+  if (format === 'csv') lines.push('word,letters,decided,added,model_called_invalid');
+  for (let i = 0; i < current.length; i++) {
+    const index = current[i]!;
+    const word = wordAt(table!, index);
+    if (format === 'txt') {
+      lines.push(word);
+      continue;
+    }
+    const added = manifest!.dateTable[meta!.added[index]!] ?? '';
+    const called = (meta!.flags[index]! & WordFlag.LlmSaysInvalid) !== 0 ? 'yes' : 'no';
+    lines.push(`${word},${word.length},${DECIDED_NAMES[meta!.decided[index]!]},${added},${called}`);
+  }
+  return `${lines.join('\n')}\n`;
+}
+
 self.onmessage = (event: MessageEvent<Request>): void => {
   const message = event.data;
 
@@ -157,6 +176,15 @@ self.onmessage = (event: MessageEvent<Request>): void => {
       // An exact hit is a prefix range of width one whose word is the needle.
       const found = hi > lo && table.lengths[lo] === needle.length ? rowAt(lo) : null;
       post({ type: 'lookup', id: message.id, row: found });
+      return;
+    }
+    case 'pick': {
+      const index = current[message.offset];
+      post({ type: 'lookup', id: message.id, row: index === undefined ? null : rowAt(index) });
+      return;
+    }
+    case 'export': {
+      post({ type: 'export', id: message.id, text: exportText(message.format) });
       return;
     }
   }

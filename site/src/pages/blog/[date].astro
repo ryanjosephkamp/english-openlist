@@ -1,0 +1,372 @@
+---
+import Base from '../../layouts/Base.astro';
+import RunShape from '../../islands/RunShape.tsx';
+import { runs, fmt, runHref, REPO, DECIDED_LABEL, DECIDED_ORDER, type Run } from '../../util/data';
+import { usDate } from '../../util/dates';
+import { plural } from '../../charts/format';
+import { lookups } from '../../util/lookups';
+
+export function getStaticPaths() {
+  return runs.map((run, i) => ({
+    params: { date: run.date },
+    props: { run, previous: runs[i - 1] ?? null, next: runs[i + 1] ?? null, earlier: runs.slice(0, i) },
+  }));
+}
+
+interface Props {
+  run: Run;
+  previous: Run | null;
+  next: Run | null;
+  /** the runs before this one, oldest first */
+  earlier: Run[];
+}
+
+const { run, previous, next, earlier } = Astro.props;
+const date = usDate(run.date);
+const n = run.words.length;
+const by = (how: string) => run.words.filter((w) => w.how === how).length;
+const promoted = by('promoted');
+const discovered = by('discovered');
+const dated = by('dated');
+
+const signed = (d: number) => (d > 0 ? `+${fmt(d)}` : d < 0 ? `−${fmt(-d)}` : '0');
+const net = run.total !== null && run.before !== null ? run.total - run.before : null;
+const other = net === null ? 0 : net - n;
+// Invalid entries before this run: the last earlier run that recorded them.
+const invalidBefore = [...earlier].reverse().find((r) => r.recorded?.invalid != null)?.recorded?.invalid ?? null;
+const invalidAfter = run.recorded?.invalid ?? null;
+
+const parts = [
+  promoted && `${plural(promoted, 'word')} promoted from the invalid list`,
+  discovered && `${plural(discovered, 'new word')} it found`,
+  dated && `${plural(dated, 'word')} the list dates to this day`,
+].filter(Boolean) as string[];
+const join = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')}, and ${xs.at(-1)}`);
+
+const lengths = [...new Set(run.words.map((w) => w.word.length))].sort((a, b) => a - b);
+const letters = [...new Set(run.words.map((w) => w.word[0]!))].sort();
+const count = <T,>(xs: T[], x: T) => xs.filter((y) => y === x).length;
+
+const at = run.at ? new Date(run.at) : null;
+const time = at
+  ? new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }).format(at)
+  : null;
+const postUrl = `${REPO}/blob/main/_posts/${run.post}`;
+const HOW: Record<string, string> = {
+  promoted: 'promoted from the invalid list',
+  discovered: 'a new word it found',
+  dated: 'dated to this day',
+};
+---
+
+<Base
+  title={`Daily log, ${date}`}
+  section="Daily log"
+  description={`The English OpenList's nightly run of ${date}: ${n > 0 ? `${plural(n, 'word')} added` : 'no words added'}.`}
+>
+  <div class="frame page">
+    <header class="page-head">
+      <p class="eyebrow"><a href="/blog/">The daily log</a></p>
+      <h1>{date}</h1>
+      <p class="lede">
+        {
+          run.failed ? (
+            <>This run failed before it could read the list: its post recorded the list as 0 words, and it added nothing.</>
+          ) : n > 0 ? (
+            <>
+              {promoted === n ? (
+                <>The nightly run promoted <strong class="n">{plural(n, 'word')}</strong> from the invalid list.</>
+              ) : discovered === n ? (
+                <>The nightly run found <strong class="n">{plural(n, 'new word')}</strong> and added {n === 1 ? 'it' : 'them'}.</>
+              ) : dated === n ? (
+                <>The list dates <strong class="n">{plural(n, 'word')}</strong> to this day, though the run's post named none.</>
+              ) : (
+                <>The list gained <strong class="n">{plural(n, 'word')}</strong> this day: {join(parts)}.</>
+              )}
+              {run.total !== null && <> The list then held {fmt(run.total)} words.</>}
+            </>
+          ) : run.recorded ? (
+            <>The nightly run added no words.{run.total !== null && <> The list held {fmt(run.total)} words.</>}</>
+          ) : (
+            <>This run's post recorded no figures, and no word on the list carries this date.</>
+          )
+        }
+      </p>
+    </header>
+
+    {
+      n > 0 && (
+        <section aria-labelledby="words">
+          <h2 id="words">The words it added</h2>
+          <ul class="words">
+            {run.words.map((w) => (
+              <li>
+                <a class="word w" href={`/?w=${w.word}`}>{w.word}</a>
+                <span class="w-meta">
+                  {plural(w.word.length, 'letter')} · {HOW[w.how]} · {DECIDED_LABEL[DECIDED_ORDER[w.decided]!]}
+                </span>
+                <span class="w-look">
+                  Look it up:{' '}
+                  {lookups(w.word).map((l, i) => (
+                    <>
+                      {i > 0 && ' · '}
+                      <a href={l.href} rel="noopener" target="_blank">{l.label}</a>
+                    </>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p class="note">Select a word for its full entry: when it was added, what decided it, and its look-ups.</p>
+        </section>
+      )
+    }
+
+    {
+      (n > 0 || run.missing.length > 0) && (
+        <section aria-labelledby="how" class="doc">
+          <h2 id="how">How they got on</h2>
+          {promoted > 0 && (
+            <p>
+              <strong>Promoted from the invalid list.</strong> Each night the run takes about 1,000 entries of the invalid
+              list and looks each up in dictionary APIs, Merriam-Webster's first. A word a dictionary recognizes moves to the
+              list, with that dictionary's ruling in its record. A word whose look-up was refused is not checked that night,
+              and nothing records it as rejected.
+            </p>
+          )}
+          {discovered > 0 && (
+            <p>
+              <strong>A new word the run found.</strong> The run reads Merriam-Webster's and Wordnik's words of the day and a
+              file of manual additions, and adds a word a dictionary recognizes. The post did not record which source gave it.
+            </p>
+          )}
+          {dated > 0 && (
+            <p>
+              <strong>Dated to this day.</strong> The list records this day as the date {dated === 1 ? 'this word' : 'these words'}{' '}
+              joined it, though the run's post did not name {dated === 1 ? 'it' : 'them'}.
+            </p>
+          )}
+          {run.missing.length > 0 && (
+            <p>
+              The post also names {plural(run.missing.length, 'word')} the list does not carry with this date:{' '}
+              {run.missing.map((w, i) => <>{i > 0 && ', '}<a class="word" href={`/?w=${w}`}>{w}</a></>)}
+              . A correction may have moved {run.missing.length === 1 ? 'it' : 'them'} since.
+            </p>
+          )}
+        </section>
+      )
+    }
+
+    {
+      !run.failed && (run.total !== null || invalidAfter !== null) && (
+        <section aria-labelledby="changed">
+          <h2 id="changed">How the list changed</h2>
+          <div class="table-wrap">
+            <table class="changes">
+              <thead>
+                <tr>
+                  <th scope="col" />
+                  <th scope="col" class="num">Before</th>
+                  <th scope="col" class="num">After</th>
+                  <th scope="col" class="num">Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                {run.total !== null && (
+                  <tr>
+                    <th scope="row">Words on the list</th>
+                    <td class="num">{run.before !== null ? fmt(run.before) : 'not recorded'}</td>
+                    <td class="num">{fmt(run.total)}</td>
+                    <td class="num">{net !== null ? signed(net) : '—'}</td>
+                  </tr>
+                )}
+                {invalidAfter !== null && (
+                  <tr>
+                    <th scope="row">Entries on the invalid list</th>
+                    <td class="num">{invalidBefore !== null ? fmt(invalidBefore) : 'not recorded'}</td>
+                    <td class="num">{fmt(invalidAfter)}</td>
+                    <td class="num">{invalidBefore !== null ? signed(invalidAfter - invalidBefore) : '—'}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {other !== 0 && (
+            <p class="note">
+              Besides this run's words, the list's size changed by {signed(other)} from the recorded day before, through a change
+              made outside the nightly run.
+              {other < 0 && <>Words moved off the list by hand are in <a href="/rule/#record">the record of corrections</a>.</>}
+            </p>
+          )}
+          {n > 0 && (
+            <dl class="added-by">
+              <div>
+                <dt>The words added, by length</dt>
+                <dd>{lengths.map((l) => `${plural(l, 'letter')}: +${count(run.words.map((w) => w.word.length), l)}`).join(' · ')}</dd>
+              </div>
+              <div>
+                <dt>By first letter</dt>
+                <dd>{letters.map((l) => `${l}: +${count(run.words.map((w) => w.word[0]), l)}`).join(' · ')}</dd>
+              </div>
+            </dl>
+          )}
+        </section>
+      )
+    }
+
+    {
+      run.lengths && run.firstLetters && run.total !== null && (
+        <section aria-labelledby="after">
+          <h2 id="after">The list after this run</h2>
+          <p class="note">{fmt(run.total)} words, as the run's post recorded them.</p>
+          <RunShape
+            client:visible
+            total={run.total}
+            lengths={run.lengths}
+            firstLetters={run.firstLetters}
+            addedLengths={lengths}
+            addedLetters={letters}
+          />
+        </section>
+      )
+    }
+
+    <p class="note source">
+      {time ? <>The run wrote its post at {time} UTC.</> : <>The post does not record when the run wrote it.</>}{' '}
+      Its own record is in the repository: <a href={postUrl} rel="noopener"><code>_posts/{run.post}</code></a>.
+    </p>
+
+    <nav class="pager" aria-label="Other runs">
+      {previous ? <a href={runHref(previous.date)} rel="prev">← {usDate(previous.date)}</a> : <span />}
+      <a href="/blog/">Every run</a>
+      {next ? <a href={runHref(next.date)} rel="next">{usDate(next.date)} →</a> : <span />}
+    </nav>
+  </div>
+</Base>
+
+<style>
+  .page {
+    display: grid;
+    gap: var(--space-7);
+  }
+  .page-head {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .eyebrow {
+    font-size: var(--step--1);
+    font-weight: 600;
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+  .lede .n {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  section {
+    display: grid;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+  h2 {
+    font-size: var(--step-3);
+  }
+  .doc h2 {
+    margin-top: 0;
+  }
+  .words {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: var(--space-3);
+  }
+  .words li {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+  }
+  .w {
+    font-size: var(--step-2);
+    justify-self: start;
+  }
+  .w-meta,
+  .w-look {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+  .w-look a {
+    white-space: nowrap;
+  }
+  .note {
+    color: var(--ink-soft);
+    font-size: var(--step--1);
+    max-width: var(--measure);
+  }
+  .table-wrap {
+    overflow-x: auto;
+  }
+  .changes {
+    border-collapse: collapse;
+    min-width: 100%;
+    max-width: 40rem;
+  }
+  .changes th,
+  .changes td {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+  }
+  .changes th:first-child {
+    padding-left: 0;
+  }
+  .changes thead th {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .num {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .added-by {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+  }
+  .added-by dt {
+    font-weight: 600;
+    font-size: var(--step--1);
+  }
+  .added-by dd {
+    margin: 0;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .source code {
+    overflow-wrap: anywhere;
+  }
+  .pager {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--rule);
+  }
+  @media (max-width: 36rem) {
+    h1 {
+      font-size: var(--step-4);
+    }
+    .changes th,
+    .changes td {
+      padding-inline: var(--space-2);
+    }
+  }
+</style>

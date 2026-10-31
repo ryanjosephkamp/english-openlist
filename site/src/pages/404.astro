@@ -5,7 +5,7 @@ import Base from '../layouts/Base.astro';
 <Base title="Not found" section="" description="This page does not exist.">
   <script is:inline>
     // The old site gave each word a page at /word/<word>. Cloudflare's redirects
-    // cannot carry the word into a query, so this page sends it to the search.
+    // cannot carry the word into a query, so this page opens the word's panel.
     (() => {
       const m = /^\/word\/([^/]+)\/?$/.exec(location.pathname);
       if (!m) return;
@@ -13,7 +13,7 @@ import Base from '../layouts/Base.astro';
       try {
         word = decodeURIComponent(word);
       } catch {}
-      location.replace('/?q=' + encodeURIComponent(word.toLowerCase()));
+      location.replace('/?w=' + encodeURIComponent(word.toLowerCase()));
     })();
   </script>
   <div class="frame doc">

@@ -531,3 +531,143 @@ button.cols-hit {
 .growth-read strong {
   color: var(--ink);
 }
+
+/* The nightly run's additions, on a calendar axis: 1 slot a day. */
+.nightly {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.nightly .cols-plot {
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.nightly-runs {
+  position: absolute;
+  inset: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nightly-runs li {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+}
+.nightly-hit {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.nightly-hit.is-on {
+  background: color-mix(in oklch, var(--sunken) 80%, transparent);
+}
+.nightly-hit:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.nightly-bar {
+  display: block;
+  width: max(2px, calc(100% - 1px));
+  max-width: 14px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+}
+.nightly-zero {
+  display: block;
+  width: max(2px, calc(100% - 1px));
+  max-width: 14px;
+  height: 2px;
+  background: var(--chart-muted);
+}
+.nightly-zero.is-failed {
+  height: 6px;
+  background: repeating-linear-gradient(135deg, var(--ink-soft) 0 1.5px, transparent 1.5px 3px);
+}
+.nightly-hit.is-on .nightly-bar,
+.nightly-hit.is-on .nightly-zero {
+  outline: 1.5px solid var(--ink);
+  outline-offset: 1px;
+}
+.nightly-gap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  background: repeating-linear-gradient(135deg, color-mix(in oklch, var(--rule) 70%, transparent) 0 1px, transparent 1px 7px);
+  border-inline: 1px dashed var(--rule-strong);
+  pointer-events: none;
+}
+.nightly-gap span {
+  font-size: var(--step--2);
+  color: var(--ink-soft);
+  background: var(--ground);
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+.nightly-card.is-open {
+  pointer-events: auto;
+}
+.nightly-card a {
+  font-weight: 600;
+  justify-self: start;
+}
+.nightly-card a::after {
+  content: ' \2192';
+}
+.nightly-hint {
+  font-size: var(--step--2);
+}
+.nightly-axis {
+  position: relative;
+  height: 1.4em;
+  margin-left: 2.6rem;
+  font-size: var(--step--2);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.nightly-axis span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* A chart's key that says what each bar means, in sentences. */
+.key-what {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+.key-what div {
+  display: grid;
+  gap: 0.15rem;
+}
+.key-what dt {
+  font-weight: 600;
+  font-size: var(--step--1);
+}
+.key-what dd {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--step--1);
+  max-width: var(--measure);
+}
+@media (min-width: 48rem) {
+  .key-what {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4) var(--space-6);
+  }
+}
