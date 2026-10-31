@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Mark from '../components/Mark.astro';
 import Search from '../islands/Search.tsx';
-import { manifest, stats, fmt, DECIDED_LABEL, HF } from '../util/data';
+import { manifest, stats, runs, fmt, DECIDED_LABEL, DECIDED_WHAT, HF } from '../util/data';
 import { usDate } from '../util/dates';
 
 const maxLength = stats.lengths[stats.lengths.length - 1]!.length;
@@ -25,11 +25,12 @@ const EXAMPLES = ['steamship', 'epiphysis', 'trehalose', 'mainmast', 'remittance
         <h1>English OpenList</h1>
         <p class="lede">
           A free list of <strong class="n">{fmt(manifest.wordCount)}</strong> English words, lowercase a to z only, for word
-          games and apps, research, and teaching. The whole list is on this page, so every search runs in your browser.
+          games and apps, research, and teaching. The whole list loads into this page, so every search runs in your browser.
         </p>
         <p class="home-sub">
           This is the list as published on {lastPublished}. Its files are on
-          <a href={HF} rel="noopener">Hugging Face</a>; <a href="/rule/">its rule and record</a> say what is on it and why.
+          <a href={HF} rel="noopener">Hugging Face</a>; <a href="/rule/">its rule and record</a> say what is on it and why, and
+          <a href="/blog/">the daily log</a> shows what each night's run added.
         </p>
       </div>
     </header>
@@ -37,7 +38,10 @@ const EXAMPLES = ['steamship', 'epiphysis', 'trehalose', 'mainmast', 'remittance
     <Search
       client:load
       decidedLabels={DECIDED_LABEL}
+      decidedWhat={DECIDED_WHAT}
       decidedCounts={stats.decided}
+      runDates={runs.map((r) => r.date)}
+      bulkDates={manifest.bulkDates.map((b) => b.date)}
       maxLength={maxLength}
       examples={EXAMPLES}
     />

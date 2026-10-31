@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Query } from '@eol/wordlist/query';
-import type { Manifest, Request, Response, Row } from '../worker/protocol';
+import type { ExportFormat, Manifest, Request, Response, Row } from '../worker/protocol';
 
 /** Rows fetched per request. Comfortably more than a screen, so scrolling rarely waits. */
 const PAGE = 240;
@@ -28,6 +28,10 @@ export type Search = {
   readonly searching: boolean;
   readonly rowAt: (index: number) => Row | undefined;
   readonly lookup: (word: string) => Promise<Row | null>;
+  /** the row at `offset` of the current result */
+  readonly pick: (offset: number) => Promise<Row | null>;
+  /** the current result as a file's text */
+  readonly exportAs: (format: ExportFormat) => Promise<string>;
 };
 
 export function useSearch(query: Query): Search {
@@ -52,6 +56,7 @@ export function useSearch(query: Query): Search {
   const nextId = useRef(1);
   const queryId = useRef(0);
   const pending = useRef(new Map<number, (row: Row | null) => void>());
+  const pendingText = useRef(new Map<number, (text: string) => void>());
 
   useEffect(() => {
     const worker = new Worker(new URL('../worker/search.worker.ts', import.meta.url), {
@@ -100,6 +105,12 @@ export function useSearch(query: Query): Search {
         case 'lookup': {
           pending.current.get(message.id)?.(message.row);
           pending.current.delete(message.id);
+          return;
+        }
+
+        case 'export': {
+          pendingText.current.get(message.id)?.(message.text);
+          pendingText.current.delete(message.id);
           return;
         }
       }
@@ -152,6 +163,26 @@ export function useSearch(query: Query): Search {
     });
   }, []);
 
+  const pick = useCallback((offset: number): Promise<Row | null> => {
+    const worker = workerRef.current;
+    if (!worker) return Promise.resolve(null);
+    const id = nextId.current++;
+    return new Promise((resolve) => {
+      pending.current.set(id, resolve);
+      worker.postMessage({ type: 'pick', id, offset } satisfies Request);
+    });
+  }, []);
+
+  const exportAs = useCallback((format: ExportFormat): Promise<string> => {
+    const worker = workerRef.current;
+    if (!worker) return Promise.resolve('');
+    const id = nextId.current++;
+    return new Promise((resolve) => {
+      pendingText.current.set(id, resolve);
+      worker.postMessage({ type: 'export', id, format } satisfies Request);
+    });
+  }, []);
+
   return useMemo(
     () => ({
       status,
@@ -165,7 +196,9 @@ export function useSearch(query: Query): Search {
       searching,
       rowAt,
       lookup,
+      pick,
+      exportAs,
     }),
-    [status, failure, manifest, transferred, decodeMillis, count, millis, error, searching, rowAt, lookup],
+    [status, failure, manifest, transferred, decodeMillis, count, millis, error, searching, rowAt, lookup, pick, exportAs],
   );
 }

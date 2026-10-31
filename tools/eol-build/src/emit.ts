@@ -71,7 +71,7 @@ export async function emit(key: string, extension: string, data: Uint8Array): Pr
  * beside the deleting code rather than at a call site where it reads as an
  * afterthought.
  */
-export const GENERATED = ['stats.json', 'record.json'] as const;
+export const GENERATED = ['stats.json', 'record.json', 'runs.json'] as const;
 
 export async function clearStale(
   keep: readonly Artifact[],

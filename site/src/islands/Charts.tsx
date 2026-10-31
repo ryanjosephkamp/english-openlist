@@ -86,21 +86,24 @@ export default function Charts({ stats, decidedOrder, decidedLabel, decidedWhat,
       <div className="chart-grid">
         <ChartFrame
           title="What decided each word"
-          note="Each word's record, sorted by 1 rule into 4 values."
+          note="Each word's record says how it got on the list. 1 rule sorts the records into 4 values, each explained under the bars."
           table={decidedOrder.map((d) => ({ label: decidedLabel[d], value: stats.decided[d] }))}
           total={total}
           valueLabel="Words"
         >
           <BarList
             label="Words by what decided them"
-            bars={decidedOrder.map((d) => ({
-              key: d,
-              label: decidedLabel[d],
-              value: stats.decided[d],
-              title: decidedWhat[d],
-            }))}
+            bars={decidedOrder.map((d) => ({ key: d, label: decidedLabel[d], value: stats.decided[d] }))}
             total={total}
           />
+          <dl className="key-what">
+            {decidedOrder.map((d) => (
+              <div key={d}>
+                <dt>{decidedLabel[d]}</dt>
+                <dd>{decidedWhat[d]}</dd>
+              </div>
+            ))}
+          </dl>
         </ChartFrame>
 
         <ChartFrame
@@ -134,14 +137,6 @@ export default function Charts({ stats, decidedOrder, decidedLabel, decidedWhat,
   const floor = Math.floor(lo / 10_000) * 10_000;
   const ceiling = floor + Math.ceil((hi - floor) / 40_000) * 40_000;
 
-  // The nightly's daily additions after the last correction: every recorded
-  // day from the day after the last large change, with its net change.
-  const lastBig = big.length ? big[big.length - 1]!.date : g.first.date;
-  const after = g.points.filter((p) => p.date > lastBig);
-  const prev = new Map(g.points.map((p, i) => [p.date, i > 0 ? g.points[i - 1]!.total : p.total]));
-  const added = after.map((p) => ({ date: p.date, value: p.total - prev.get(p.date)! }));
-  const addedTotal = added.reduce((s, a) => s + a.value, 0);
-
   return (
     <div className="chart-grid">
       <ChartFrame
@@ -158,25 +153,6 @@ export default function Charts({ stats, decidedOrder, decidedLabel, decidedWhat,
           ceiling={ceiling}
         />
       </ChartFrame>
-
-      {added.length > 0 && (
-        <ChartFrame
-          title="What the nightly run added"
-          note={`The net change on each recorded day after ${longDate(lastBig)}: ${full(addedTotal)} words in all, the last on ${longDate(
-            [...added].reverse().find((a) => a.value > 0)?.date ?? lastBig,
-          )}.`}
-          table={added.map((a) => ({ label: longDate(a.date), value: a.value }))}
-          valueLabel="Words"
-        >
-          <Columns
-            label="Words added on each recorded day"
-            columns={added.map((a) => ({ key: a.date, label: `${MONTHS[Number(a.date.slice(5, 7)) - 1]!.slice(0, 3)} ${Number(a.date.slice(8))}`, name: longDate(a.date), value: Math.max(0, a.value) }))}
-            total={Math.max(1, addedTotal)}
-            labelEvery={7}
-            height={150}
-          />
-        </ChartFrame>
-      )}
     </div>
   );
 }

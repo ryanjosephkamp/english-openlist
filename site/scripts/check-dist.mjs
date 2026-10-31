@@ -3,6 +3,8 @@
 //     address, or the page about it exists;
 //   - a public file carries a channel label the CEOL Universe withholds;
 //   - a word the start page offers is no longer on the list.
+// A word the daily log prints can contain a name these checks look for, so
+// such a word is set aside as a whole token first; the name alone still fails.
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,13 +32,20 @@ const CEOL_ADDRESSES = ['common-english-openlist', 'ceol-universe', 'ceol'];
 // The labels as they appear in the list's own records and in the CEOL's files.
 const WITHHELD = ['twl_scrabble_dictionary', 'tournament-list', 'collins', 'coca_frequency', 'merriam-webster', 'linux_', 'nltk_'];
 
+const runs = JSON.parse(readFileSync(join(dist, 'data/runs.json'), 'utf8'));
+const runWords = new Set(runs.flatMap((r) => [...r.words.map((w) => w.word), ...r.missing]));
+// A run word equal to a name is not set aside: that page needs a person's look.
+const masked = [...runWords].filter((w) => [...CEOL_ADDRESSES, ...WITHHELD].some((n) => w.includes(n) && w !== n));
+const mask = masked.length ? new RegExp(`(?<![a-z])(?:${masked.join('|')})(?![a-z])`, 'g') : null;
+
 let read = 0;
 for (const path of files(dist)) {
   if (!TEXT.test(path)) continue;
   const rel = relative(dist, path);
   // the word lists are words, not labels: a withheld label's name can be a word
   if (rel.startsWith('downloads/')) continue;
-  const text = readFileSync(path, 'utf8').toLowerCase();
+  let text = readFileSync(path, 'utf8').toLowerCase();
+  if (mask) text = text.replace(mask, '');
   read++;
   if (!ceolPublic) for (const a of CEOL_ADDRESSES) if (text.includes(a)) failures.push(`${rel}: names ${a} while CEOL_PUBLIC is false`);
   if (rel.startsWith('data/')) for (const w of WITHHELD) if (text.includes(w)) failures.push(`${rel}: carries the withheld label ${w}`);
@@ -56,4 +65,7 @@ if (failures.length) {
   for (const f of failures) console.error(`  - ${f}`);
   process.exit(1);
 }
-console.log(`check-dist: ${read} files read, CEOL_PUBLIC ${ceolPublic}, ${examples.length} examples on the list; clean`);
+console.log(
+  `check-dist: ${read} files read, CEOL_PUBLIC ${ceolPublic}, ${examples.length} examples on the list,` +
+    ` ${runs.length} runs, ${masked.length} run words set aside; clean`,
+);

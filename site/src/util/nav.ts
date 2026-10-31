@@ -8,6 +8,7 @@ export interface Section {
 
 export const SECTIONS: readonly Section[] = [
   { label: 'Search', href: '/' },
+  { label: 'Daily log', href: '/blog/' },
   { label: 'Charts', href: '/charts/' },
   { label: 'Rule and record', href: '/rule/' },
   { label: 'Downloads', href: '/downloads/' },

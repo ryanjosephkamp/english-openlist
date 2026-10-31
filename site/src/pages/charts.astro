@@ -1,9 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
 import Charts from '../islands/Charts.tsx';
+import NightlyChart from '../islands/NightlyChart.tsx';
 import { manifest, stats, fmt, DECIDED_LABEL, DECIDED_ORDER, DECIDED_WHAT } from '../util/data';
+import { nightlyWindow } from '../util/runs';
 
 const props = { stats, decidedOrder: DECIDED_ORDER, decidedLabel: DECIDED_LABEL, decidedWhat: DECIDED_WHAT };
+const nightly = nightlyWindow();
 ---
 
 <Base
@@ -28,8 +31,8 @@ const props = { stats, decidedOrder: DECIDED_ORDER, decidedLabel: DECIDED_LABEL,
     <section aria-labelledby="origin">
       <h2 id="origin">Where its words came from</h2>
       <p class="section-note">
-        The list kept a record of how each word came in. "What decided it" sorts those records into 4 values;
-        <a href="/rule/#decided">the rule page</a> says what each means.
+        The list kept a record of how each word came in. "What decided each word" sorts those records into 4 values,
+        each explained under its chart; <a href="/rule/#decided">the rule page</a> has the same table.
       </p>
       <Charts client:visible part="origin" {...props} />
     </section>
@@ -40,6 +43,8 @@ const props = { stats, decidedOrder: DECIDED_ORDER, decidedLabel: DECIDED_LABEL,
         The 2 drops are corrections, each recorded word by word in a ledger: <a href="/rule/#record">the record</a> lists them.
       </p>
       <Charts client:visible part="growth" {...props} />
+      {nightly && <NightlyChart client:visible window={nightly} base="/blog/" />}
+      <p class="section-note">Every run has a page in <a href="/blog/">the daily log</a>: the words it added and how the list changed.</p>
     </section>
   </div>
 </Base>

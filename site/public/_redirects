@@ -7,6 +7,3 @@
 /shape/       /charts/     301
 /as-it-is     /rule/       301
 /as-it-is/    /rule/       301
-# The daily posts live in the repository.
-/blog         https://github.com/ryanjosephkamp/english-openlist/tree/main/_posts  302
-/blog/*       https://github.com/ryanjosephkamp/english-openlist/tree/main/_posts  302

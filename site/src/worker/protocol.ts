@@ -30,7 +30,13 @@ export type Request =
   | { readonly type: 'init'; readonly baseUrl: string }
   | { readonly type: 'query'; readonly id: number; readonly query: Query; readonly limit: number }
   | { readonly type: 'page'; readonly id: number; readonly offset: number; readonly limit: number }
-  | { readonly type: 'lookup'; readonly id: number; readonly word: string };
+  | { readonly type: 'lookup'; readonly id: number; readonly word: string }
+  /** the row at `offset` of the current result, for "Surprise me" */
+  | { readonly type: 'pick'; readonly id: number; readonly offset: number }
+  /** every row of the current result, as a file's text */
+  | { readonly type: 'export'; readonly id: number; readonly format: ExportFormat };
+
+export type ExportFormat = 'txt' | 'csv';
 
 export type Response =
   | {
@@ -50,4 +56,5 @@ export type Response =
       readonly rows: readonly Row[];
     }
   | { readonly type: 'rows'; readonly id: number; readonly offset: number; readonly rows: readonly Row[] }
-  | { readonly type: 'lookup'; readonly id: number; readonly row: Row | null };
+  | { readonly type: 'lookup'; readonly id: number; readonly row: Row | null }
+  | { readonly type: 'export'; readonly id: number; readonly text: string };
