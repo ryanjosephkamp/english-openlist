@@ -21,7 +21,7 @@ being proper nouns, which is what should have been excluding them all along.
 ``config.LENGTH_FLAG_OVER`` replaces the ceiling with an *integrity* check —
 a guard against concatenation bugs, not a statement about wordhood.
 
-See PROTOCOL.md §1.3 and research/DECISIONS.md D-025.
+See corrections/README.md.
 
 Rules:
 1. Lowercase letters only (a-z)

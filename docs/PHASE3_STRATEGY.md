@@ -520,7 +520,7 @@ phase3/
 | **Detecting New Words** | RSS parsing, external new-word feeds, periodic full re-checks |
 | **Proper Noun Leakage** | Multi-layer validation: API response + heuristics + LLM fallback |
 | **Large File Sizes** | Use Parquet for invalid data, compress with gzip |
-| **GitHub Actions Limits** | Stay under 6-hour job limit (our pipeline is <10 min) |
+| **GitHub Actions Limits** | Stay under the 6-hour limit per run (our pipeline is <10 min) |
 
 ---
 

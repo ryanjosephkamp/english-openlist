@@ -222,7 +222,7 @@ def test_a_damaged_download_cannot_perpetuate_itself(tmp_path, monkeypatch):
 
 def test_counts_invalid_words_without_loading_them(tmp_path):
     """
-    The daily job runs with skip_invalid, so the set is empty by design. The
+    The nightly runs with skip_invalid, so the set is empty by design. The
     count still has to be the truth -- it is published to Hugging Face in
     update_stats.json every day, and reporting 0 against a 9.27M-word list is
     exactly the kind of quiet falsehood this project keeps finding.

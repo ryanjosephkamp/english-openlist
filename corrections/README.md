@@ -8,7 +8,7 @@ nothing moves without a recorded reason and a source you can go and check.
 Until August 2026 the rule on this dataset was that no word is ever added,
 removed or altered — documentation and infrastructure only. That was reversed
 deliberately by the dataset's owner, not drifted away from. Promotion from the
-invalid list to the valid list was always the nightly pipeline's job; what was
+invalid list to the valid list was always the nightly pipeline's work; what was
 new is moving a word the other way.
 
 **33,594 words have now been demoted**, on 2026-08-14, in two batches. None of
@@ -567,8 +567,7 @@ first that follows a change to the rules themselves.
 a 2–45 character range. Both bounds were Scrabble tournament conventions and both
 excluded real English: `a` and `i` below, and the 46-character
 `phosphoribosylaminoimidazolesuccinocarboxamide` above. **The list is now
-deliberately not Scrabble-conformant.** See `PROTOCOL.md` §1.3 and
-`research/DECISIONS.md` D-025.
+deliberately not Scrabble-conformant.**
 
 **190 entries on the valid list never satisfied even the old rule** — 188
 hyphenated and 2 accented. They predate the rule being written down. The site has

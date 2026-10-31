@@ -88,7 +88,6 @@ uv run --no-project --isolated --with playwright==1.58.0 python tools/demo_gif.p
 | `site/`, `tools/eol-build/`, `packages/wordlist/` | the site, the build of its data and the daily log, and the word list's binary format and search |
 | `tools/demo_gif.py` | the recording of the demo above |
 | `archive/`, `updates/` | the daily statistics kept over time |
-| `research/`, `PROTOCOL.md` | a measurement study of the list, paused |
 
 ## License
 
