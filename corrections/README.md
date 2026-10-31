@@ -624,8 +624,14 @@ The nightly passes over the 24 (`nightly_may_promote` in `config.py`, held by
 `tests/test_letter_guard.py`). A dictionary's entry for a letter names the
 character, so a lookup would promote every one of them. Before the guard
 existed, 4 runs promoted one each that way: August 22, August 30, September 12,
-and October 30, 2026. All 4 are still on the list; returning them to the
-candidates is a correction like any other.
+and October 30, 2026. `ledger_letters_promoted.csv` returns all 4 to the
+candidates (October 31, 2026), applied by `scripts/demote_words.py`: the valid
+list goes from 345,166 to 345,162 words, and the invalid list gains the same 4.
+They stay on the recheck queue, for adjudication like the other 20.
+
+```bash
+python scripts/demote_words.py --data-dir .cache/hf --ledger corrections/ledger_letters_promoted.csv --dry-run
+```
 
 ### Reproducing it
 
