@@ -29,3 +29,32 @@ jobs:
 
       - name: Run tests
         run: pytest tests/ -v
+
+  # The site and its build tool. The data build and `check-dist.mjs` need the
+  # dataset's files (the 291 MB dictionary among them), so they run with each
+  # deploy rather than here.
+  site:
+    name: site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Type-check the build tool
+        run: pnpm typecheck
+
+      # Astro writes the types for `import.meta.env` and its modules on sync.
+      - name: Type-check the site
+        run: |
+          pnpm --filter @eol/site exec astro sync
+          pnpm --dir site exec tsc --noEmit
