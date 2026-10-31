@@ -3,10 +3,11 @@ Tests for the nightly's single-letter guard.
 
 D-027 asserts `a` and `i` and makes the other 24 letters candidates, to be
 adjudicated on evidence. A dictionary's entry for a letter names the character,
-so a lookup would promote every one of them. The run of October 30, 2026
-promoted one through the recheck queue, which bypasses the pre-filter. These
-tests hold both nightly paths, the invalid-list check and new-word discovery,
-to never ask about one of those letters, and so never to promote one.
+so a lookup would promote every one of them. Before the guard, 4 runs, from
+August 22 to October 30, 2026, promoted one each through the recheck queue,
+which bypasses the pre-filter. These tests hold both nightly paths, the
+invalid-list check and new-word discovery, to never ask about one of those
+letters, and so never to promote one.
 """
 
 import asyncio

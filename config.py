@@ -135,9 +135,10 @@ RECHECK_DAILY_SLICE = 200
 # The only single letters the nightly may promote. D-027 makes the other 24
 # candidates, to be adjudicated on evidence, and a dictionary lookup is not that
 # evidence: a dictionary's entry for a letter names the character, so a match
-# would promote every one of them without saying whether any is a word. The run
-# of October 30, 2026 promoted one that way. The letters stay on the recheck
-# queue so adjudication can reach them; the nightly passes over them.
+# would promote every one of them without saying whether any is a word. Before
+# this guard, 4 runs promoted one each that way, from August 22 to October 30,
+# 2026. The letters stay on the recheck queue so adjudication can reach them; the
+# nightly passes over them.
 ASSERTED_LETTERS = frozenset({"a", "i"})
 
 
