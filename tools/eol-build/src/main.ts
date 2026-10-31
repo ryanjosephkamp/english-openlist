@@ -20,6 +20,7 @@ function step(n: number, label: string): void {
 
 const started = Date.now();
 const revision = (await readFile(resolve(CACHE_DIR, '.revision'), 'utf8').catch(() => '')).trim() || null;
+const publishedAt = (await readFile(resolve(CACHE_DIR, '.published'), 'utf8').catch(() => '')).trim() || null;
 
 // ---------------------------------------------------------------- 1. word list
 
@@ -209,6 +210,7 @@ console.log(`      record.json  ${record.length} ledger lines`);
 const manifest = {
   builtAt: new Date().toISOString(),
   revision,
+  publishedAt,
   wordCount: words.length,
   dateTable,
   decidedCounts,

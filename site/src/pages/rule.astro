@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { manifest, stats, record, fmt, moved, DECIDED_LABEL, DECIDED_ORDER, DECIDED_WHAT, REPO } from '../util/data';
+import { manifest, stats, record, fmt, moved, publishedOn, DECIDED_LABEL, DECIDED_ORDER, DECIDED_WHAT, REPO } from '../util/data';
 import { usDate } from '../util/dates';
 import { plural } from '../charts/format';
 import { CEOL_PUBLIC } from '../util/release-state';
@@ -23,8 +23,29 @@ const malformed = moved('delete_malformed', 'ledger_form_rules.csv');
 const letters = moved('demote_to_invalid', 'ledger_single_letters.csv');
 const candidates = moved('add_candidate', 'ledger_form_rules.csv');
 const requeued = moved('queue_for_recheck', 'ledger_letters_recheck.csv');
+const returned = moved('demote_to_invalid', 'ledger_letters_promoted.csv');
 const reviewed = record.filter((r) => r.action === 'none').reduce((s, r) => s + r.count, 0);
 const ledgerDate = (ledger: string) => usDate(record.find((r) => r.ledger === ledger)!.date);
+
+// A ledger the lines above do not describe is still listed, by its counts, so
+// the record never leaves out a correction.
+const DESCRIBED = [
+  'ledger_stage1.csv',
+  'ledger_demotions.csv',
+  'ledger_demotions_stage4.csv',
+  'ledger_form_rules.csv',
+  'ledger_single_letters.csv',
+  'ledger_letters_recheck.csv',
+  'ledger_letters_promoted.csv',
+];
+const ACTION_WHAT: Readonly<Record<string, string>> = {
+  remove_from_invalid_list: 'removed from the invalid list',
+  demote_to_invalid: 'moved to the invalid list',
+  delete_malformed: 'deleted',
+  add_candidate: 'added to the invalid list as candidates',
+  queue_for_recheck: 'queued to be checked again',
+};
+const others = record.filter((r) => r.action !== 'none' && !DESCRIBED.includes(r.ledger));
 
 const bulk = [...manifest.bulkDates].sort((a, b) => a.date.localeCompare(b.date));
 const bulkTotal = bulk.reduce((s, b) => s + b.count, 0);
@@ -156,10 +177,29 @@ const tree = `${REPO}/tree/main`;
           <span class="when">From {usDate(lastBig)}</span>
           <p>
             The nightly run added <strong>{fmt(nightlyAfter)}</strong> {nightlyAfter === 1 ? 'word' : 'words'}{lastAdded && <>, the last on {usDate(lastAdded.date)}</>}.
-            The list was last published on {usDate(g.last.date)}.
           </p>
         </li>
+        <li>
+          <span class="when">{ledgerDate('ledger_letters_promoted.csv')}</span>
+          <p>
+            <strong>{fmt(returned)}</strong> {returned === 1 ? 'single letter' : 'single letters'} the nightly run had promoted,
+            before it passed over letters, {returned === 1 ? 'was' : 'were'} moved back to the invalid list. Like the other
+            single letters, {returned === 1 ? 'it is' : 'they are'} queued to be checked again.
+          </p>
+        </li>
+        {
+          others.map((r) => (
+            <li>
+              <span class="when">{usDate(r.date)}</span>
+              <p>
+                <strong>{fmt(r.count)}</strong> {r.count === 1 ? 'word was' : 'words were'} {ACTION_WHAT[r.action] ?? <>marked <code>{r.action}</code></>},
+                by <a href={`${tree}/corrections/${r.ledger}`} rel="noopener"><code>{r.ledger}</code></a>.
+              </p>
+            </li>
+          ))
+        }
       </ol>
+      <p>The list was last published on {usDate(publishedOn)}.</p>
       <p class="note">
         The ledgers also hold {fmt(reviewed)} rows of samples that were checked and moved nothing; they are the evidence for the
         corrections above. How each was decided is in
