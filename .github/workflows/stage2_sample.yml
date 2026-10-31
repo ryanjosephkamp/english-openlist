@@ -76,7 +76,7 @@ jobs:
       # The guard. This stage must not change the published dataset, so record
       # what it is before doing anything and compare afterwards. Checking the
       # Hugging Face revision is a stronger check than hashing local files the
-      # job never downloads: it watches the artifact people actually consume.
+      # workflow never downloads: it watches the artifact people actually use.
       - name: Record the published dataset revision
         id: before
         run: |

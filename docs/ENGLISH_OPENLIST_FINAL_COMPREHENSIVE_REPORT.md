@@ -120,7 +120,7 @@ To ensure technical depth, targeted pipelines extracted vocabulary from:
 
 ### 2.4 Validation Rules: Scrabble-Compatible Standards
 
-All words in the English OpenList adhere to strict validation rules modeled after official Scrabble tournament dictionaries:
+Every word in the English OpenList follows validation rules modeled on Scrabble's tournament dictionaries:
 
 | Rule | Specification | Rationale |
 |------|---------------|-----------|

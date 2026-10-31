@@ -12,9 +12,5 @@ feedparser
 python-dotenv
 tenacity
 
-# The tests, and the research code they cover
+# The tests
 pytest
-numpy
-scipy
-pandas
-pyarrow

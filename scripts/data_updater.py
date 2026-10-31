@@ -164,7 +164,7 @@ class DataManager:
         """
         How many invalid words there are, whether or not they were loaded.
 
-        The daily job runs with skip_invalid so it never pulls 9.27 million
+        The nightly runs with skip_invalid so it never pulls 9.27 million
         words into memory, which left the reported total at 0 -- accidentally
         true while the list was empty, and a published falsehood from the moment
         it was restored. Counting lines costs one pass over 91 MB and no

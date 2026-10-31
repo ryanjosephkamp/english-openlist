@@ -81,7 +81,7 @@ HF_DATASET_PRIVATE = False
 # out `a` and `i`, and the 45-character maximum ruled out
 # `phosphoribosylaminoimidazolesuccinocarboxamide`, which is 46 and carries a
 # Wiktionary English entry. Chemical nomenclature is productive, so any ceiling
-# is arbitrary. See PROTOCOL.md §1.3 and research/DECISIONS.md D-025.
+# is arbitrary. See corrections/README.md.
 VALIDATION_RULES = {
     "lowercase_only": True,
     "alphabetic_only": True,
