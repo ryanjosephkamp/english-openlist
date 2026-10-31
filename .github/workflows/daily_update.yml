@@ -1,7 +1,7 @@
 # GitHub Actions Workflow: Daily Dictionary Validation
 # English OpenList Phase 3 - Invalid List Recovery + Blog Automation
 #
-# This workflow runs on demand (workflow_dispatch) to:
+# This workflow runs every night at midnight UTC, and on demand, to:
 # 1. Download current word lists from Hugging Face
 # 2. Validate ~1,000 words from the invalid list against MW APIs
 # 3. Promote validated words to the valid list
@@ -18,9 +18,8 @@ permissions:
   contents: write
 
 on:
-  # The nightly schedule is off. To turn it on, add back:
-  #   schedule:
-  #     - cron: '0 0 * * *'
+  schedule:
+    - cron: '0 0 * * *'
   workflow_dispatch:
     inputs:
       validation_limit:
