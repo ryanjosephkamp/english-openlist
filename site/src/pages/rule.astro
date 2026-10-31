@@ -63,8 +63,9 @@ const tree = `${REPO}/tree/main`;
         <li>
           <strong>The nightly run</strong> is the only automated process that adds words. It looks for new words (Merriam-Webster's
           and Wordnik's words of the day, and a file of manual additions) and checks about 1,000 entries of the invalid list
-          against dictionary APIs. A word a dictionary recognizes is promoted to the list. A word whose check was refused or
-          rate-limited is not checked that night, and nothing records it as rejected.
+          against dictionary APIs. A word a dictionary recognizes is promoted to the list, except a single letter other than
+          <span class="word">a</span> and <span class="word">i</span>: a dictionary's entry for a letter names the letter, so the run passes over them. A word whose
+          check was refused or rate-limited is not checked that night, and nothing records it as rejected.
         </li>
         <li>
           <strong>A correction ledger</strong> is the only other way a word moves. Each row of a ledger in

@@ -3,14 +3,17 @@
     uv run --no-project --isolated --with playwright==1.58.0 python tools/demo_gif.py [site] [out]
 
 It drives the site in Chrome (Playwright's channel "chrome"): a search, a
-filter, the charts, and the record. It records the window and turns the
-recording into a GIF with ffmpeg. The preview banner is hidden, and a drawn
-pointer shows where each click lands. The site defaults to the review preview;
-give the production address once it is published. Needs Chrome and ffmpeg.
+word's panel, a filter, a run on the daily log's chart, and the charts. It
+records the window and turns the recording into a GIF with ffmpeg. The preview
+banner is hidden, and a drawn pointer shows where each click lands. The site
+defaults to the live site; give the review preview's address to record a build
+before it ships. Needs Chrome and ffmpeg.
 
 The searches are chosen so that every word on screen is 1 of a short vetted
 list of examples, and the text is typed faster than the search's pause, so no
-search runs on a partial word.
+search runs on a partial word. Each scene checks the words in the window and
+stops the recording if any other word is there; that is why the chart's card is
+opened and its day's log is not.
 """
 
 import shutil
@@ -22,9 +25,12 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-SITE = sys.argv[1] if len(sys.argv) > 1 else "https://review.english-openlist.pages.dev"
+SITE = sys.argv[1] if len(sys.argv) > 1 else "https://english-openlist.pages.dev"
 OUT = Path(sys.argv[2] if len(sys.argv) > 2 else "docs/media/search-the-list.gif")
-W, H = 1280, 800
+W, H = 1280, 720
+# The recording's frame shows about the top 88% of the window and pads the rest
+# with gray, so each scene scrolls what it shows into the top 620 pixels. The
+# word check still covers the whole window.
 
 # the searches, and every word they may show; each set was checked against
 # the list, by prefix and by contents
@@ -101,12 +107,24 @@ def main() -> int:
         def shown_words():
             return set(page.locator(".rows .row-word").all_inner_texts())
 
+        def in_window():
+            """Every word drawn in the window, anywhere on the page."""
+            return set(page.evaluate("""() => [...document.querySelectorAll('.word, .run-words a')]
+              .filter((e) => { const r = e.getBoundingClientRect();
+                return r.width > 0 && r.bottom > 0 && r.top < innerHeight; })
+              .map((e) => e.textContent.trim().replace(/[\u201c\u201d]/g, ''))"""))
+
         def check(expected=None):
             words = shown_words()
-            if not words <= SHOWN:
-                raise SystemExit(f"the demo would show {len(words - SHOWN)} word(s) outside its list")
             if expected is not None and words != expected:
                 raise SystemExit(f"expected {sorted(expected)}, saw {sorted(words)}")
+            words |= in_window()
+            if not words <= SHOWN:
+                raise SystemExit(f"the demo would show {len(words - SHOWN)} word(s) outside its list")
+
+        def scroll_to(top, pause=900):
+            page.evaluate(f"window.scrollTo({{ top: {top}, behavior: 'smooth' }})")
+            page.wait_for_timeout(pause)
 
         def type_search(text):
             field = page.locator("#q")
@@ -122,19 +140,51 @@ def main() -> int:
         check({w for w in SHOWN if w.startswith(FIRST)})
         page.mouse.move(*pointer)
         ready = time.monotonic() - started
-        page.wait_for_timeout(1600)
+        page.wait_for_timeout(1000)
+        scroll_to(130, 1100)
 
         type_search(SECOND)
         check({w for w in SHOWN if w.startswith(SECOND)})
-        page.wait_for_timeout(1500)
+        page.wait_for_timeout(1000)
+
+        # a word's panel: its facts, what decided it, and where to look it up
+        click(page.locator(".rows .row-hit").filter(has_text="sincerity").first, 300)
+        page.wait_for_selector("dialog.panel[open] .panel-facts")
+        check()
+        page.wait_for_timeout(2800)
+        click(page.locator(".panel-close"), 900)
 
         type_search(THIRD)
         check({w for w in SHOWN if w.startswith(THIRD)})
         page.wait_for_timeout(900)
         click(page.locator(".modes label").filter(has_text="Contains"), 1300)
         check({w for w in SHOWN if THIRD in w})
-        click(page.locator(".opt").filter(has_text="No model or engine").locator("input"), 1600)
+        scroll_to("document.querySelector('.opt-explained').getBoundingClientRect().top + scrollY - 330", 1000)
+        click(page.locator(".opt").filter(has_text="From a source").locator("input"), 1800)
         check()
+
+        # the daily log: a run's card on its chart
+        click(page.get_by_role("link", name="Daily log").first, 300)
+        page.wait_for_selector(".nightly-hit")
+        page.mouse.move(*pointer)
+        page.wait_for_timeout(700)
+        # the chart's foot into the frame, and the runs' words still below the window
+        scroll_to(36, 900)
+        check()
+        # along the runs to August 27, 2026, and its card pinned
+        hits = page.locator(".nightly-hit")
+        day = page.evaluate("""() => [...document.querySelectorAll('.nightly-hit')]
+          .findIndex((e) => e.getAttribute('aria-label').startsWith('August 27'))""")
+        for i in (max(0, day - 8), day):
+            box = hits.nth(i).bounding_box()
+            go_to(box["x"] + box["width"] / 2, box["y"] + box["height"] - 10, steps=18)
+            page.wait_for_timeout(800)
+        page.mouse.down()
+        page.wait_for_timeout(90)
+        page.mouse.up()
+        page.wait_for_selector(".nightly-card.is-open")
+        check()
+        page.wait_for_timeout(2400)
 
         click(page.get_by_role("link", name="Charts").first, 300)
         page.wait_for_selector("figure.chart")
@@ -144,16 +194,10 @@ def main() -> int:
         box = bars.bounding_box()
         go_to(box["x"] + box["width"] / 2, box["y"] + box["height"] - 6)
         page.wait_for_timeout(1300)
-        for top in (620, 1240, 1860):
-            page.evaluate(f"window.scrollTo({{ top: {top}, behavior: 'smooth' }})")
-            page.wait_for_timeout(1500)
-
-        click(page.get_by_role("link", name="Rule and record").first, 300)
-        page.wait_for_selector("#record")
-        page.mouse.move(*pointer)
-        page.wait_for_timeout(1000)
-        page.evaluate("document.querySelector('#record').scrollIntoView({ behavior: 'smooth' })")
-        page.wait_for_timeout(2600)
+        for top in (540, 1080, 1620):
+            scroll_to(top, 1500)
+            check()
+        page.wait_for_timeout(600)
         video = page.video.path()
         page.close()
         ctx.close()
