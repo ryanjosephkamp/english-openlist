@@ -621,6 +621,11 @@ Scrabble lists hold no one-letter entries by rule, and Wiktionary gives a
 word-level part of speech to 25 of the 26, including `q` as a determiner. So it
 goes to adjudication rather than to anyone's judgement.
 
+The nightly passes over the 24 (`nightly_may_promote` in `config.py`, held by
+`tests/test_letter_guard.py`). A dictionary's entry for a letter names the
+character, so a lookup would promote every one of them; the run of October 30,
+2026 promoted one that way before the guard existed.
+
 ### Reproducing it
 
 ```bash

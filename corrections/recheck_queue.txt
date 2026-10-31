@@ -9,6 +9,9 @@
 #   * single letters, which the pre-filter cannot pass at any value:
 #     is_likely_english drops anything under 3 characters, and its
 #     vowel-ratio band cannot be satisfied by a 1-character string.
+#     The nightly itself passes over them (D-027, nightly_may_promote
+#     in config.py): a dictionary's entry for a letter names the
+#     character, so they wait here for adjudication.
 #
 # The nightly reserves part of each night for this queue and ignores the
 # pre-filter that would otherwise hide the shortest and longest entries,

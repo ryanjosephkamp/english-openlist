@@ -132,6 +132,19 @@ RECHECK_QUEUE_FILE = PROJECT_ROOT / "corrections" / "recheck_queue.txt"
 # this should move with it.
 RECHECK_DAILY_SLICE = 200
 
+# The only single letters the nightly may promote. D-027 makes the other 24
+# candidates, to be adjudicated on evidence, and a dictionary lookup is not that
+# evidence: a dictionary's entry for a letter names the character, so a match
+# would promote every one of them without saying whether any is a word. The run
+# of October 30, 2026 promoted one that way. The letters stay on the recheck
+# queue so adjudication can reach them; the nightly passes over them.
+ASSERTED_LETTERS = frozenset({"a", "i"})
+
+
+def nightly_may_promote(word: str) -> bool:
+    """False for a single letter other than a and i (D-027), True otherwise."""
+    return len(word) != 1 or word in ASSERTED_LETTERS
+
 # =============================================================================
 # OUTPUT CONFIGURATION
 # =============================================================================

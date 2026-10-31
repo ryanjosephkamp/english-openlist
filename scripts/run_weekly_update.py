@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import (
     PHASE3_ROOT, OUTPUT_DIR, LOG_FILE, LOG_LEVEL, LOG_FORMAT,
     VALID_WORDS_FILE, VALID_DICT_FILE,
-    get_release_date, get_release_dir
+    get_release_date, get_release_dir, nightly_may_promote
 )
 from scripts.dictionary_api import DictionaryAPIClient, WordStatus
 from scripts.word_validator import WordValidator
@@ -289,10 +289,11 @@ class WeeklyUpdatePipeline:
             logger.info("Step 2: Discovering new word candidates...")
             self.discovered_words = await self.discoverer.discover_all()
             
-            # Filter out words already in valid list
+            # Filter out words already in valid list, and the single letters
+            # D-027 leaves to adjudication
             new_candidates = [
                 w for w in self.discovered_words
-                if w not in existing_valid
+                if w not in existing_valid and nightly_may_promote(w)
             ]
             logger.info(f"  New candidates to check: {len(new_candidates)}")
             
