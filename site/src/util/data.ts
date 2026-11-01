@@ -44,6 +44,8 @@ export const DECIDED_WHAT: Readonly<Record<DecidedName, string>> = {
 export interface Manifest {
   readonly builtAt: string;
   readonly revision: string | null;
+  /** When that revision was committed on Hugging Face; null for a build from a local copy. */
+  readonly publishedAt: string | null;
   readonly wordCount: number;
   readonly dateTable: readonly string[];
   readonly decidedCounts: Readonly<Record<DecidedName, number>>;
@@ -111,6 +113,9 @@ export const runs = read<Run[]>('runs.json');
 export const runHref = (date: string) => `/blog/${date}/`;
 
 if (stats.words !== manifest.wordCount) throw new Error('stats.json and manifest.json describe different lists');
+
+/** The day the list on this site was published: its revision's commit date, or the nightly log's last day. */
+export const publishedOn = manifest.publishedAt?.slice(0, 10) ?? stats.growth.last.date;
 
 export const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
 

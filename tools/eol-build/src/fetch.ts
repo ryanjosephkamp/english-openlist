@@ -25,13 +25,15 @@ const FILES = [
 ] as const;
 
 const STAMP = resolve(CACHE_DIR, '.revision');
+/** When that revision was committed: the day the list the site shows was published. */
+const PUBLISHED = resolve(CACHE_DIR, '.published');
 
-async function currentRevision(): Promise<string> {
-  const response = await fetch(`https://huggingface.co/api/datasets/${HF_REPO}`);
+async function revisionInfo(): Promise<{ sha: string; lastModified: string }> {
+  const response = await fetch(`https://huggingface.co/api/datasets/${HF_REPO}/revision/${HF_REVISION}`);
   if (!response.ok) throw new Error(`dataset info: HTTP ${response.status}`);
-  const info = (await response.json()) as { sha?: string };
-  if (!info.sha) throw new Error('dataset info carried no revision');
-  return info.sha;
+  const info = (await response.json()) as { sha?: string; lastModified?: string };
+  if (!info.sha || !info.lastModified) throw new Error('dataset info carried no revision or date');
+  return { sha: info.sha, lastModified: info.lastModified };
 }
 
 async function sizeOf(path: string): Promise<number> {
@@ -59,7 +61,7 @@ const kb = (n: number) => `${(n / 1024 / 1024).toFixed(1)} MB`;
 
 await mkdir(CACHE_DIR, { recursive: true });
 
-const revision = HF_REVISION === 'main' ? await currentRevision() : HF_REVISION;
+const { sha: revision, lastModified } = await revisionInfo();
 const cached = await readFile(STAMP, 'utf8').catch(() => '');
 const fresh = cached.trim() === revision;
 
@@ -81,6 +83,7 @@ for (const file of FILES) {
 }
 
 await writeFile(STAMP, `${revision}\n`);
+await writeFile(PUBLISHED, `${lastModified}\n`);
 
 console.log(
   downloaded > 0 ? `\ndownloaded ${kb(downloaded)}\n` : '\nnothing to download\n',

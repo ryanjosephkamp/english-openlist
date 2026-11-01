@@ -2,11 +2,11 @@
 import Base from '../layouts/Base.astro';
 import Mark from '../components/Mark.astro';
 import Search from '../islands/Search.tsx';
-import { manifest, stats, runs, fmt, DECIDED_LABEL, DECIDED_WHAT, HF } from '../util/data';
+import { manifest, stats, runs, fmt, publishedOn, DECIDED_LABEL, DECIDED_WHAT, HF } from '../util/data';
 import { usDate } from '../util/dates';
 
 const maxLength = stats.lengths[stats.lengths.length - 1]!.length;
-const lastPublished = usDate(stats.growth.last.date);
+const lastPublished = usDate(publishedOn);
 
 // Words to start from, chosen from a vetted list of examples; the build fails
 // if one leaves the list.
