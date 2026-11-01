@@ -12,7 +12,9 @@ const over45 = stats.lengths.filter((l) => l.length > 45).reduce((s, l) => s + l
 const g = stats.growth;
 const big = g.events.filter((e) => Math.abs(e.delta) >= 100);
 const lastBig = big.length ? big[big.length - 1]!.date : g.first.date;
-const nightlyAfter = g.events.filter((e) => e.date > lastBig).reduce((s, e) => s + e.delta, 0);
+// Only the rises: the nightly never removes a word, and a correction made
+// between runs shows in the next run's statistics as a drop.
+const nightlyAfter = g.events.filter((e) => e.date > lastBig && e.delta > 0).reduce((s, e) => s + e.delta, 0);
 const lastAdded = [...g.events].reverse().find((e) => e.delta > 0);
 
 // The record, from the ledgers in corrections/. Each line names its ledger.
