@@ -1,0 +1,522 @@
+"""
+Data Updater
+Handles updating the Valid and Invalid word lists and dictionaries.
+
+This module:
+- Loads existing data from Phase 1-2 deliverables
+- Adds newly validated words to the Valid list
+- Removes promoted words from the Invalid list
+- Maintains dictionary metadata
+- Saves updated data
+"""
+
+import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+import orjson
+
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config import (
+    VALID_WORDS_FILE, VALID_DICT_FILE,
+    INVALID_WORDS_FILE, INVALID_DICT_FILE,
+    get_release_dir
+)
+
+logger = logging.getLogger(__name__)
+
+# The invalid list only ever shrinks by the words promoted out of it -- on the
+# order of 1,000 a day against ~9.2 million -- so a write that would drop more
+# than half of what this run loaded is a symptom, not an update.
+#
+# This exists because merged_invalid_words.txt was written unconditionally while
+# merged_invalid_dict.json was guarded by `if self.invalid_dict:`. On 2026-01-25
+# the words file arrived empty, the empty set was written over the real 91 MB
+# file, the empty file was uploaded, and the next morning's run downloaded that
+# empty file and did it again. The list stayed at 0 bytes for 199 days. The dict
+# survived only because its guard refused the same write.
+MAX_SHRINK_RATIO = 0.5
+
+
+@dataclass
+class UpdateStats:
+    """Statistics for a data update operation."""
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    words_added_to_valid: int = 0
+    words_removed_from_invalid: int = 0
+    total_valid_before: int = 0
+    total_valid_after: int = 0
+    total_invalid_before: int = 0
+    total_invalid_after: int = 0
+    new_words: list = field(default_factory=list)
+    promoted_words: list = field(default_factory=list)
+    errors: list = field(default_factory=list)
+    
+    def to_dict(self) -> dict:
+        return {
+            "timestamp": self.timestamp,
+            "words_added_to_valid": self.words_added_to_valid,
+            "words_removed_from_invalid": self.words_removed_from_invalid,
+            "total_valid_before": self.total_valid_before,
+            "total_valid_after": self.total_valid_after,
+            "total_invalid_before": self.total_invalid_before,
+            "total_invalid_after": self.total_invalid_after,
+            "new_words": self.new_words,
+            "promoted_words": self.promoted_words,
+            "errors": self.errors,
+        }
+
+
+class DataManager:
+    """
+    Manages loading and saving of word lists and dictionaries.
+    
+    Handles both the merged files and alphabetized subsets.
+    """
+    
+    def __init__(
+        self,
+        valid_words_path: Optional[Path] = None,
+        valid_dict_path: Optional[Path] = None,
+        invalid_words_path: Optional[Path] = None,
+        invalid_dict_path: Optional[Path] = None,
+        skip_invalid: bool = False
+    ):
+        self.valid_words_path = valid_words_path or VALID_WORDS_FILE
+        self.valid_dict_path = valid_dict_path or VALID_DICT_FILE
+        self.invalid_words_path = invalid_words_path or INVALID_WORDS_FILE
+        self.invalid_dict_path = invalid_dict_path or INVALID_DICT_FILE
+        self.skip_invalid = skip_invalid
+        
+        # Loaded data
+        self.valid_words: set = set()
+        self.valid_dict: dict = {}
+        self.invalid_words: set = set()
+        self.invalid_dict: dict = {}
+
+        # Entry counts as they were loaded, so a save can tell an ordinary
+        # update from a wipe. See MAX_SHRINK_RATIO.
+        self._invalid_words_loaded = 0
+        self._invalid_dict_loaded = 0
+
+        self._loaded = False
+    
+    def load_data(self) -> None:
+        """Load all data from files."""
+        logger.info("Loading existing word data...")
+        
+        # Load valid words list
+        if self.valid_words_path.exists():
+            with open(self.valid_words_path, 'r', encoding='utf-8') as f:
+                self.valid_words = set(line.strip() for line in f if line.strip())
+            logger.info(f"Loaded {len(self.valid_words)} valid words")
+        else:
+            logger.warning(f"Valid words file not found: {self.valid_words_path}")
+        
+        # Load valid dictionary
+        if self.valid_dict_path.exists():
+            with open(self.valid_dict_path, 'rb') as f:
+                self.valid_dict = orjson.loads(f.read())
+            logger.info(f"Loaded valid dictionary with {len(self.valid_dict)} entries")
+        else:
+            logger.warning(f"Valid dict file not found: {self.valid_dict_path}")
+        
+        # Skip loading invalid words if flag is set (for testing/memory constraints)
+        if self.skip_invalid:
+            logger.info("Skipping invalid words loading (skip_invalid=True)")
+            self._loaded = True
+            return
+        
+        # Load invalid words list (memory-efficient: count lines first)
+        if self.invalid_words_path.exists():
+            # For very large files, just count and keep path for reference
+            with open(self.invalid_words_path, 'r', encoding='utf-8') as f:
+                self.invalid_words = set(line.strip() for line in f if line.strip())
+            self._invalid_words_loaded = len(self.invalid_words)
+            logger.info(f"Loaded {len(self.invalid_words)} invalid words")
+            if not self.invalid_words:
+                logger.error(
+                    f"{self.invalid_words_path} exists but is empty. The copy on "
+                    "Hugging Face is damaged; this run will not write over it."
+                )
+        else:
+            logger.warning(f"Invalid words file not found: {self.invalid_words_path}")
+        
+        # Load invalid dictionary (this can be large, use streaming if needed)
+        if self.invalid_dict_path.exists():
+            try:
+                with open(self.invalid_dict_path, 'rb') as f:
+                    self.invalid_dict = orjson.loads(f.read())
+                self._invalid_dict_loaded = len(self.invalid_dict)
+                logger.info(f"Loaded invalid dictionary with {len(self.invalid_dict)} entries")
+            except Exception as e:
+                logger.warning(f"Could not load invalid dict (may be too large): {e}")
+                self.invalid_dict = {}
+        else:
+            logger.warning(f"Invalid dict file not found: {self.invalid_dict_path}")
+
+        self._loaded = True
+
+    def count_invalid_words(self) -> int:
+        """
+        How many invalid words there are, whether or not they were loaded.
+
+        The nightly runs with skip_invalid so it never pulls 9.27 million
+        words into memory, which left the reported total at 0 -- accidentally
+        true while the list was empty, and a published falsehood from the moment
+        it was restored. Counting lines costs one pass over 91 MB and no
+        allocation.
+        """
+        if self.invalid_words:
+            return len(self.invalid_words)
+        if not self.invalid_words_path.exists():
+            return 0
+
+        total = 0
+        with open(self.invalid_words_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.strip():
+                    total += 1
+        return total
+
+    def _may_write_invalid(self, count: int, loaded: int, label: str) -> bool:
+        """
+        Decide whether it is safe to write `count` invalid entries.
+
+        Refuses an empty write outright, and refuses any write that would drop
+        more than MAX_SHRINK_RATIO of what this run loaded. Either case means
+        the source data did not arrive, and writing would destroy the good copy
+        that is still on Hugging Face.
+        """
+        if count == 0:
+            logger.warning(
+                f"Not writing {label}: no entries loaded this run. "
+                "Leaving the existing copy untouched."
+            )
+            return False
+
+        if loaded and count < loaded * MAX_SHRINK_RATIO:
+            logger.error(
+                f"Refusing to write {label}: {count:,} entries would replace the "
+                f"{loaded:,} loaded this run. That is a wipe, not an update. "
+                "Leaving the existing copy untouched."
+            )
+            return False
+
+        return True
+
+    def save_data(self, output_dir: Optional[Path] = None) -> None:
+        """
+        Save all data to files.
+        
+        Args:
+            output_dir: Directory to save to. Uses release dir if not specified.
+        """
+        output_dir = output_dir or get_release_dir()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        logger.info(f"Saving updated data to {output_dir}")
+        
+        # Save valid words list (sorted)
+        valid_words_file = output_dir / "merged_valid_words.txt"
+        with open(valid_words_file, 'w', encoding='utf-8') as f:
+            for word in sorted(self.valid_words):
+                f.write(f"{word}\n")
+        logger.info(f"Saved {len(self.valid_words)} valid words")
+        
+        # Save valid dictionary
+        valid_dict_file = output_dir / "merged_valid_dict.json"
+        with open(valid_dict_file, 'wb') as f:
+            f.write(orjson.dumps(self.valid_dict, option=orjson.OPT_INDENT_2))
+        logger.info(f"Saved valid dictionary")
+        
+        # Save invalid words list (sorted)
+        if self._may_write_invalid(
+            len(self.invalid_words), self._invalid_words_loaded, "merged_invalid_words.txt"
+        ):
+            invalid_words_file = output_dir / "merged_invalid_words.txt"
+            with open(invalid_words_file, 'w', encoding='utf-8') as f:
+                for word in sorted(self.invalid_words):
+                    f.write(f"{word}\n")
+            logger.info(f"Saved {len(self.invalid_words)} invalid words")
+
+        # Save invalid dictionary (only if we have data - it may be skipped for space)
+        if self._may_write_invalid(
+            len(self.invalid_dict), self._invalid_dict_loaded, "merged_invalid_dict.json"
+        ):
+            invalid_dict_file = output_dir / "merged_invalid_dict.json"
+            with open(invalid_dict_file, 'wb') as f:
+                f.write(orjson.dumps(self.invalid_dict, option=orjson.OPT_INDENT_2))
+            logger.info(f"Saved invalid dictionary")
+    
+    def save_source_files(self) -> None:
+        """
+        Update the original source files in initial_deliverables/.
+        
+        This is critical for persistence across workflow runs.
+        The source files are the canonical data that gets uploaded to Hugging Face.
+        """
+        from config import VALID_WORDS_FILE, VALID_DICT_FILE, INVALID_WORDS_FILE, INVALID_DICT_FILE
+        
+        logger.info("Updating source files in initial_deliverables/...")
+        
+        # Save valid words list (sorted)
+        with open(VALID_WORDS_FILE, 'w', encoding='utf-8') as f:
+            for word in sorted(self.valid_words):
+                f.write(f"{word}\n")
+        logger.info(f"Updated {VALID_WORDS_FILE} with {len(self.valid_words)} words")
+        
+        # Save valid dictionary
+        with open(VALID_DICT_FILE, 'wb') as f:
+            f.write(orjson.dumps(self.valid_dict, option=orjson.OPT_INDENT_2))
+        logger.info(f"Updated {VALID_DICT_FILE}")
+        
+        # Save invalid words list (sorted)
+        if self._may_write_invalid(
+            len(self.invalid_words), self._invalid_words_loaded, str(INVALID_WORDS_FILE)
+        ):
+            with open(INVALID_WORDS_FILE, 'w', encoding='utf-8') as f:
+                for word in sorted(self.invalid_words):
+                    f.write(f"{word}\n")
+            logger.info(f"Updated {INVALID_WORDS_FILE} with {len(self.invalid_words)} words")
+
+        # Save invalid dictionary (only if we have data - it may be skipped for space)
+        if self._may_write_invalid(
+            len(self.invalid_dict), self._invalid_dict_loaded, str(INVALID_DICT_FILE)
+        ):
+            with open(INVALID_DICT_FILE, 'wb') as f:
+                f.write(orjson.dumps(self.invalid_dict, option=orjson.OPT_INDENT_2))
+            logger.info(f"Updated {INVALID_DICT_FILE}")
+    
+    def add_valid_word(
+        self,
+        word: str,
+        metadata: Optional[dict] = None
+    ) -> bool:
+        """
+        Add a word to the valid list.
+        
+        Args:
+            word: The word to add
+            metadata: Optional metadata for the dictionary entry
+            
+        Returns:
+            True if word was added (wasn't already present)
+        """
+        word = word.lower().strip()
+        
+        if word in self.valid_words:
+            return False
+        
+        self.valid_words.add(word)
+        
+        # Add dictionary entry
+        if metadata:
+            self.valid_dict[word] = metadata
+        else:
+            self.valid_dict[word] = {
+                "word": word,
+                "source": "phase3_update",
+                "added_date": datetime.now().isoformat(),
+                "validation_status": "valid"
+            }
+        
+        return True
+    
+    def remove_from_invalid(self, word: str) -> bool:
+        """
+        Remove a word from the invalid list.
+        
+        Args:
+            word: The word to remove
+            
+        Returns:
+            True if word was removed (was present)
+        """
+        word = word.lower().strip()
+        
+        if word not in self.invalid_words:
+            return False
+        
+        self.invalid_words.discard(word)
+        
+        # Remove dictionary entry if present
+        if word in self.invalid_dict:
+            del self.invalid_dict[word]
+        
+        return True
+
+
+class DataUpdater:
+    """
+    Orchestrates updates to the word data.
+    
+    Handles the full update workflow:
+    1. Load existing data
+    2. Apply new words
+    3. Remove promoted words from invalid
+    4. Generate statistics
+    5. Save updated data
+    """
+    
+    def __init__(self, data_manager: Optional[DataManager] = None):
+        self.data_manager = data_manager or DataManager()
+        self.stats = UpdateStats()
+    
+    def run_update(
+        self,
+        new_valid_words: list[dict],
+        output_dir: Optional[Path] = None,
+        update_source_files: bool = True
+    ) -> UpdateStats:
+        """
+        Run a full update cycle.
+        
+        Args:
+            new_valid_words: List of dicts with 'word' and optional metadata
+            output_dir: Directory to save updated data
+            update_source_files: If True, also update the source files in initial_deliverables/
+            
+        Returns:
+            UpdateStats with summary of changes
+        """
+        logger.info("Starting data update...")
+        
+        # Load existing data
+        self.data_manager.load_data()
+        
+        # Record initial counts
+        self.stats.total_valid_before = len(self.data_manager.valid_words)
+        self.stats.total_invalid_before = self.data_manager.count_invalid_words()
+        
+        # Process new words
+        for entry in new_valid_words:
+            word = entry.get("word", "").lower().strip()
+            if not word:
+                continue
+            
+            metadata = entry.get("metadata", {})
+            
+            # Add to valid list
+            if self.data_manager.add_valid_word(word, metadata):
+                self.stats.words_added_to_valid += 1
+                self.stats.new_words.append(word)
+                logger.debug(f"Added new valid word: {word}")
+            
+            # Remove from invalid list if present
+            if self.data_manager.remove_from_invalid(word):
+                self.stats.words_removed_from_invalid += 1
+                self.stats.promoted_words.append(word)
+                logger.debug(f"Promoted word from invalid: {word}")
+        
+        # Record final counts
+        self.stats.total_valid_after = len(self.data_manager.valid_words)
+        # Promotions in this run came out of the list, and with skip_invalid the
+        # file on disk has not been rewritten to reflect that yet.
+        self.stats.total_invalid_after = (
+            self.data_manager.count_invalid_words() - self.stats.words_removed_from_invalid
+            if not self.data_manager.invalid_words
+            else len(self.data_manager.invalid_words)
+        )
+        
+        # Save updated data to release directory
+        self.data_manager.save_data(output_dir)
+        
+        # Also update the source files so changes persist
+        if update_source_files:
+            self.data_manager.save_source_files()
+        
+        logger.info(f"Update complete: +{self.stats.words_added_to_valid} valid, "
+                   f"-{self.stats.words_removed_from_invalid} invalid")
+        
+        return self.stats
+
+
+def create_word_metadata(
+    word: str,
+    source: str = "phase3_update",
+    part_of_speech: Optional[str] = None,
+    definition: Optional[str] = None,
+    pronunciation: Optional[str] = None,
+    etymology: Optional[str] = None
+) -> dict:
+    """
+    Create a metadata dictionary for a word entry.
+    
+    Args:
+        word: The word
+        source: Source of the word (e.g., "merriam-webster")
+        part_of_speech: Part of speech (noun, verb, etc.)
+        definition: Word definition
+        pronunciation: Phonetic pronunciation
+        etymology: Word etymology
+        
+    Returns:
+        Dictionary with word metadata
+    """
+    return {
+        "word": word,
+        "source": source,
+        "added_date": datetime.now().isoformat(),
+        "validation_status": "valid",
+        "part_of_speech": part_of_speech,
+        "definition": definition,
+        "pronunciation": pronunciation,
+        "etymology": etymology,
+    }
+
+
+if __name__ == "__main__":
+    # Test the data updater
+    import tempfile
+    
+    # Create test data
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir = Path(tmpdir)
+        
+        # Create test valid words file
+        valid_words = tmpdir / "valid_words.txt"
+        with open(valid_words, 'w') as f:
+            f.write("apple\nbanana\ncherry\n")
+        
+        # Create test valid dict
+        valid_dict = tmpdir / "valid_dict.json"
+        with open(valid_dict, 'w') as f:
+            json.dump({"apple": {"word": "apple"}, "banana": {"word": "banana"}}, f)
+        
+        # Create test invalid words file
+        invalid_words = tmpdir / "invalid_words.txt"
+        with open(invalid_words, 'w') as f:
+            f.write("boba\nfurikake\nxyzzy\n")
+        
+        # Create test invalid dict
+        invalid_dict = tmpdir / "invalid_dict.json"
+        with open(invalid_dict, 'w') as f:
+            json.dump({"boba": {"word": "boba"}, "furikake": {"word": "furikake"}}, f)
+        
+        # Create data manager
+        dm = DataManager(
+            valid_words_path=valid_words,
+            valid_dict_path=valid_dict,
+            invalid_words_path=invalid_words,
+            invalid_dict_path=invalid_dict
+        )
+        
+        # Run update
+        updater = DataUpdater(dm)
+        
+        new_words = [
+            {"word": "boba", "metadata": {"source": "merriam-webster"}},
+            {"word": "mango", "metadata": {"source": "merriam-webster"}},
+        ]
+        
+        stats = updater.run_update(new_words, tmpdir / "output")
+        
+        print("\nUpdate Statistics:")
+        print(f"  Words added to valid: {stats.words_added_to_valid}")
+        print(f"  Words removed from invalid: {stats.words_removed_from_invalid}")
+        print(f"  New words: {stats.new_words}")
+        print(f"  Promoted words: {stats.promoted_words}")

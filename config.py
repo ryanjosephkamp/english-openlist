@@ -1,0 +1,221 @@
+"""
+Phase 3 Configuration
+English OpenList - Automated Dictionary Updates
+
+This file contains configuration settings for the Phase 3 update pipeline.
+Sensitive values (API keys) should be set via environment variables.
+"""
+
+import os
+from pathlib import Path
+from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(Path(__file__).parent / ".env")
+
+# =============================================================================
+# PATH CONFIGURATION
+# =============================================================================
+
+# Base paths
+# config.py lives at the repository root. Keep PROJECT_ROOT pointed at this
+# directory so generated files such as _posts/, updates/, and overall_stats.json
+# are written inside the Git checkout and can be committed by GitHub Actions.
+PHASE3_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = PHASE3_ROOT
+INITIAL_DELIVERABLES = PHASE3_ROOT / "initial_deliverables"
+SCRIPTS_DIR = PHASE3_ROOT / "scripts"
+OUTPUT_DIR = PHASE3_ROOT / "output"
+TEMPLATES_DIR = PHASE3_ROOT / "templates"
+
+# Blog & Statistics paths
+UPDATES_LOG_FILE = PROJECT_ROOT / "updates" / "updates_log.csv"
+OVERALL_STATS_FILE = PROJECT_ROOT / "overall_stats.json"
+BLOG_POSTS_DIR = PROJECT_ROOT / "_posts"
+
+# Input files (from Phases 1-2)
+VALID_WORDS_FILE = INITIAL_DELIVERABLES / "merged_valid_words.txt"
+VALID_DICT_FILE = INITIAL_DELIVERABLES / "merged_valid_dict.json"
+INVALID_WORDS_FILE = INITIAL_DELIVERABLES / "merged_invalid_words.txt"
+INVALID_DICT_FILE = INITIAL_DELIVERABLES / "merged_invalid_dict.json"
+ALPHABETIZED_DIR = INITIAL_DELIVERABLES / "alphabetized_data"
+
+# =============================================================================
+# API CONFIGURATION
+# =============================================================================
+
+# Merriam-Webster's API terms are a non-commercial license that bars automated or
+# recorded queries without written approval. The nightly run's lookups against
+# it are paused until that approval is settled. Set MW_LOOKUPS_ENABLED=1 to
+# switch them back on; nothing else changes. The manual measurement workflows
+# (stage_sample, stage2_sample) ask Merriam-Webster too and are paused with it.
+MW_LOOKUPS_ENABLED = os.environ.get("MW_LOOKUPS_ENABLED", "0") == "1"
+
+# Merriam-Webster Collegiate Dictionary API
+MW_API_KEY = os.environ.get("MW_API_KEY", "")
+MW_BASE_URL = "https://www.dictionaryapi.com/api/v3/references/collegiate/json"
+MW_RATE_LIMIT = 1000  # requests per day
+MW_REQUEST_DELAY = 0.1  # seconds between requests
+
+# Merriam-Webster Medical Dictionary API
+MW_MEDICAL_API_KEY = os.environ.get("MW_MEDICAL_API_KEY", "")
+MW_MEDICAL_BASE_URL = "https://www.dictionaryapi.com/api/v3/references/medical/json"
+
+# Free Dictionary API (fallback)
+FREE_DICT_BASE_URL = "https://api.dictionaryapi.dev/api/v2/entries/en"
+
+# Wordnik API (optional, for new word discovery)
+WORDNIK_API_KEY = os.environ.get("WORDNIK_API_KEY", "")
+WORDNIK_BASE_URL = "https://api.wordnik.com/v4/words.json"
+
+# =============================================================================
+# HUGGING FACE CONFIGURATION
+# =============================================================================
+
+HF_TOKEN = os.environ.get("HF_TOKEN", "")
+HF_DATASET_REPO = "ryanjosephkamp/english-openlist"  # Format: username/repo
+HF_DATASET_PRIVATE = False
+
+# =============================================================================
+# UPDATE PIPELINE CONFIGURATION
+# =============================================================================
+
+# Validation rules.
+#
+# NOT Scrabble-compatible, deliberately, since 2026-08-16. Both length bounds
+# were removed because both excluded real English: the 2-character minimum ruled
+# out `a` and `i`, and the 45-character maximum ruled out
+# `phosphoribosylaminoimidazolesuccinocarboxamide`, which is 46 and carries a
+# Wiktionary English entry. Chemical nomenclature is productive, so any ceiling
+# is arbitrary. See corrections/README.md.
+VALIDATION_RULES = {
+    "lowercase_only": True,
+    "alphabetic_only": True,
+    "no_proper_nouns": True,
+}
+
+#: Not a validation rule — an ingest integrity check against concatenation bugs.
+#: A candidate longer than this is flagged and needs a recorded reason before it
+#: enters the frame. The longest string in the universe today is 63 characters.
+LENGTH_FLAG_OVER = 100
+
+# Scheduling
+UPDATE_SCHEDULE = "daily"  # "daily" or "weekly"
+UPDATE_HOUR = 0  # Hour (UTC) for scheduled updates
+
+# Invalid list validation settings
+#
+# This was briefly lowered to 600 on 2026-08-14 to free Collegiate quota for the
+# stage 2 sample, on the assumption that a full nightly run exhausts the 1000/day
+# limit. Measurement showed that assumption was wrong: hours after a full run,
+# Collegiate answered 393 of 393 lookups and Medical 400 of 400, none of them
+# rate-limited. Restored, and worth remembering before anyone plans around this
+# number again.
+DAILY_VALIDATION_LIMIT = 1000  # Words to validate per day from invalid list
+VALIDATION_BATCH_SIZE = 50  # Words per batch for API calls
+
+# How long a word stays off the validation queue after being checked.
+#
+# This used to be forever: every word the nightly examined was appended to
+# validation_progress.json and filtered out of every future run. A word checked
+# once and not found was invalid permanently, which is wrong — Merriam-Webster
+# adds words, and "no entry today" is not "no entry ever". After this many days
+# a word becomes eligible again.
+RECHECK_AFTER_DAYS = 180
+
+# Words this project deliberately demoted from the valid list, kept in a queue so
+# they are re-examined on a known cadence rather than waiting for their turn
+# among 9.29 million others — which, at 1,000 a day, would take about 25 years.
+RECHECK_QUEUE_FILE = PROJECT_ROOT / "corrections" / "recheck_queue.txt"
+
+# How much of each night's budget is reserved for that queue. The rest is
+# selected as it always has been.
+#
+# Raised from 100 to 200 on 2026-08-14 when the queue reached 33,594 words: at
+# 100 a night a full rotation took 336 days, which is longer than the cooldown
+# above, so the cooldown would never have been the binding constraint. At 200 a
+# rotation takes about 168 days and the two line up. If the queue grows again,
+# this should move with it.
+RECHECK_DAILY_SLICE = 200
+
+# The only single letters the nightly may promote. D-027 makes the other 24
+# candidates, to be adjudicated on evidence, and a dictionary lookup is not that
+# evidence: a dictionary's entry for a letter names the character, so a match
+# would promote every one of them without saying whether any is a word. Before
+# this guard, 4 runs promoted one each that way, from August 22 to October 30,
+# 2026. The letters stay on the recheck queue so adjudication can reach them; the
+# nightly passes over them.
+ASSERTED_LETTERS = frozenset({"a", "i"})
+
+
+def nightly_may_promote(word: str) -> bool:
+    """False for a single letter other than a and i (D-027), True otherwise."""
+    return len(word) != 1 or word in ASSERTED_LETTERS
+
+# =============================================================================
+# OUTPUT CONFIGURATION
+# =============================================================================
+
+# File naming
+def get_release_date() -> str:
+    """Get current date in YYYY-MM-DD format for release naming."""
+    return datetime.now().strftime("%Y-%m-%d")
+
+def get_release_dir() -> Path:
+    """Get the output directory for current release."""
+    release_dir = OUTPUT_DIR / get_release_date()
+    release_dir.mkdir(parents=True, exist_ok=True)
+    return release_dir
+
+# Zip file names
+ZIP_VALID_TEMPLATE = "english_openlist_valid_{date}.zip"
+ZIP_INVALID_TEMPLATE = "english_openlist_invalid_{date}.zip"
+ZIP_CHANGELOG_TEMPLATE = "english_openlist_changelog_{date}.zip"
+ZIP_STATS_TEMPLATE = "english_openlist_statistics_{date}.zip"
+
+# =============================================================================
+# STATISTICS CONFIGURATION
+# =============================================================================
+
+STATS_FIGURES = {
+    "word_length_distribution": True,
+    "part_of_speech_breakdown": True,
+    "words_added_over_time": True,
+    "letter_frequency": True,
+}
+
+FIGURE_DPI = 150
+FIGURE_FORMAT = "png"
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_FILE = PHASE3_ROOT / "logs" / "update_pipeline.log"
+
+# =============================================================================
+# NEW WORD DISCOVERY SOURCES
+# =============================================================================
+
+NEW_WORD_SOURCES = {
+    "merriam_webster_rss": "https://www.merriam-webster.com/wotd/feed/rss2",
+    "wordnik_wotd": "https://api.wordnik.com/v4/words.json/wordOfTheDay",
+}
+
+# Wordnik API rate limits (Basic/Free plan)
+WORDNIK_DAILY_LIMIT = 100  # API calls per day
+WORDNIK_WOTD_LOOKBACK_DAYS = 30  # How many days of Word of the Day to fetch
+
+# Discovery tracking (to avoid re-processing same words)
+DISCOVERED_WORDS_CACHE = PHASE3_ROOT / "discovered_words_cache.json"
+
+# =============================================================================
+# ERROR HANDLING
+# =============================================================================
+
+MAX_RETRIES = 3
+RETRY_DELAY = 5  # seconds
+TIMEOUT = 30  # seconds for API requests

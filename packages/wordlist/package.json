@@ -1,0 +1,11 @@
+{
+  "name": "@eol/wordlist",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./format": "./src/format.ts",
+    "./decode": "./src/decode.ts",
+    "./query": "./src/query.ts"
+  }
+}

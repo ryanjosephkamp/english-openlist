@@ -1,0 +1,122 @@
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '!templates/dataset_card.md'
+
+  # The daily pipeline's own commit cannot trigger this.
+  #
+  # It checks out with `token: secrets.GITHUB_TOKEN` and pushes as that token,
+  # and GitHub deliberately does not start workflow runs from pushes made with
+  # GITHUB_TOKEN -- it is the guard against a workflow endlessly re-triggering
+  # itself. So the `push` trigger above has never once fired for a daily update,
+  # and the site only ever rebuilt when a person pushed. Nobody noticed because
+  # the list moves about one word a day; it became obvious the morning after
+  # 33,594 words were demoted and the site still showed the old count.
+  #
+  # Chaining off the run itself is the fix that does not require handing the
+  # pipeline a personal access token.
+  workflow_run:
+    workflows: ["Daily Dictionary Update"]
+    types: [completed]
+    branches: [main]
+
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Without Cloudflare credentials there is nothing to deploy to, and a run
+    # that fails on a missing secret every morning trains people to ignore red
+    # builds. Skip cleanly instead.
+    #
+    # And when chained off the daily pipeline, only deploy if that pipeline
+    # actually succeeded -- `workflow_run` fires on failure too, and publishing
+    # from a half-finished update is worse than publishing nothing.
+    if: >-
+      ${{ vars.CLOUDFLARE_PROJECT_NAME != '' &&
+          (github.event_name != 'workflow_run' ||
+           github.event.workflow_run.conclusion == 'success') }}
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The dataset revision, resolved before the cache key is computed. The
+      # 291 MB metadata file only changes on days a word is actually promoted,
+      # so on most mornings this restores instead of downloading.
+      - name: Resolve dataset revision
+        id: dataset
+        run: |
+          sha=$(curl -sSf https://huggingface.co/api/datasets/ryanjosephkamp/english-openlist \
+                | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "English OpenList at $sha"
+
+      - uses: actions/cache@v4
+        with:
+          path: .cache/hf
+          key: eol-data-${{ steps.dataset.outputs.sha }}
+
+      # The script is `fetch-data`, not `fetch`, and it is invoked through
+      # `pnpm run`. `pnpm fetch` is a built-in command that populates the
+      # virtual store from the lockfile, and it wins over a package script of
+      # the same name -- so the first version of this step quietly ran pnpm's
+      # own command, exited 0, downloaded nothing, and left the next step to
+      # fail on a missing file.
+      - name: Fetch dataset
+        run: pnpm data:fetch
+
+      # Fails the build if the dataset has changed shape — see
+      # tools/eol-build/src/expected.ts. A silent change in what the intake
+      # fields mean would otherwise ship as a wrong site.
+      - name: Build data artifacts
+        run: pnpm data:build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      # EOL_PRODUCTION=1 drops the review banner and the noindex tag that every
+      # other build carries. scripts/check-dist.mjs runs as part of the build.
+      - name: Build site
+        env:
+          EOL_PRODUCTION: '1'
+        run: pnpm build
+
+      # Wrangler is invoked directly rather than through cloudflare/wrangler-action.
+      # That action installs its own copy with a bare `pnpm add wrangler@...`,
+      # which pnpm refuses in a workspace root without `-w` -- so in a repo shaped
+      # like this one it fails before it ever reaches Cloudflare, and the error it
+      # prints is about pnpm rather than about the deploy.
+      #
+      # The site's own pinned copy, from the lockfile: a publish step is the wrong
+      # place to pick up a surprise.
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: >-
+          pnpm --dir site exec wrangler pages deploy dist
+          --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }}
+          --branch=main
