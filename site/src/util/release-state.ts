@@ -8,7 +8,7 @@
  * the footer, and the page "The EOL in the CEOL Universe", then build. The
  * README gains the same family link by hand at the same time.
  */
-export const CEOL_PUBLIC = false;
+export const CEOL_PUBLIC = true;
 
 /** The CEOL Universe's site, and its page about the English OpenList. */
 export const CEOL_SITE = 'https://common-english-openlist.pages.dev/';

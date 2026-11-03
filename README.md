@@ -8,6 +8,7 @@ A free list of English words, lowercase a to z only, published on Hugging Face a
 
 - **Site:** [english-openlist.pages.dev](https://english-openlist.pages.dev/): search with a panel for every word, the daily log of every nightly run (with an [RSS feed](https://english-openlist.pages.dev/feed.xml)), charts, the rule and record, and downloads.
 - **Dataset:** [ryanjosephkamp/english-openlist](https://huggingface.co/datasets/ryanjosephkamp/english-openlist) on Hugging Face.
+- **Family:** the list is a dated subset of each version of the [CEOL Universe](https://common-english-openlist.pages.dev/), an inventory of candidate English strings. The CEOL's full dataset is not published yet; its site shows its statistics and a sample.
 
 ## Load it
 
