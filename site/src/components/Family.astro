@@ -1,0 +1,39 @@
+---
+// The family link: "CEOL Universe · English OpenList". It renders only once the
+// CEOL Universe is public (CEOL_PUBLIC); until then it renders nothing at all.
+import { CEOL_PUBLIC, CEOL_SITE } from '../util/release-state';
+
+interface Props {
+  where: 'header' | 'footer';
+}
+const { where } = Astro.props;
+---
+
+{
+  CEOL_PUBLIC && (
+    <p class:list={['family', `family-${where}`]}>
+      <a href={CEOL_SITE} rel="noopener">CEOL Universe</a>
+      <span aria-hidden="true"> · </span>
+      <span aria-current="page">English OpenList</span>
+    </p>
+  )
+}
+
+<style>
+  .family {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+  .family a {
+    color: var(--ink-soft);
+  }
+  .family a:hover {
+    color: var(--ink);
+  }
+  .family [aria-current] {
+    color: var(--ink);
+  }
+  .family-header {
+    padding-block: var(--space-2) 0;
+  }
+</style>

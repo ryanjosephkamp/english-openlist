@@ -1,0 +1,20 @@
+---
+import { SECTIONS } from '../util/nav';
+
+interface Props {
+  section: string;
+}
+const { section } = Astro.props;
+---
+
+<ul class="nav-list">
+  {
+    SECTIONS.map((s) => (
+      <li>
+        <a href={s.href} aria-current={s.label === section ? 'page' : undefined}>
+          {s.label}
+        </a>
+      </li>
+    ))
+  }
+</ul>

@@ -1,0 +1,119 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Environment variables (contains API keys!)
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Generated release data. Everything here is published to Hugging Face under
+# releases/, so committing it duplicated ~379 MB into the repository for no gain.
+# The per-day metrics that only ever existed here are preserved in
+# archive/daily-metrics/.
+output/
+latest/
+data/brrrdle/
+
+# Large data files (stored on Hugging Face, not in git)
+initial_deliverables/
+initial_deliverables.zip
+*.json
+!templates/*.json
+!overall_stats.json
+# The archived per-day metrics are the only surviving copy of these files, so
+# they must survive the blanket *.json rule above. This negation works because
+# archive/ is not itself excluded -- git will not re-include a file whose parent
+# directory is ignored.
+!archive/**/*.json
+# Which words have already been checked against the dictionary APIs, and the one
+# thing carrying that knowledge between runs. Without it every run starts from
+# "Already validated: 0" and re-samples the same 9.27 million words, spending API
+# quota on entries that were already settled. The blanket *.json above was
+# catching it, and nothing noticed because validation produced no output for 199
+# days -- the file was never written, so the rule was never exercised.
+!validation_progress.json
+
+# --- Website -----------------------------------------------------------------
+# Two things above fight a JavaScript workspace, and both fail silently.
+#
+# The blanket `*.json` swallows package.json, every tsconfig, and the web app
+# manifest. It is the same rule that broke the 2026-08-12 daily run, and the
+# daily workflow now hard-errors on a produced-but-ignored path rather than
+# skipping it, so anything missed here surfaces as a red build rather than a
+# quiet omission.
+#
+# The Python template's generic directory names -- `lib/`, `build/`, `dist/`,
+# `downloads/` -- match ordinary source paths anywhere in the tree, not just at
+# the root. `site/src/lib/` would have been ignored wholesale. The source tree
+# uses `util/` instead of `lib/` so that trap cannot be re-sprung by a later
+# rename, and the rest are re-included by name below.
+!package.json
+!tsconfig*.json
+!site/package.json
+!site/tsconfig*.json
+!site/src/**/*.json
+!site/public/**/*.json
+!tools/eol-build/package.json
+!tools/eol-build/tsconfig*.json
+
+# Generated on every build by tools/eol-build, from Hugging Face. Committing it
+# would put a fresh ~700 KB of binary in git history daily for no gain -- the
+# deploy rebuilds it from the live dataset anyway. Listed after the negations
+# above because the last matching rule wins.
+site/public/data/
+site/public/downloads/
+# Regenerated from _posts/ on every build. Committing them would put a new
+# feed.xml in history every morning for no gain.
+site/public/feed.xml
+site/public/sitemap.xml
+site/public/robots.txt
+node_modules/
+.cache/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# pytest
+.pytest_cache/
+
+# The measurement study of the list is paused and kept outside this repository.
+research/
+
+# Astro writes generated types here on every build.
+site/.astro/

@@ -1,0 +1,9 @@
+# The old site's paths, sent to the pages that replaced them, so links made to
+# it keep working. Pages evaluates these top to bottom and stops at the first
+# match.
+/use          /downloads/  301
+/use/         /downloads/  301
+/shape        /charts/     301
+/shape/       /charts/     301
+/as-it-is     /rule/       301
+/as-it-is/    /rule/       301

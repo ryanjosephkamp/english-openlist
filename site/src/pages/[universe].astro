@@ -1,0 +1,44 @@
+---
+// "The EOL in the CEOL Universe". Built only once the CEOL Universe is public:
+// while CEOL_PUBLIC is false this route has no paths, so no page exists.
+import Base from '../layouts/Base.astro';
+import { CEOL_PUBLIC, CEOL_SITE, CEOL_EOL_PAGE, CEOL_COMPOSE_EOL } from '../util/release-state';
+import { manifest, fmt } from '../util/data';
+
+export function getStaticPaths() {
+  return CEOL_PUBLIC ? [{ params: { universe: 'universe' } }] : [];
+}
+---
+
+<Base
+  title="In the CEOL Universe"
+  section="In the CEOL Universe"
+  description="The English OpenList as a dated subset of the CEOL Universe, a larger, versioned inventory of English word candidates."
+>
+  <div class="frame page doc">
+    <h1>The English OpenList in the CEOL Universe</h1>
+    <p class="lede">
+      The <a href={CEOL_SITE} rel="noopener">CEOL Universe</a> is a larger inventory of English word candidates, released in
+      fixed versions. Each version holds the English OpenList as a dated subset: its list at 1 pinned revision.
+    </p>
+    <p>
+      The 2 projects do different jobs. This list changes every night under its own rule; a version of the CEOL Universe never
+      changes once released. So the CEOL Universe reads this list at a revision it names and never writes to it, and a later
+      version takes in what this list adds by moving its pin. This site's list today has {fmt(manifest.wordCount)} words.
+    </p>
+    <ul>
+      <li><a href={CEOL_EOL_PAGE} rel="noopener">Its page in the CEOL Universe</a>: the subset charted, and what decided its rows.</li>
+      <li><a href={CEOL_COMPOSE_EOL} rel="noopener">Compose a list from it</a>: the subset as a list, with the code that reproduces it.</li>
+    </ul>
+  </div>
+</Base>
+
+<style>
+  .page {
+    display: grid;
+    gap: var(--space-4);
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+</style>
