@@ -46,7 +46,7 @@ So the list holds 1-letter words and words longer than 45 letters, on purpose. T
    - It downloads the lists and looks for new words: Merriam-Webster's and Wordnik's words of the day, and `manual_additions.txt`.
    - It checks about 1,000 candidates against the Free Dictionary API and promotes what the dictionary recognizes, and it publishes the lists to Hugging Face.
    - It never promotes a single letter other than `a` and `i`: a dictionary's entry for a letter names the letter, so a match says nothing about a word.
-   - A lookup that is refused or rate-limited (403 or 429) means the word was not checked that night. It stays a candidate, and nothing records it as rejected. Some nights the API refuses every lookup. Then nothing is checked, nothing is promoted, and the run publishes the lists as they are.
+   - A lookup that is refused or rate-limited (403 or 429) means the word was not checked that night. It stays a candidate, and nothing records it as rejected. Some nights the API refuses every lookup. Then nothing is checked, nothing is promoted, and the run publishes the lists as they are, then ends marked failed, with the refused lookups on its page.
    - A step that fails stops the run. With `skip_upload`, it is a dry run that publishes nothing.
    - Each run writes a post to [`_posts/`](_posts/), and the site's daily log gives every run a page: the words it added, how they got on, and how the list changed.
 - **Corrections** move a word only through a ledger in [`corrections/`](corrections/): each row names the word, the action, the reason, the method, the source that ruled, and the date. [`corrections/README.md`](corrections/README.md) explains each one. No other process moves a word.

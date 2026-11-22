@@ -721,7 +721,9 @@ def write_validation_summary(results: dict) -> None:
 def exit_code(results: dict) -> int:
     """
     0 for a night that checked words or had none to check; 1 otherwise. While
-    Merriam-Webster is paused, a night that checked nothing is 0 too.
+    Merriam-Webster is paused, a night that checked nothing is 0 too, so the
+    rest of the nightly still publishes; validation_report.py, the workflow's
+    last step, then fails the run.
 
     Nothing to validate is not a failure. A night on which every selected word
     went unchecked is: it means the primary dictionary refused us (a bad key, a
@@ -736,7 +738,8 @@ def exit_code(results: dict) -> int:
             # checks nothing is then expected; the run still has to publish.
             logger.warning(
                 "No selected word could be checked tonight, and Merriam-Webster "
-                "lookups are paused; the run goes on and publishes the lists as they are.")
+                "lookups are paused; the run goes on and publishes the lists as they are, "
+                "and its last step marks the run failed.")
             return 0
         logger.error("No selected word could be checked tonight.")
         return 1

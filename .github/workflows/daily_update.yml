@@ -252,3 +252,12 @@ jobs:
             echo "Promoted words:" >> $GITHUB_STEP_SUMMARY
             cat output/${{ steps.date.outputs.date }}/promoted_words.txt >> $GITHUB_STEP_SUMMARY
           fi
+
+      # Last, so the lists, the stats and the post above are published whatever
+      # the dictionaries said. A night on which no selected word could be checked
+      # ends red here, with the refused lookups on the run's page, rather than
+      # green with "validated": 0. A night with some words unchecked gets a warning.
+      - name: Check that the night's lookups ran
+        if: ${{ github.event.inputs.skip_invalid_validation != 'true' }}
+        run: |
+          python scripts/validation_report.py output/${{ steps.date.outputs.date }}/validation_summary.json
