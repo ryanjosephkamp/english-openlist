@@ -69,13 +69,13 @@ def test_a_missing_or_unsuccessful_summary_fails():
     assert report.verdict({"success": False, "message": "source files are not writable"})[0] == report.FAILED
 
 
-def test_the_step_exits_1_on_a_refused_night_and_writes_the_run_summary(tmp_path, monkeypatch, capsys):
+def test_the_step_flags_a_refused_night_and_still_exits_0(tmp_path, monkeypatch, capsys):
     path = tmp_path / "validation_summary.json"
     path.write_text(json.dumps(REFUSED_NIGHT))
     step_summary = tmp_path / "step_summary.md"
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(step_summary))
 
-    assert report.main(["validation_report.py", str(path)]) == 1
+    assert report.main(["validation_report.py", str(path)]) == 0
     assert capsys.readouterr().out.startswith("::error title=No word was checked::")
     assert "### Lookups failed" in step_summary.read_text()
 

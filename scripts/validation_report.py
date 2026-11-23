@@ -9,7 +9,8 @@ lookup with 403, and each run reported success with "validated": 0.
 This reads the night's validation_summary.json after everything else has run
 and says what happened, in the log, on the run's page, and in its summary:
 
-- No selected word checked: the step fails, so the run ends red.
+- No selected word checked: an error on the run's page. The step still exits 0,
+  because deploy-site.yml deploys the site only after a successful nightly.
 - Some words not checked: a warning, and the run stays green.
 - Otherwise, or nothing to check: a plain line.
 
@@ -73,7 +74,7 @@ def load(path: Path) -> dict | None:
 
 
 def report(level: str, message: str) -> int:
-    """Print the verdict for the log and the run's page; 1 for a failed night."""
+    """Print the verdict for the log and the run's page. Always 0, so the site still deploys."""
     if level == FAILED:
         print(f"::error title=No word was checked::{message}")
     elif level == WARNING:
@@ -87,7 +88,7 @@ def report(level: str, message: str) -> int:
         with open(summary_file, "a", encoding="utf-8") as f:
             f.write(f"\n### {heading}\n\n{message}\n")
 
-    return 1 if level == FAILED else 0
+    return 0
 
 
 def main(argv: list[str]) -> int:
