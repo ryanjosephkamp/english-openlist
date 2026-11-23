@@ -1,5 +1,5 @@
 """
-A night that checked no word ends red, and the changelog gives tonight's
+A night that checked no word is flagged on the run's page, and the changelog gives tonight's
 counts, not the running total.
 
 From 2026-11-02 the Free Dictionary API answered every lookup with 403. Each
