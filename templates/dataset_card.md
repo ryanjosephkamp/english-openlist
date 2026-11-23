@@ -263,9 +263,10 @@ the Brrrdle artifacts — remains browsable and downloadable; they are simply no
 part of the default load. Point at one explicitly to read it:
 
 ```python
+# The candidates not on the list, one per row (91 MB)
 dataset = load_dataset(
     "ryanjosephkamp/english-openlist",
-    data_files="releases/2026-08-11/merged_valid_words.txt",
+    data_files="data/merged_invalid_words.txt",
     split="train",
 )
 ```

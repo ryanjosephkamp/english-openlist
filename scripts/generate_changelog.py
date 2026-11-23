@@ -50,8 +50,44 @@ def load_promoted_words(release_dir: Path) -> list[str]:
     return []
 
 
+def load_validation_summary(release_dir: Path) -> dict | None:
+    """Tonight's validation counts, as validate_invalid_list.py wrote them; None if it did not run."""
+    summary_file = release_dir / "validation_summary.json"
+    if summary_file.exists():
+        with open(summary_file, 'r') as f:
+            return json.load(f)
+    return None
+
+
+def validation_line(summary: dict | None) -> str:
+    """
+    What tonight's validation did, in 1 sentence for the changelog. The counts
+    are tonight's: validated_count in validation_progress.json is the running
+    total since the first night, and printing it as "today" made 43,005 words
+    appear checked on nights the dictionary refused every lookup.
+    """
+    if summary is None or not summary.get("success", False):
+        return "No invalid list validation ran today."
+    selected = summary.get("selected", 0)
+    checked = summary.get("validated", 0)
+    not_checked = summary.get("not_checked", 0)
+    by_status = ", ".join(
+        f"{status}: {count:,}" for status, count in sorted((summary.get("not_checked_by_status") or {}).items())
+    )
+    because = f" (HTTP {by_status})" if by_status else ""
+    if not selected:
+        return "No word was selected from the invalid list today."
+    if not checked:
+        return (f"No word from the invalid list could be checked today: all {selected:,} "
+                f"lookups failed{because}.")
+    line = f"Checked {checked:,} of {selected:,} words selected from the invalid list today."
+    if not_checked:
+        line += f" {not_checked:,} could not be checked{because}."
+    return line
+
+
 def load_validation_progress(phase3_root: Path) -> dict:
-    """Load validation progress to get today's stats."""
+    """The running totals across every night (validation_progress.json)."""
     progress_file = phase3_root / "validation_progress.json"
     if progress_file.exists():
         with open(progress_file, 'r') as f:
@@ -90,6 +126,8 @@ def generate_changelog(release_date: str = None) -> None:
     update_stats = load_update_stats(release_dir)
     promoted_from_invalid = load_promoted_words(release_dir)
     validation_progress = load_validation_progress(phase3_root)
+    validation_summary = load_validation_summary(release_dir)
+    checked_today = (validation_summary or {}).get("validated", 0)
     
     # Calculate totals
     new_words = update_stats.get("new_words", [])
@@ -102,9 +140,6 @@ def generate_changelog(release_date: str = None) -> None:
     total_invalid = update_stats.get("total_invalid_after", 0) - words_promoted_from_invalid
     if total_invalid < 0:
         total_invalid = 0  # Safety check
-    
-    # Get validation stats for today
-    words_validated_today = validation_progress.get("validated_count", 0)
     
     # Generate changelog content
     changelog_file = release_dir / "CHANGELOG.md"
@@ -134,23 +169,20 @@ _Sources: Merriam-Webster RSS, MW New Words Page, Wordnik Word of the Day_
     
     content += "\n### Words Promoted from Invalid to Valid\n"
     
+    content += f"\n_{validation_line(validation_summary)}_\n"
     if promoted_from_invalid:
-        content += f"\n_Validated {validation_progress.get('validated_count', 0):,} words from the invalid list today._\n\n"
-        content += "| Word | Status |\n|------|--------|\n"
+        content += "\n| Word | Status |\n|------|--------|\n"
         for word in promoted_from_invalid:
             content += f"| {word} | Promoted ✓ |\n"
-    else:
-        if words_validated_today > 0:
-            content += f"_Validated {words_validated_today:,} words from invalid list. No words promoted today._\n"
-        else:
-            content += "_No invalid list validation performed today._\n"
+    elif checked_today:
+        content += "\n_No words promoted today._\n"
     
     content += f"""
 ### Technical Notes
 - Update completed at: {datetime.now().isoformat()}
 - Words discovered from automated sources: {len(update_stats.get('new_words', []))}
-- Words validated from invalid list: {validation_progress.get('validated_count', 0)}
-- Cumulative words validated from invalid list: {validation_progress.get('validated_count', 0):,}
+- Words checked from invalid list today: {checked_today:,}
+- Cumulative words checked from invalid list: {validation_progress.get('validated_count', 0):,}
 - Cumulative promotions from invalid list: {validation_progress.get('promoted_count', 0):,}
 
 ### Discovery Sources
